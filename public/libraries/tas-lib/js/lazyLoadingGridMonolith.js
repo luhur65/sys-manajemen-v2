@@ -261,6 +261,9 @@ function renderFromCache(grid, data, direction, rowsPerPage, currentPage, res) {
         data.forEach(function (row) {
             if (!existingIdSet.has(row.id.toString())) {
                 grid.jqGrid('addRowData', row.id, row, 'last');
+            } else {
+                // ← TAMBAH INI: update row yang sudah ada
+                grid.jqGrid('setRowData', row.id, row);
             }
         });
         let validPage = currentPage || maxPageLoaded;

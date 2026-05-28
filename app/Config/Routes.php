@@ -183,18 +183,12 @@ $routes->match(['GET', 'POST'], 'Menu/index', 'Menu::index');
 $routes->match(['GET', 'POST'], 'menu/index', 'Menu::index');
 $routes->match(['GET', 'POST'], 'Menu/grid', 'Menu::grid');
 $routes->match(['GET', 'POST'], 'menu/grid', 'Menu::grid');
-$routes->match(['GET', 'POST'], 'Menu/operation/(:any)', 'Menu::operation/$1');
-$routes->match(['GET', 'POST'], 'menu/operation/(:any)', 'Menu::operation/$1');
-$routes->match(['GET', 'POST'], 'Menu/grid1', 'Menu::grid1');
-$routes->match(['GET', 'POST'], 'menu/grid1', 'Menu::grid1');
-$routes->match(['GET', 'POST'], 'Menu/view/(:any)', 'Menu::view/$1');
-$routes->match(['GET', 'POST'], 'menu/view/(:any)', 'Menu::view/$1');
-$routes->match(['GET', 'POST'], 'Menu/add', 'Menu::add');
-$routes->match(['GET', 'POST'], 'menu/add', 'Menu::add');
-$routes->match(['GET', 'POST'], 'Menu/edit/(:any)', 'Menu::edit/$1');
-$routes->match(['GET', 'POST'], 'menu/edit/(:any)', 'Menu::edit/$1');
-$routes->match(['GET', 'POST'], 'Menu/delete/(:any)', 'Menu::delete/$1');
-$routes->match(['GET', 'POST'], 'menu/delete/(:any)', 'Menu::delete/$1');
+$routes->match(['GET', 'POST'], 'Menu/crud', 'Menu::crud');
+$routes->match(['GET', 'POST'], 'menu/crud', 'Menu::crud');
+$routes->match(['GET', 'POST'], 'Menu/getById/(:any)', 'Menu::getById/$1');
+$routes->match(['GET', 'POST'], 'menu/getById/(:any)', 'Menu::getById/$1');
+$routes->match(['GET', 'POST'], 'Menu/lookupAco', 'Menu::lookupAco');
+$routes->match(['GET', 'POST'], 'menu/lookupAco', 'Menu::lookupAco');
 $routes->match(['GET', 'POST'], 'Menu/reseq', 'Menu::reseq');
 $routes->match(['GET', 'POST'], 'menu/reseq', 'Menu::reseq');
 
@@ -481,16 +475,12 @@ $routes->match(['GET', 'POST'], 'Roles', 'Roles::index');
 $routes->match(['GET', 'POST'], 'roles', 'Roles::index');
 $routes->match(['GET', 'POST'], 'Roles/index', 'Roles::index');
 $routes->match(['GET', 'POST'], 'roles/index', 'Roles::index');
-$routes->match(['GET', 'POST'], 'Roles/view/(:any)', 'Roles::view/$1');
-$routes->match(['GET', 'POST'], 'roles/view/(:any)', 'Roles::view/$1');
+$routes->match(['GET', 'POST'], 'Roles/getById/(:any)', 'Roles::getById/$1');
+$routes->match(['GET', 'POST'], 'roles/getById/(:any)', 'Roles::getById/$1');
 $routes->match(['GET', 'POST'], 'Roles/grid', 'Roles::grid');
 $routes->match(['GET', 'POST'], 'roles/grid', 'Roles::grid');
-$routes->match(['GET', 'POST'], 'Roles/add', 'Roles::add');
-$routes->match(['GET', 'POST'], 'roles/add', 'Roles::add');
-$routes->match(['GET', 'POST'], 'Roles/edit/(:any)', 'Roles::edit/$1');
-$routes->match(['GET', 'POST'], 'roles/edit/(:any)', 'Roles::edit/$1');
-$routes->match(['GET', 'POST'], 'Roles/delete/(:any)', 'Roles::delete/$1');
-$routes->match(['GET', 'POST'], 'roles/delete/(:any)', 'Roles::delete/$1');
+$routes->match(['GET', 'POST'], 'Roles/crud', 'Roles::crud');
+$routes->match(['GET', 'POST'], 'roles/crud', 'Roles::crud');
 
 // Routes for App\Controllers\Sop (Sop)
 $routes->match(['GET', 'POST'], 'Sop', 'Sop::index');
@@ -683,12 +673,13 @@ $routes->match(['GET', 'POST'], 'User/generate/(:any)', 'User::generate/$1');
 $routes->match(['GET', 'POST'], 'user/generate/(:any)', 'User::generate/$1');
 $routes->match(['GET', 'POST'], 'User/operation/(:any)', 'User::operation/$1');
 $routes->match(['GET', 'POST'], 'user/operation/(:any)', 'User::operation/$1');
-$routes->match(['GET', 'POST'], 'User/excel', 'User::excel');
-$routes->match(['GET', 'POST'], 'user/excel', 'User::excel');
-$routes->match(['GET', 'POST'], 'User/hakakses/(:any)', 'User::hakakses/$1');
-$routes->match(['GET', 'POST'], 'user/hakakses/(:any)', 'User::hakakses/$1');
+$routes->match(['GET', 'POST'], 'User/getRoles', 'User::getRoles');
+$routes->match(['GET', 'POST'], 'user/getroles', 'User::getRoles');
+$routes->match(['GET', 'POST'], 'user/getRoles', 'User::getRoles');
+$routes->match(['GET', 'POST'], 'User/getById/(:any)', 'User::getById/$1');
+$routes->match(['GET', 'POST'], 'user/getById/(:any)', 'User::getById/$1');
 
-// Routes for App\Controllers\UserAcl (UserAcl)
+// Routes for App\Controllers\User.old (User.old)
 $routes->match(['GET', 'POST'], 'UserAcl/view/(:any)', 'UserAcl::view/$1');
 $routes->match(['GET', 'POST'], 'useracl/view/(:any)', 'UserAcl::view/$1');
 $routes->match(['GET', 'POST'], 'UserAcl/userroles/(:any)', 'UserAcl::userroles/$1');

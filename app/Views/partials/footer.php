@@ -36,6 +36,7 @@
     <!-- TAS Libraries -->
     <script src="<?= asset('libraries/tas-lib/js/mains.js?version=' . time()) ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridMonolith.js?version=' . time()) ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridHelper.js?version=' . time()) ?>"></script>
     <!-- <script src="<?= asset('libraries/tas-lib/js/lookup-columns.js?version=' . time()) ?>"></script> -->
     <script src="<?= asset('libraries/tas-lib/js/pager.js?version=' . time()) ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/YearPicker.js?version=' . time()) ?>"></script>
