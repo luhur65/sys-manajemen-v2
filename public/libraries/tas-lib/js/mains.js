@@ -643,7 +643,7 @@ function setCustomBindKeys(grid) {
                             });
                         }
                     } else if (e.keyCode === 33) { // PageUp
-                        var targetAbsIndex = (currentSelectedPage - 2) * serverPageSize;
+                        var targetAbsIndex = currentAbsIndex - visibleRows;
                         if (targetAbsIndex < 0) targetAbsIndex = 0;
 
                         if (targetAbsIndex >= firstDomAbsIndex && targetAbsIndex <= lastDomAbsIndex) {
@@ -670,7 +670,7 @@ function setCustomBindKeys(grid) {
                             });
                         }
                     } else if (e.keyCode === 34) { // PageDown
-                        var targetAbsIndex = currentSelectedPage * serverPageSize;
+                        var targetAbsIndex = currentAbsIndex + visibleRows;
                         if (targetAbsIndex >= totRec) targetAbsIndex = totRec - 1;
 
                         if (targetAbsIndex >= firstDomAbsIndex && targetAbsIndex <= lastDomAbsIndex) {
