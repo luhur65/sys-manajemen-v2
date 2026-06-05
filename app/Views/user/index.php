@@ -487,22 +487,16 @@
             if (res.status === 'sukses') {
                 $('#crudModal').modal('hide');
                 if (action == 'add') {
-                    if(typeof loadGridData === 'function') {
-                        loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'jump', 'page');
-                    } else {
-                        $grid.trigger("reloadGrid");
+                    if(typeof refreshLazyGrid === 'function') {
+                        refreshLazyGrid($grid, apiUrl);
                     }
                 } else if (action == 'edit') {
                     if(typeof refreshLazyGrid === 'function') {
                         refreshLazyGrid($grid, apiUrl);
-                    } else {
-                        $grid.trigger("reloadGrid");
                     }
                 } else if (action == 'del') {
                     if(typeof deleteLazyRow === 'function') {
                         deleteLazyRow($grid, $('#id').val());
-                    } else {
-                        $grid.trigger("reloadGrid");
                     }
                 }
             } else {
