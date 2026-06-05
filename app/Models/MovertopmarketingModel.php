@@ -5,7 +5,7 @@ use CodeIgniter\Model;
 
 // Migrated from CI3: application/models/movertop.php
 
-class MovertopModel extends Model
+class MovertopmarketingModel extends Model
 {
     protected $dbtruck;
     protected $table      = 'movertop';
@@ -64,7 +64,7 @@ class MovertopModel extends Model
         }
 
         $sql = $this->dbtruck->query("SELECT * FROM (
-            SELECT FNTrans, FNInvoice, FNominal, FSisa, FTgl, FTglJT, FSelisih, FTglHariIni, FNShipper, FTOP, FJnsRemind, FJnsJob, 
+            SELECT FNMarketing, FNTrans, FNInvoice, FNominal, FSisa, FTgl, FTglJT, FSelisih, FTglHariIni, FNShipper, FTOP, FJnsRemind, FJnsJob, 
             FNoJob, FBlnJob, FThnJob, FJnsPiutang,
             (ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob)))) as FNTgl,
             ROW_NUMBER() OVER (ORDER BY $surut $sord) AS RowNum 
@@ -92,6 +92,15 @@ class MovertopModel extends Model
 		$data = $this->dbtruck->query($sql);
 
 		return $data;
+	}
+
+    public function get_marketing($where){
+		$sql = $this->dbtruck->query("SELECT DISTINCT FNMarketing FROM LapEMKL_OverDue WHERE FKCABANG ='".$where."'");
+		$hasil = '<option value="">ALL</option>';
+		foreach ($sql->getResult() as $key) {
+		 	$hasil = $hasil.'<option value="'.$key->FNMarketing.'">'.$key->FNMarketing.'</option>';
+		 }
+		return $hasil;
 	}
     public function get_tglupdate($cabangid) {
 		$sql = $this->dbtruck->query("SELECT max(FlastUpdate) as FlastUpdate FROM LapEMKL_OverDue WHERE FKCABANG='" . $cabangid."'");
