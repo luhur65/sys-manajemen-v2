@@ -58,6 +58,7 @@ $routes->match(['GET', 'POST'], 'extension/getalldata/(:any)/(:any)/(:any)/(:any
 $routes->match(['GET', 'POST'], 'extension/getAllData/(:any)/(:any)/(:any)/(:any)', 'Extension::getAllData/$1/$2/$3/$4');
 $routes->match(['GET', 'POST'], 'Extension/getalldata/(:any)/(:any)/(:any)/(:any)', 'Extension::getAllData/$1/$2/$3/$4');
 $routes->match(['GET', 'POST'], 'Extension/getMargin/(:any)', 'Extension::getMargin/$1');
+
 $routes->match(['GET', 'POST'], 'extension/getmargin/(:any)', 'Extension::getMargin/$1');
 $routes->match(['GET', 'POST'], 'extension/getMargin/(:any)', 'Extension::getMargin/$1');
 $routes->match(['GET', 'POST'], 'Extension/getmargin/(:any)', 'Extension::getMargin/$1');
@@ -583,8 +584,15 @@ $routes->match(['GET', 'POST'], 'Truckingemkllaindetailexp/index', 'Truckingemkl
 $routes->match(['GET', 'POST'], 'truckingemkllaindetailexp/index', 'Truckingemkllaindetailexp::index');
 
 // Routes for App\Controllers\Truckinghargatradoluarlebihmahal (Truckinghargatradoluarlebihmahal)
-$routes->match(['GET', 'POST'], 'Truckinghargatradoluarlebihmahal', 'Truckinghargatradoluarlebihmahal::index');
-$routes->match(['GET', 'POST'], 'truckinghargatradoluarlebihmahal', 'Truckinghargatradoluarlebihmahal::index');
+$routes->get('truckinghargatradoluarlebihmahal', 'Truckinghargatradoluarlebihmahal::index');
+$routes->post('truckinghargatradoluarlebihmahal/grid', 'Truckinghargatradoluarlebihmahal::grid');
+
+// Penggunaan Trado Luar (TruckingTradoLuar)
+$routes->get('truckingtradoluar', 'TruckingTradoLuar::index');
+$routes->post('truckingtradoluar/grid', 'TruckingTradoLuar::grid');
+$routes->post('truckingtradoluar/griddetail', 'TruckingTradoLuar::griddetail');
+
+// Menu - Cek Sisa Stok
 $routes->match(['GET', 'POST'], 'Truckinghargatradoluarlebihmahal/index', 'Truckinghargatradoluarlebihmahal::index');
 $routes->match(['GET', 'POST'], 'truckinghargatradoluarlebihmahal/index', 'Truckinghargatradoluarlebihmahal::index');
 
@@ -768,3 +776,218 @@ $routes->match(['GET', 'POST'], 'Parameter/crud', 'Parameter::crud');
 $routes->match(['GET', 'POST'], 'parameter/crud', 'Parameter::crud');
 $routes->match(['GET', 'POST'], 'Parameter/getById', 'Parameter::getById');
 $routes->match(['GET', 'POST'], 'parameter/getById', 'Parameter::getById');
+
+// Routes for App\Controllers\NewShipperCabang (NewShipperCabang)
+$routes->match(['GET', 'POST'], 'NewShipperCabang/mks', 'NewShipperCabang::mks');
+$routes->match(['GET', 'POST'], 'NewShipperCabang/mks', 'NewShipperCabang::mks');
+$routes->match(['GET', 'POST'], 'newshippercabang/mks', 'NewShipperCabang::mks');
+$routes->match(['GET', 'POST'], 'NewShipperCabang/getGridDataMks', 'NewShipperCabang::getGridDataMks');
+$routes->match(['GET', 'POST'], 'newshippercabang/getgriddatamks', 'NewShipperCabang::getGridDataMks');
+
+// Laporan New Shipper (Master)
+$routes->get('NewShipper/index', 'NewShipper::index');
+$routes->post('NewShipper/getGridData', 'NewShipper::getGridData');
+
+// Routes for App\Controllers\Orderan (Orderan)
+$routes->match(['GET', 'POST'], 'Orderan', 'Orderan::index');
+$routes->match(['GET', 'POST'], 'orderan', 'Orderan::index');
+$routes->match(['GET', 'POST'], 'Orderan/index', 'Orderan::index');
+$routes->match(['GET', 'POST'], 'orderan/index', 'Orderan::index');
+$routes->match(['GET', 'POST'], 'Orderan/grid', 'Orderan::grid');
+$routes->match(['GET', 'POST'], 'orderan/grid', 'Orderan::grid');
+
+
+// Routes for App\Controllers\Overtopemkl (Overtopemkl)
+$routes->match(['GET', 'POST'], 'Overtopemkl', 'Overtopemkl::index');
+$routes->match(['GET', 'POST'], 'overtopemkl', 'Overtopemkl::index');
+$routes->match(['GET', 'POST'], 'Overtopemkl/index', 'Overtopemkl::index');
+$routes->match(['GET', 'POST'], 'overtopemkl/index', 'Overtopemkl::index');
+$routes->match(['GET', 'POST'], 'Overtopemkl/grid', 'Overtopemkl::grid');
+$routes->match(['GET', 'POST'], 'overtopemkl/grid', 'Overtopemkl::grid');
+
+
+// Routes for App\Controllers\Overtopemklmarketing (Overtopemklmarketing)
+$routes->match(['GET', 'POST'], 'Overtopemklmarketing', 'Overtopemklmarketing::index');
+$routes->match(['GET', 'POST'], 'overtopemklmarketing', 'Overtopemklmarketing::index');
+$routes->match(['GET', 'POST'], 'Overtopemklmarketing/index', 'Overtopemklmarketing::index');
+$routes->match(['GET', 'POST'], 'overtopemklmarketing/index', 'Overtopemklmarketing::index');
+$routes->match(['GET', 'POST'], 'Overtopemklmarketing/grid', 'Overtopemklmarketing::grid');
+$routes->match(['GET', 'POST'], 'overtopemklmarketing/grid', 'Overtopemklmarketing::grid');
+$routes->match(['GET', 'POST'], 'Overtopemklmarketing/get_marketing', 'Overtopemklmarketing::get_marketing');
+$routes->match(['GET', 'POST'], 'overtopemklmarketing/get_marketing', 'Overtopemklmarketing::get_marketing');
+
+
+// Routes for App\Controllers\Omsetmarketingmdn (Omsetmarketingmdn)
+$routes->match(['GET', 'POST'], 'Omsetmarketingmdn', 'Omsetmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingmdn', 'Omsetmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingmdn/index', 'Omsetmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingmdn/index', 'Omsetmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingmdn/grid', 'Omsetmarketingmdn::grid');
+$routes->match(['GET', 'POST'], 'omsetmarketingmdn/grid', 'Omsetmarketingmdn::grid');
+
+
+// Routes for App\Controllers\Omsetmarketingjkt (Omsetmarketingjkt)
+$routes->match(['GET', 'POST'], 'Omsetmarketingjkt', 'Omsetmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingjkt', 'Omsetmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingjkt/index', 'Omsetmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingjkt/index', 'Omsetmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingjkt/grid', 'Omsetmarketingjkt::grid');
+$routes->match(['GET', 'POST'], 'omsetmarketingjkt/grid', 'Omsetmarketingjkt::grid');
+
+
+// Routes for App\Controllers\Omsetmarketingsby (Omsetmarketingsby)
+$routes->match(['GET', 'POST'], 'Omsetmarketingsby', 'Omsetmarketingsby::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingsby', 'Omsetmarketingsby::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingsby/index', 'Omsetmarketingsby::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingsby/index', 'Omsetmarketingsby::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingsby/grid', 'Omsetmarketingsby::grid');
+$routes->match(['GET', 'POST'], 'omsetmarketingsby/grid', 'Omsetmarketingsby::grid');
+
+
+// Routes for App\Controllers\Omsetmarketingmks (Omsetmarketingmks)
+$routes->match(['GET', 'POST'], 'Omsetmarketingmks', 'Omsetmarketingmks::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingmks', 'Omsetmarketingmks::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingmks/index', 'Omsetmarketingmks::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingmks/index', 'Omsetmarketingmks::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingmks/grid', 'Omsetmarketingmks::grid');
+$routes->match(['GET', 'POST'], 'omsetmarketingmks/grid', 'Omsetmarketingmks::grid');
+
+
+// Routes for App\Controllers\Omsetmarketingsmg (Omsetmarketingsmg)
+$routes->match(['GET', 'POST'], 'Omsetmarketingsmg', 'Omsetmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingsmg', 'Omsetmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingsmg/index', 'Omsetmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingsmg/index', 'Omsetmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingsmg/grid', 'Omsetmarketingsmg::grid');
+$routes->match(['GET', 'POST'], 'omsetmarketingsmg/grid', 'Omsetmarketingsmg::grid');
+
+
+// Routes for App\Controllers\Omsetmarketingbtg (Omsetmarketingbtg)
+$routes->match(['GET', 'POST'], 'Omsetmarketingbtg', 'Omsetmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingbtg', 'Omsetmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingbtg/index', 'Omsetmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'omsetmarketingbtg/index', 'Omsetmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'Omsetmarketingbtg/grid', 'Omsetmarketingbtg::grid');
+$routes->match(['GET', 'POST'], 'omsetmarketingbtg/grid', 'Omsetmarketingbtg::grid');
+
+
+// Routes for App\Controllers\Omsetrekapmarketingmdn (Omsetrekapmarketingmdn)
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmdn', 'Omsetrekapmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmdn', 'Omsetrekapmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmdn/index', 'Omsetrekapmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmdn/index', 'Omsetrekapmarketingmdn::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmdn/grid', 'Omsetrekapmarketingmdn::grid');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmdn/grid', 'Omsetrekapmarketingmdn::grid');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmdn/combomarketing', 'Omsetrekapmarketingmdn::combomarketing');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmdn/combomarketing', 'Omsetrekapmarketingmdn::combomarketing');
+
+
+
+// Routes for App\Controllers\Omsetrekapmarketingjkt
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingjkt', 'Omsetrekapmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingjkt', 'Omsetrekapmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingjkt/index', 'Omsetrekapmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingjkt/index', 'Omsetrekapmarketingjkt::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingjkt/grid', 'Omsetrekapmarketingjkt::grid');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingjkt/grid', 'Omsetrekapmarketingjkt::grid');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingjkt/combomarketing', 'Omsetrekapmarketingjkt::combomarketing');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingjkt/combomarketing', 'Omsetrekapmarketingjkt::combomarketing');
+
+// Routes for App\Controllers\Omsetrekapmarketingsby
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsby', 'Omsetrekapmarketingsby::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsby', 'Omsetrekapmarketingsby::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsby/index', 'Omsetrekapmarketingsby::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsby/index', 'Omsetrekapmarketingsby::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsby/grid', 'Omsetrekapmarketingsby::grid');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsby/grid', 'Omsetrekapmarketingsby::grid');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsby/combomarketing', 'Omsetrekapmarketingsby::combomarketing');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsby/combomarketing', 'Omsetrekapmarketingsby::combomarketing');
+
+// Routes for App\Controllers\Omsetrekapmarketingmks
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmks', 'Omsetrekapmarketingmks::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmks', 'Omsetrekapmarketingmks::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmks/index', 'Omsetrekapmarketingmks::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmks/index', 'Omsetrekapmarketingmks::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmks/grid', 'Omsetrekapmarketingmks::grid');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmks/grid', 'Omsetrekapmarketingmks::grid');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingmks/combomarketing', 'Omsetrekapmarketingmks::combomarketing');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingmks/combomarketing', 'Omsetrekapmarketingmks::combomarketing');
+
+// Routes for App\Controllers\Omsetrekapmarketingsmg
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsmg', 'Omsetrekapmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsmg', 'Omsetrekapmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsmg/index', 'Omsetrekapmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsmg/index', 'Omsetrekapmarketingsmg::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsmg/grid', 'Omsetrekapmarketingsmg::grid');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsmg/grid', 'Omsetrekapmarketingsmg::grid');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingsmg/combomarketing', 'Omsetrekapmarketingsmg::combomarketing');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingsmg/combomarketing', 'Omsetrekapmarketingsmg::combomarketing');
+
+// Routes for App\Controllers\Omsetrekapmarketingbtg
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingbtg', 'Omsetrekapmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingbtg', 'Omsetrekapmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingbtg/index', 'Omsetrekapmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingbtg/index', 'Omsetrekapmarketingbtg::index');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingbtg/grid', 'Omsetrekapmarketingbtg::grid');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingbtg/grid', 'Omsetrekapmarketingbtg::grid');
+$routes->match(['GET', 'POST'], 'Omsetrekapmarketingbtg/combomarketing', 'Omsetrekapmarketingbtg::combomarketing');
+$routes->match(['GET', 'POST'], 'omsetrekapmarketingbtg/combomarketing', 'Omsetrekapmarketingbtg::combomarketing');
+
+
+
+// Routes for App\Controllers\Tracing (Tracing)
+$routes->match(['GET', 'POST'], 'Tracing', 'Tracing::index');
+$routes->match(['GET', 'POST'], 'tracing', 'Tracing::index');
+$routes->match(['GET', 'POST'], 'Tracing/index', 'Tracing::index');
+$routes->match(['GET', 'POST'], 'tracing/index', 'Tracing::index');
+$routes->match(['GET', 'POST'], 'Tracing/grid', 'Tracing::grid');
+$routes->match(['GET', 'POST'], 'tracing/grid', 'Tracing::grid');
+
+
+// Routes for App\Controllers\Grafiktradoluar (Grafiktradoluar)
+$routes->match(['GET', 'POST'], 'Grafiktradoluar', 'Grafiktradoluar::index');
+$routes->match(['GET', 'POST'], 'grafiktradoluar', 'Grafiktradoluar::index');
+$routes->match(['GET', 'POST'], 'Grafiktradoluar/index', 'Grafiktradoluar::index');
+$routes->match(['GET', 'POST'], 'grafiktradoluar/index', 'Grafiktradoluar::index');
+
+
+// Routes for App\Controllers\Grafikemklluar (Grafikemklluar)
+$routes->match(['GET', 'POST'], 'Grafikemklluar', 'Grafikemklluar::index');
+$routes->match(['GET', 'POST'], 'grafikemklluar', 'Grafikemklluar::index');
+$routes->match(['GET', 'POST'], 'Grafikemklluar/index', 'Grafikemklluar::index');
+$routes->match(['GET', 'POST'], 'grafikemklluar/index', 'Grafikemklluar::index');
+
+
+// Routes for App\Controllers\Supirpercabang (Supirpercabang)
+$routes->match(['GET', 'POST'], 'Supirpercabang', 'Supirpercabang::index');
+$routes->match(['GET', 'POST'], 'supirpercabang', 'Supirpercabang::index');
+$routes->match(['GET', 'POST'], 'Supirpercabang/index', 'Supirpercabang::index');
+$routes->match(['GET', 'POST'], 'supirpercabang/index', 'Supirpercabang::index');
+$routes->match(['GET', 'POST'], 'Supirpercabang/grid', 'Supirpercabang::grid');
+$routes->match(['GET', 'POST'], 'supirpercabang/grid', 'Supirpercabang::grid');
+$routes->match(['GET', 'POST'], 'Supirpercabang/detail', 'Supirpercabang::detail');
+$routes->match(['GET', 'POST'], 'supirpercabang/detail', 'Supirpercabang::detail');
+
+// Routes for App\Controllers\Truckingtradoluardetailexp
+$routes->match(['GET', 'POST'], 'Truckingtradoluardetailexp', 'Truckingtradoluardetailexp::index');
+$routes->match(['GET', 'POST'], 'truckingtradoluardetailexp', 'Truckingtradoluardetailexp::index');
+$routes->match(['GET', 'POST'], 'Truckingtradoluardetailexp/index', 'Truckingtradoluardetailexp::index');
+$routes->match(['GET', 'POST'], 'truckingtradoluardetailexp/index', 'Truckingtradoluardetailexp::index');
+$routes->match(['GET', 'POST'], 'Truckingtradoluardetailexp/grid', 'Truckingtradoluardetailexp::grid');
+$routes->match(['GET', 'POST'], 'truckingtradoluardetailexp/grid', 'Truckingtradoluardetailexp::grid');
+
+// Routes for App\Controllers\Truckingtradoluartas
+$routes->match(['GET', 'POST'], 'Truckingtradoluartas/grid', 'Truckingtradoluartas::grid');
+$routes->match(['GET', 'POST'], 'truckingtradoluartas/grid', 'Truckingtradoluartas::grid');
+
+// Routes for App\Controllers\Truckingtradoluartasjkt
+$routes->match(['GET', 'POST'], 'Truckingtradoluartasjkt/grid', 'Truckingtradoluartasjkt::grid');
+$routes->match(['GET', 'POST'], 'truckingtradoluartasjkt/grid', 'Truckingtradoluartasjkt::grid');
+
+// Routes for App\Controllers\Truckingtradoluartasmks
+$routes->match(['GET', 'POST'], 'Truckingtradoluartasmks/grid', 'Truckingtradoluartasmks::grid');
+$routes->match(['GET', 'POST'], 'truckingtradoluartasmks/grid', 'Truckingtradoluartasmks::grid');
+
+// Routes for App\Controllers\Truckingtradoluartassby
+$routes->match(['GET', 'POST'], 'Truckingtradoluartassby/grid', 'Truckingtradoluartassby::grid');
+$routes->match(['GET', 'POST'], 'truckingtradoluartassby/grid', 'Truckingtradoluartassby::grid');

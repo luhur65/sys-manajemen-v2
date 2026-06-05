@@ -480,6 +480,90 @@ input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
     z-index: 9999;
 }
 
+#modalDetailSupir {
+    padding-right: 0px !important;
+    padding-left: 0px !important;
+}
+#modalDetailSupir .modal-dialog {
+    max-width: 100%;
+    margin: 0;
+    height: 100%;
+}
+#modalDetailSupir .modal-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    /* padding: 0!important; */
+    background-color: #ffcc99;
+}
+#modalDetailSupir .modal-body {
+    overflow-y: auto;
+    height: calc(100vh - 81px);
+    /* height: calc(92vh); */
+    /* height: 100%; */
+    border: 0;
+    border-radius: 0;
+    padding-bottom: 4rem;
+}
+#modalDetailSupir .modal-footer {
+    position: sticky;
+    bottom: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: #dcdcdc;
+    z-index: 9999;
+}
+
+#modalDetailSupir .modal-header .modal-title {
+    position: sticky;
+    top: 0;
+    border: 0;
+    border-radius: 0;
+    z-index: 9999;
+}
+
+#modalDetailTradoLuar {
+    padding-right: 0px !important;
+    padding-left: 0px !important;
+}
+#modalDetailTradoLuar .modal-dialog {
+    max-width: 100%;
+    margin: 0;
+    height: 100%;
+}
+#modalDetailTradoLuar .modal-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    /* padding: 0!important; */
+    background-color: #ffcc99;
+}
+#modalDetailTradoLuar .modal-body {
+    overflow-y: auto;
+    height: calc(100vh - 81px);
+    /* height: calc(92vh); */
+    /* height: 100%; */
+    border: 0;
+    border-radius: 0;
+    padding-bottom: 4rem;
+}
+#modalDetailTradoLuar .modal-footer {
+    position: sticky;
+    bottom: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: #dcdcdc;
+    z-index: 9999;
+}
+
+#modalDetailTradoLuar .modal-header .modal-title {
+    position: sticky;
+    top: 0;
+    border: 0;
+    border-radius: 0;
+    z-index: 9999;
+}
+
 
 .modal-full {
     padding-right: 0px !important;
@@ -2209,3 +2293,28 @@ body.dark-mode .ui-jqgrid tr.myfootrow td {
 .ui-search-input input {
 		padding-right: 25px !important;
 }
+
+
+/* YearPicker styling fix */
+.year-picker { background: #fff; border: 1px solid #ccc; padding: 10px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1); }
+.month-picker-month-table td { text-align: center; padding: 2px; }
+.month-picker-month-table a { padding: 5px 10px; display: block; cursor: pointer; text-decoration: none;}
+.month-picker-month-table a:hover { background: #007bff; color: white; border-radius: 4px; }
+.month-picker-month-table a.ui-state-active { background: #e0e4e9ff; color: white; border-radius: 4px; font-weight: bold;}
+.month-picker-header { text-align: center; margin-bottom: 5px; font-weight: bold; }
+.month-picker-year-table { width: 100%; }
+
+/* Dark Mode styling */
+body.dark-mode .year-picker { background: #343a40; border-color: #6c757d; color: #fff; }
+body.dark-mode .month-picker-month-table a { color: #fff; }
+body.dark-mode .month-picker-month-table a:hover { background: #454d55; color: #fff; }
+body.dark-mode .month-picker-month-table a.ui-state-active { background: #007bff; color: #fff; }
+body.dark-mode .month-picker-header { color: #fff; background: transparent; }
+
+body.dark-mode .ui-datepicker { background: #343a40 !important; border: 1px solid #6c757d; color: #fff; }
+body.dark-mode .ui-datepicker .ui-datepicker-header { background: #343a40 !important; color: #fff !important; border-bottom: 1px solid #6c757d; }
+body.dark-mode .ui-datepicker .ui-state-default { background: #343a40 !important; color: #fff !important; border: 1px solid #6c757d !important; }
+body.dark-mode .ui-datepicker .ui-state-hover { background: #454d55 !important; color: #fff !important; }
+body.dark-mode .ui-datepicker .ui-state-active { background: #007bff !important; color: #fff !important; }
+body.dark-mode .ui-widget-content { background: #343a40; color: #fff; }
+body.dark-mode .ui-widget-header a { color: #fff; }

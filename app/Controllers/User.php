@@ -42,10 +42,10 @@ class User extends BaseController
         $where1 = " WHERE 1=1 ";
         $where2 = "";
 
-        if ($search === "true" && !empty($filters)) {
-            $parsedFilters = json_decode($filters);
-            if (!empty($parsedFilters->rules)) {
-                $where2 = " AND (" . $this->operation($filters) . ")";
+        if ($search == "true" && !empty($filters)) {
+            $operation = trim($this->operation($filters));
+            if (!empty($operation)) {
+                $where2 = " AND (" . $operation . ")";
             }
         }
         $where = $where1 . " " . $where2;

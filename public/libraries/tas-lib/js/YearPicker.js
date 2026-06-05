@@ -15,9 +15,9 @@
                 <div class="ui-widget-header month-picker-header ui-corner-all">
                     <table class="month-picker-year-table">
                         <tr>
-                            <td class="month-picker-previous"><a class="prev-12"></a></td>
+                            <td class="month-picker-previous"><a class="prev-12 ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" style="cursor: pointer;"><span class="ui-button-icon-primary ui-icon ui-icon-circle-triangle-w"></span><span class="ui-button-text"></span></a></td>
                             <td class="month-picker-title"><a class="year-range"></a></td>
-                            <td class="month-picker-next"><a class="next-12"></a></td>
+                            <td class="month-picker-next"><a class="next-12 ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" style="cursor: pointer;"><span class="ui-button-icon-primary ui-icon ui-icon-circle-triangle-e"></span><span class="ui-button-text"></span></a></td>
                         </tr>
                     </table>
                 </div>
@@ -54,11 +54,15 @@
       }
 
       // Navigasi 12 Tahun (Sesuai i18n prev12Years/next12Years) 
-      $container.find('.prev-12').button({ icons: { primary: 'ui-icon-circle-triangle-w' }, text: false }).click(() => {
+      $container.find('.prev-12').click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
         currentBaseYear -= 12;
         renderYears(currentBaseYear);
       });
-      $container.find('.next-12').button({ icons: { primary: 'ui-icon-circle-triangle-e' }, text: false }).click(() => {
+      $container.find('.next-12').click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
         currentBaseYear += 12;
         renderYears(currentBaseYear);
       });
