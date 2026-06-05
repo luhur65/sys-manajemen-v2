@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\MtruckingtradoluarModel;
 
-class TruckingTradoLuar extends BaseController
+class Truckingtradoluar extends BaseController
 {
     protected $mtruckingtradoluarModel;
 
