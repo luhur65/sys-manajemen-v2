@@ -114,7 +114,7 @@
             ],
             autowidth: true,
             // shrinkToFit: isDesktop,
-            height: isDesktop ? 450 : 350,
+            height: 400,
             rowNum: rowNum,
             toolbar: [true, "top"],
             rowList: [10, 20, 50, 100, 500],

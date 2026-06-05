@@ -119,7 +119,7 @@
             ],
             autowidth: true,
             shrinkToFit: false,
-            height: 350,
+            height: 400,
             rowNum: rowNum,
             rownumbers: true,
             rownumWidth: 45,
