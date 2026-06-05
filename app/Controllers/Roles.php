@@ -109,9 +109,10 @@ class Roles extends BaseController
                 }
                 
                 $status = $this->rolesModel->saveData($data);
+                $dbError = $this->rolesModel->db->error();
                 return $this->response->setJSON([
                     'status' => $status ? 'sukses' : 'gagal',
-                    'message' => $status ? '' : json_encode($this->rolesModel->errors())
+                    'message' => $status ? '' : ($dbError['message'] ?? json_encode($this->rolesModel->errors()))
                 ]);
             } elseif ($action == 'del') {
                 $status = $this->rolesModel->deleteRole($id);
@@ -191,5 +192,21 @@ class Roles extends BaseController
             $where = " ";
         }
         return $where;
+    }
+
+    public function test_roles()
+    {
+        $data = [
+            'roleid' => 3,
+            'rolename' => 'ADMIN',
+            'role_permission' => [
+                'acos' => [59, 20, 22, 21, 18, 23, 19, 40, 39, 47, 46, 48, 49, 51, 50, 52, 53, 44, 45, 3, 5, 4, 6, 1, 2, 43, 56, 9, 11, 10, 7, 8, 25, 30, 26, 24, 33, 32, 35, 36, 37, 38, 14, 16, 15, 12, 13, 17]
+            ]
+        ];
+        $status = $this->rolesModel->saveData($data);
+        $dbError = $this->rolesModel->db->error();
+        echo "Status: " . ($status ? 'sukses' : 'gagal') . "\n";
+        echo "DB Error: ";
+        print_r($dbError);
     }
 }

@@ -106,6 +106,8 @@ class RolesModel extends Model
                 }
                 $this->saveRolePermission($id, $acos);
             } else {
+                $error = $this->db->error();
+                file_put_contents(WRITEPATH . 'logs/roles_update_error.txt', date('Y-m-d H:i:s') . ' - Update Error: ' . print_r($error, true) . "\n", FILE_APPEND);
                 $this->db->transRollback();
                 return false;
             }
@@ -124,6 +126,8 @@ class RolesModel extends Model
         }
 
         if ($this->db->transStatus() === false) {
+            $error = $this->db->error();
+            file_put_contents(WRITEPATH . 'logs/roles_db_error.txt', date('Y-m-d H:i:s') . ' - DB Error: ' . print_r($error, true) . "\n", FILE_APPEND);
             $this->db->transRollback();
             return false;
         } else {
@@ -177,42 +181,49 @@ class RolesModel extends Model
     {
         $insert = [];
         if (isset($data['acos'])) {
+            $data['acos'] = array_unique($data['acos']);
             $records = $this->getListAll('tblacl', ['roleid' => $data['roleid']], true);
             if (empty($records)) {
+                $maxQuery = $this->db->query("SELECT ISNULL(MAX(aclid), 0) as max_id FROM tblacl");
+                $maxId = (int)$maxQuery->getRow()->max_id;
                 foreach ($data['acos'] as $aco) {
-                    $insert[] = [
-                        'roleid' => $data['roleid'],
-                        'acoid' => $aco,
-                        'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
-                        'modifiedon' => date("Y-m-d H:i:s")
-                    ];
-                }
-                if (count($insert) > 0) {
-                    $this->db->table('tblacl')->insertBatch($insert);
+                    $maxId++;
+                    try {
+                        $this->db->table('tblacl')->insert([
+                            'aclid' => $maxId,
+                            'roleid' => $data['roleid'],
+                            'acoid' => $aco,
+                            'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
+                            'modifiedon' => date("Y-m-d H:i:s")
+                        ]);
+                    } catch (\Exception $e) {
+                        file_put_contents(WRITEPATH . 'logs/roles_db_error.txt', date('Y-m-d H:i:s') . ' - Insert Error (New): ' . $e->getMessage() . "\n", FILE_APPEND);
+                    }
                 }
                 return true;
             } else {
-                $records = $this->getListByGroup(['r.roleid' => $data['roleid']]);
-                
-                $existingAcos = [];
-                if (!empty($records) && isset($records[0]['acos']) && !empty($records[0]['acos'])) {
-                    $existingAcos = strpos($records[0]['acos'], ',') === false ? [trim($records[0]['acos'])] : explode(',', trim($records[0]['acos']));
-                }
+                $existingAcos = array_column($records, 'acoid');
                 
                 $inserts = array_diff($data['acos'], $existingAcos);
                 $removes = array_diff($existingAcos, $data['acos']);
                 
                 if (!empty($inserts)) {
-                    $insert = [];
+                    $maxQuery = $this->db->query("SELECT ISNULL(MAX(aclid), 0) as max_id FROM tblacl");
+                    $maxId = (int)$maxQuery->getRow()->max_id;
                     foreach ($inserts as $val) {
-                        $insert[] = [
-                            'roleid' => $data['roleid'],
-                            'acoid' => $val,
-                            'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
-                            'modifiedon' => date("Y-m-d H:i:s")
-                        ];
+                        $maxId++;
+                        try {
+                            $this->db->table('tblacl')->insert([
+                                'aclid' => $maxId,
+                                'roleid' => $data['roleid'],
+                                'acoid' => $val,
+                                'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
+                                'modifiedon' => date("Y-m-d H:i:s")
+                            ]);
+                        } catch (\Exception $e) {
+                            file_put_contents(WRITEPATH . 'logs/roles_db_error.txt', date('Y-m-d H:i:s') . ' - Insert Error: ' . $e->getMessage() . "\n", FILE_APPEND);
+                        }
                     }
-                    $this->db->table('tblacl')->insertBatch($insert);
                 }
                 
                 if (!empty($removes)) {

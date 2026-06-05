@@ -103,7 +103,7 @@
         $grid.jqGrid({
             url: apiUrl,
             mtype: "POST",
-            datatype: "json",
+            datatype: "local",
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
@@ -277,6 +277,26 @@
         
         $('#crudModal').on('hidden.bs.modal', function () {
             $('.modal-loader').addClass('d-none');
+        });
+
+        if(typeof loadGridData === 'function') {
+            loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
+        }
+
+        // Logic for clear search button
+        $(document).on('keyup input', '.ui-search-input input', function() {
+            const $input = $(this);
+            const $clearBtn = $input.closest('tr').find('.clearsearchclass');
+
+            if ($input.val().length > 0) {
+                $clearBtn.attr('style', 'display: flex !important');
+            } else {
+                $clearBtn.attr('style', 'display: none !important');
+            }
+        });
+
+        $(document).on('click', '.clearsearchclass', function() {
+            $(this).attr('style', 'display: none !important');
         });
     });
 
