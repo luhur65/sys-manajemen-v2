@@ -1,47 +1,69 @@
 <?php
 namespace App\Controllers;
 
-use App\Models\MomsetModel;
+use App\Models\MomsetrekapmarketingjktModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
-class Omset extends BaseController
+class Omsetrekapmarketingjkt extends BaseController
 {
-    protected $momsetModel;
+    protected $momsetrekapmarketingjktModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->momsetModel = new MomsetModel();
+        $this->momsetrekapmarketingjktModel = new MomsetrekapmarketingjktModel();
         date_default_timezone_set("Asia/Jakarta");
         ini_set('memory_limit', '-1');
     }
 
     public function index()
     {
-        $data['menuaktif'] = 'Laporan Omset';
-        $data['title'] = 'Laporan Omset';
+        $data['menuaktif'] = 'Laporan Rekap Omset Marketing Jakarta';
+        $data['title'] = 'Laporan Rekap Omset Marketing Jakarta';
         
         $data['last_update'] = '';
-        $tgllast = $this->momsetModel->get_tglupdate('MDN'); // Default MDN
+        $tgllast = $this->momsetrekapmarketingjktModel->get_tglupdate();
         if(!empty($tgllast)) {
             $data['last_update'] = date("d-m-Y h:i:s", strtotime($tgllast[0]->FlastUpdate));
         }
         
-        return $this->render('trucking/omset', $data);
+        return $this->render('omsetrekapmarketingjkt/index', $data);
+    }
+    
+    public function combomarketing()
+    {
+        $jenis = $this->request->getGet('jenis');
+        $nilai = $this->request->getGet('nilai'); // either bulan or tahun
+        
+        $dataArr = [];
+        if ($jenis == 'bln' && !empty($nilai)) {
+            $res = $this->momsetrekapmarketingjktModel->getMarketingByBulan($nilai);
+            foreach ($res as $row) {
+                $dataArr[] = ['FNMarketing' => $row->FNMarketing];
+            }
+        } else if ($jenis == 'thn' && !empty($nilai)) {
+            $res = $this->momsetrekapmarketingjktModel->getMarketingByTahun($nilai);
+            foreach ($res as $row) {
+                $dataArr[] = ['FNMarketing' => $row->FNMarketing];
+            }
+        }
+        
+        return $this->response->setJSON(['data' => $dataArr]);
     }
 
     public function grid()
     {
         $page = $this->request->getPost('page') ?: 1;
         $limit = $this->request->getPost('rows') ?: 50;
-        $sidx = $this->request->getPost('sidx') ?: 'FTgl';
+        $sidx = $this->request->getPost('sidx') ?: '';
         $sord = $this->request->getPost('sord') ?: 'desc';
         
-        $cabang = $this->request->getPost('cabang') ?: 'MDN';
-        $tgl_dari = $this->request->getPost('tgl_dari');
-        $tgl_sampai = $this->request->getPost('tgl_sampai');
+        $jenis = $this->request->getPost('jenis'); // bln or thn
+        $bln = $this->request->getPost('bln');
+        $thn = $this->request->getPost('thn');
+        $marketing = $this->request->getPost('marketing');
 
         $filters = $this->request->getPost('filters');
         $search = $this->request->getPost('_search');
@@ -52,13 +74,17 @@ class Omset extends BaseController
             $where = " AND (" . $this->operationAll($filters) . ")";
         }
         
-        if (!empty($tgl_dari) && !empty($tgl_sampai)) {
-            // Usually we convert date format from dd-MM-yyyy to yyyy-MM-dd if needed,
-            // but let's assume the frontend sends yyyy-MM-dd
-            $where .= " AND FTgl >= '" . $tgl_dari . "' AND FTgl <= '" . $tgl_sampai . " 23:59:59'";
+        if ($jenis == 'bln' && !empty($bln)) {
+            $where .= " AND FBulan = '" . addslashes($bln) . "'";
+        } else if ($jenis == 'thn' && !empty($thn)) {
+            $where .= " AND FBulan LIKE '%" . addslashes($thn) . "'";
+        }
+        
+        if (!empty($marketing) && $marketing != 'ALL') {
+            $where .= " AND FNMarketing = '" . addslashes($marketing) . "'";
         }
 
-        $sql = $this->momsetModel->count($where, $cabang);
+        $sql = $this->momsetrekapmarketingjktModel->count($where);
         $count = $sql->getNumRows();
         
         if ($count > 0) {
@@ -72,9 +98,9 @@ class Omset extends BaseController
         $start = $limit * $page - $limit;
         if ($start < 0) $start = 0;
 
-        $data = $this->momsetModel->get($where, $sidx, $sord, $limit, $start, $cabang);
-        $grandTotal = $this->momsetModel->getGrandTotal($where, $cabang);
-        $tglUpdateData = $this->momsetModel->get_tglupdate($cabang);
+        $data = $this->momsetrekapmarketingjktModel->get($where, $sidx, $sord, $limit, $start);
+        $grandTotal = $this->momsetrekapmarketingjktModel->getGrandTotal($where);
+        $tglUpdateData = $this->momsetrekapmarketingjktModel->get_tglupdate();
         $lastUpdate = (!empty($tglUpdateData) && !empty($tglUpdateData[0]->FlastUpdate)) 
             ? date("d-m-Y h:i:s", strtotime($tglUpdateData[0]->FlastUpdate)) : '';
 
@@ -94,16 +120,19 @@ class Omset extends BaseController
             'GrandTotalProfit' => $grandTotal->TotalProfit ?? 0
         ];
         
+        $responce->rows = [];
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $margin = 0;
-            if((float)$row->FOmset != 0) {
-                $margin = ((float)$row->FProfit / (float)$row->FOmset) * 100;
-            }
+            $responce->rows[$i]['id']   = $i + $start; 
             
-            $responce->rows[$i]['id']   = $i + $start;
+            $margin = 0;
+            if (floatval($row->FOmset) != 0) {
+                $margin = (floatval($row->FProfit) / floatval($row->FOmset)) * 100;
+            }
+
             $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                $row->FBulan,
+                $row->FNMarketing,
                 $row->FJumlahMuatan,
                 $row->FJumlahBongkaran,
                 $row->FJumlahExim,

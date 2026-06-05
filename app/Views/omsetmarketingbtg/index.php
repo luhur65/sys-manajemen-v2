@@ -8,19 +8,6 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
-                        <label class="filter-label">Cabang</label>
-                        <select id="cabangSelect" class="form-control select2">
-                            <option value="MDN" selected>MEDAN</option>
-                            <option value="JKT">JAKARTA</option>
-                            <option value="SBY">SURABAYA</option>
-                            <option value="MKS">MAKASSAR</option>
-                            <option value="SMG">SEMARANG</option>
-                            <option value="BTG">BITUNG</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Dari</label>
                         <input type="text" class="form-control" id="tgl_dari" autocomplete="off">
                     </div>
@@ -45,7 +32,7 @@
     <!-- Grid Card -->
     <div class="card card-default">
         <div class="card-header">
-            <h3 class="card-title">DATA OMSET EMKL - CABANG MEDAN</h3>
+            <h3 class="card-title">DATA OMSET MARKETING - CABANG BITUNG</h3>
         </div>
         <div class="card-body p-0">
             <table id="jqGrid"></table>
@@ -69,7 +56,7 @@
         let sortname = 'FTgl'
         let sortorder = 'desc'
         let rowNum = 50
-        const apiUrl = `<?= base_url('omset/grid') ?>`;
+        const apiUrl = `<?= base_url('omsetmarketingbtg/grid') ?>`;
         const $grid = $("#jqGrid");
         const formatMoney = (val) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
 
@@ -97,13 +84,18 @@
             mtype: "POST", // we use post
             datatype: "local",
             postData: {
-                cabang: function() { return $('#cabangSelect').val(); },
                 tgl_dari: function() { return $('#tgl_dari').val(); },
                 tgl_sampai: function() { return $('#tgl_sampai').val(); }
             },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
+                {
+                    label: 'Marketing',
+                    name: 'FNMarketing',
+                    index: 'FNMarketing',
+                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                },
                 {
                     label: 'Tgl',
                     name: 'FTgl',
@@ -247,7 +239,7 @@
                 }
 
                 $(document).off('keydown.grid');
-                setCustomBindKeys($gridObj);
+                if(typeof setCustomBindKeys === 'function') setCustomBindKeys($gridObj);
 
                 sortname = $(this).jqGrid("getGridParam", "sortname")
                 sortorder = $(this).jqGrid("getGridParam", "sortorder")
@@ -355,13 +347,10 @@
             if (typeof cachedData !== 'undefined') cachedData = {};
             $grid.jqGrid('setGridParam', {
                 postData: {
-                    cabang: $('#cabangSelect').val(),
                     tgl_dari: $('#tgl_dari').val(),
                     tgl_sampai: $('#tgl_sampai').val()
                 }
             });
-            const cabangText = $('#cabangSelect option:selected').text();
-            $('.card-title').text('DATA OMSET EMKL - CABANG ' + cabangText);
             
             if(typeof loadGridData === 'function') {
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
