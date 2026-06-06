@@ -19,11 +19,21 @@ let lg_dekstop_4 = "600px";
 let lg_dekstop_5 = "650px";
 
 // Disable jqGrid row hover globally
-$(document).ready(function() {
-    if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
-        $.extend($.jgrid.defaults, { hoverrows: false });
+if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
+    $.extend($.jgrid.defaults, { hoverrows: false });
+}
+// Remove table-hover class from Bootstrap UI defaults if it exists
+if (typeof $.jgrid !== 'undefined' && $.jgrid.styleUI) {
+    if ($.jgrid.styleUI.Bootstrap) {
+        $.jgrid.styleUI.Bootstrap.table.className = $.jgrid.styleUI.Bootstrap.table.className.replace('table-hover', '');
     }
-});
+    if ($.jgrid.styleUI.Bootstrap4) {
+        $.jgrid.styleUI.Bootstrap4.table.className = $.jgrid.styleUI.Bootstrap4.table.className.replace('table-hover', '');
+    }
+    if ($.jgrid.styleUI.Bootstrap5) {
+        $.jgrid.styleUI.Bootstrap5.table.className = $.jgrid.styleUI.Bootstrap5.table.className.replace('table-hover', '');
+    }
+}
 let sm_mobile_1 = "150px";
 let sm_mobile_2 = "200px";
 let sm_mobile_3 = "250px";
