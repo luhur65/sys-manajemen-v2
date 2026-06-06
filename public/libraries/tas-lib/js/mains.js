@@ -24,13 +24,13 @@ if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
 }
 // Remove table-hover class from Bootstrap UI defaults if it exists
 if (typeof $.jgrid !== 'undefined' && $.jgrid.styleUI) {
-    if ($.jgrid.styleUI.Bootstrap) {
+    if ($.jgrid.styleUI.Bootstrap && $.jgrid.styleUI.Bootstrap.table) {
         $.jgrid.styleUI.Bootstrap.table.className = $.jgrid.styleUI.Bootstrap.table.className.replace('table-hover', '');
     }
-    if ($.jgrid.styleUI.Bootstrap4) {
+    if ($.jgrid.styleUI.Bootstrap4 && $.jgrid.styleUI.Bootstrap4.table) {
         $.jgrid.styleUI.Bootstrap4.table.className = $.jgrid.styleUI.Bootstrap4.table.className.replace('table-hover', '');
     }
-    if ($.jgrid.styleUI.Bootstrap5) {
+    if ($.jgrid.styleUI.Bootstrap5 && $.jgrid.styleUI.Bootstrap5.table) {
         $.jgrid.styleUI.Bootstrap5.table.className = $.jgrid.styleUI.Bootstrap5.table.className.replace('table-hover', '');
     }
 }
