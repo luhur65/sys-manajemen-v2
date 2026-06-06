@@ -18,6 +18,12 @@ let lg_dekstop_3 = "550px";
 let lg_dekstop_4 = "600px";
 let lg_dekstop_5 = "650px";
 
+// Disable jqGrid row hover globally
+$(document).ready(function() {
+    if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
+        $.extend($.jgrid.defaults, { hoverrows: false });
+    }
+});
 let sm_mobile_1 = "150px";
 let sm_mobile_2 = "200px";
 let sm_mobile_3 = "250px";
