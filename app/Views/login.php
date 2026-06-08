@@ -287,9 +287,9 @@
     body.dark-mode .verdant-footnote { color: var(--muted-dark); }
     
     @media (max-width: 576px) {
-      .verdant-login-card { padding: 3.5rem 1.25rem 2rem 1.25rem; border: none; background: transparent; box-shadow: none; }
-      body.dark-mode .verdant-login-card { background: transparent; border: none; box-shadow: none; }
+      .verdant-login-card { padding: 3.5rem 1.25rem 2rem 1.25rem; }
       .verdant-nav-text { display: none; }
+      .verdant-seal { letter-spacing: 0.15em; font-size: 0.75rem; }
     }
   </style>
 </head>
