@@ -177,6 +177,7 @@
       color: var(--sage-deep-light);
       font-size: 0.8rem; font-weight: 600; letter-spacing: 0.32em; text-align: center;
       margin-top: 1rem; margin-bottom: 1.5rem;
+      text-transform: uppercase !important;
       animation: verdant-reveal 0.8s cubic-bezier(0.16,1,0.3,1) 0.08s both;
     }
     body.dark-mode .verdant-seal { color: var(--sage-deep-dark); }
