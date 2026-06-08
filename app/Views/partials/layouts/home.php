@@ -1,5 +1,5 @@
 <!-- Content Wrapper. Contains page content -->
-<div class="content-wrapper">
+<div class="content-wrapper container-fluid">
     <!-- Content Header (Page header) -->
     <div class="content-header">
         <div class="container-fluid">
@@ -22,7 +22,9 @@
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
-            <?= view($template, $data) ?>
+            <?php if (isset($template) && $template !== '') { ?>
+                <?= view($template, $data) ?>
+            <?php } ?>
         </div>
     </section>
     <!-- /.content -->

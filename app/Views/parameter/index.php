@@ -1,20 +1,8 @@
 
-<div class="container-fluid">
-    <div class="row mb-2">
-        <div class="col-sm-12">
-            <!-- Pager buttons will appear here -->
-        </div>
-    </div>
-
-    <!-- Grid Card -->
-    <div class="card card-default">
-        <div class="card-header">
-            <h3 class="card-title">MASTER PARAMETER</h3>
-        </div>
-        <div class="card-body p-0">
-            <table id="jqGrid"></table>
-            <div id="jqGridPager"></div>
-        </div>
+<div class="row">
+    <div class="col-12">
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
     </div>
 </div>
 
@@ -158,7 +146,7 @@
             ],
             autowidth: true,
             shrinkToFit: false,
-            height: 350,
+            height: 400,
             rowNum: rowNum,
             toolbar: [true, "top"],
             rowList: [10, 20, 50, 100],
@@ -318,6 +306,8 @@
         $('#action').val('add');
         $('#crudModalLabel').text('Tambah Data Parameter');
         $('#btnSave').show();
+        $('#btnSave').removeClass('btn-danger').addClass('btn-primary');
+        $('#btnSave').html('<i class="fa fa-save"></i> Save');
         disableFields(false);
         $('#crudModal').modal('show');
     }
@@ -334,6 +324,8 @@
             $('#parametermemo').val(data.parametermemo);
             $('#crudModalLabel').text('Edit Data Parameter');
             $('#btnSave').show();
+            $('#btnSave').removeClass('btn-danger').addClass('btn-primary');
+            $('#btnSave').html('<i class="fa fa-save"></i> Save');
             disableFields(false);
             $('#crudModal').modal('show');
         }).fail(function() {
@@ -360,24 +352,27 @@
         });
     }
 
-    function reloadGrid() {
-        if (typeof cachedData !== 'undefined') cachedData = {};
-        $grid.jqGrid('clearGridData');
-        let freshPostData = $grid.jqGrid('getGridParam', 'postData');
-        loadGridData("#jqGrid", apiUrl, freshPostData, 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
-    }
-
-    function deleteData(id) {
-        $('.modal-loader').addClass('d-none');
-        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-            $.post(crudUrl, {action: 'delete', parameter_key: id}, function(res) {
-                if (res.status === 'sukses') {
-                    reloadGrid();
-                } else {
-                    alert('Gagal menghapus data.');
-                }
-            });
-        }
+    function deleteData(selectedId) {
+        $.post(getUrl, {id: selectedId}, function(data) {
+            $('.modal-loader').addClass('d-none');
+            $('#fm')[0].reset();
+            $('#action').val('delete');
+            $('#parameter_key').val(data.parameter_key);
+            $('#parametergrpid').val(data.parametergrpid);
+            $('#parameterid').val(data.parameterid);
+            $('#parametertext').val(data.parametertext);
+            $('#parametermemo').val(data.parametermemo);
+            $('#crudModalLabel').text('Hapus Data Parameter');
+            
+            $('#btnSave').show();
+            $('#btnSave').removeClass('btn-primary').addClass('btn-danger');
+            $('#btnSave').html('<i class="fa fa-trash"></i> Delete');
+            
+            disableFields(true);
+            $('#crudModal').modal('show');
+        }).fail(function() {
+            $('.modal-loader').addClass('d-none');
+        });
     }
 
     function disableFields(status) {
@@ -389,13 +384,21 @@
 
     $('#fm').on('submit', function(e) {
         e.preventDefault();
+        let action = $('#action').val();
+        
         $.post(crudUrl, $(this).serialize(), function(res) {
             if (res.status === 'sukses') {
-                $('#crudModal').modal('hide');
                 if (res.id) {
                     id = String(res.id);
                 }
-                reloadGrid();
+                
+                $('#crudModal').modal('hide');
+                
+                if (action == 'add' || action == 'edit') {
+                    refreshLazyGrid($grid, apiUrl);
+                } else if (action == 'delete') {
+                    deleteLazyRow($grid, $('#parameter_key').val());
+                }
             } else {
                 alert('Terjadi kesalahan saat menyimpan data.');
             }

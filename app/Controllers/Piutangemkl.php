@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\MovertopModel;
+use App\Models\MpiutangemklModel;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -12,12 +12,12 @@ use Psr\Log\LoggerInterface;
 
 class Piutangemkl extends BaseController
 {
-    protected $movertopModel;
+    protected $mpiutangemklModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-        $this->movertopModel = new MovertopModel();
+        $this->mpiutangemklModel = new MpiutangemklModel();
 
         date_default_timezone_set("Asia/Jakarta");
         ini_set('memory_limit', '-1');
@@ -68,7 +68,7 @@ class Piutangemkl extends BaseController
             $where .= " AND (FJnsPiutang = '' OR FJnsPiutang IS NULL)";
         }
 
-        $sql = $this->movertopModel->count($where, $cabang);
+        $sql = $this->mpiutangemklModel->count($where, $cabang);
         $count = $sql->getNumRows();
         
         if ($count > 0) {
@@ -81,8 +81,8 @@ class Piutangemkl extends BaseController
         $start = $limit * $page - $limit;
         if ($start < 0) $start = 0;
 
-        $data = $this->movertopModel->get($where, $sidx, $sord, $limit, $start, $cabang);
-        $grandTotal = $this->movertopModel->getGrandTotal($where, $cabang);
+        $data = $this->mpiutangemklModel->get($where, $sidx, $sord, $limit, $start, $cabang);
+        $grandTotal = $this->mpiutangemklModel->getGrandTotal($where, $cabang);
         
         $responce = new \stdClass();
         $responce->page = $page;
@@ -92,20 +92,20 @@ class Piutangemkl extends BaseController
         foreach ($data->getResult() as $row) {
             $responce->rows[$i]['id']   = $row->FNTrans;
             $responce->rows[$i]['cell'] = array(
-                $row->FTgl,
+                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
                 $row->FNTrans,
                 $row->FNInvoice,
                 $row->FNShipper,
                 $row->FNominal,
                 $row->FSisa,
                 $row->FTOP,
-                $row->FTglJT,
+                $row->FTglJT ? date('d-M-Y', strtotime($row->FTglJT)) : '',
                 $row->FSelisih,
                 $row->FJnsRemind,
                 $row->FNoJob,
                 $row->FBlnJob,
                 $row->FThnJob,
-                $row->FNTgl,
+                $row->FNTgl ? date('d-M-Y', strtotime($row->FNTgl)) : '',
                 $row->FJnsJob,
                 $row->FJnsPiutang
             );
@@ -124,7 +124,7 @@ class Piutangemkl extends BaseController
 
     public function getlastupdate($cabangid)
     {
-        $tgllast = $this->movertopModel->get_tglupdate($cabangid);
+        $tgllast = $this->mpiutangemklModel->get_tglupdate($cabangid);
         $hasil = "";
         foreach ($tgllast as $key) {
             $hasil = $key->FlastUpdate;

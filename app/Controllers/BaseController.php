@@ -92,6 +92,11 @@ abstract class BaseController extends Controller
             $fieldName = $rule->field;
             $fieldData = $rule->data; // TODO: Implement proper escaping if not using Query Builder
 
+            $numericColumns = ['FNOMINAL', 'FSISA', 'FSELISIH', 'FTOP', 'FJUMLAHMUATAN', 'FJUMLAHBONGKARAN', 'FJUMLAHEXIM', 'FOMSET', 'FBIAYALAPANGAN', 'FNOMPPH23', 'FPROFIT', 'FMARGIN'];
+            if (in_array(strtoupper($fieldName), $numericColumns)) {
+                $fieldData = str_replace(',', '', $fieldData);
+            }
+
             switch ($rule->op) {
                 case "eq":
                     $fieldOperation = " = '" . $fieldData . "'";
@@ -147,7 +152,12 @@ abstract class BaseController extends Controller
             }
 
             if ($fieldOperation != "") {
-                $whereArray[] = $fieldName . $fieldOperation;
+                $dateColumns = ['FTGL', 'FTGLJT', 'FNTGL'];
+                if (in_array(strtoupper($fieldName), $dateColumns)) {
+                    $whereArray[] = "FORMAT(CAST(" . $fieldName . " AS DATETIME), 'dd-MMM-yyyy', 'en-US')" . $fieldOperation;
+                } else {
+                    $whereArray[] = $fieldName . $fieldOperation;
+                }
             }
         }
 

@@ -10,8 +10,9 @@ class MuserModel extends Model
 {
     protected $table = 'tbluser';
     protected $primaryKey = 'userpk';
+    protected $useAutoIncrement = true;
     protected $returnType = 'object';
-    protected $allowedFields = ['userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif'];
+    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif'];
     protected $useTimestamps = false;
 
     protected $alias = 'u';
@@ -76,7 +77,7 @@ class MuserModel extends Model
     {
         $this->db->transStart();
         $data['modifiedon'] = date("Y-m-d H:i:s");
-        $data['modifiedby'] = strtoupper(session()->get(SESSION_NAME.'username') ?? '');
+        $data['modifiedby'] = strtoupper(session()->get('USERNAME') ?? 'SYSTEM');
 
         // encrypt the password
         if (isset($data['password']) && !empty($data['password'])) {
@@ -102,8 +103,9 @@ class MuserModel extends Model
         } else {
             $save = $this->_preFormat($data); // format untuk field
             $save['aktif'] = 0;
+            
             $id = $this->insert($save, true);
-            if ($id) {
+            if ($id !== false) {
                 if (isset($data['user_roles'])) {
                     $this->saveUserRoles($id, $data['user_roles']);
                 }
@@ -125,11 +127,7 @@ class MuserModel extends Model
     public function saveUserRoles($userpk, $roles)
     {
         $muserroles = new \App\Models\MuserrolesModel();
-        // Assuming saveBatch is a custom method in MuserrolesModel or we use builder
-        $result = $muserroles->db->table('tbluserroles')->insertBatch(array_map(function($role) use ($userpk) {
-            return ['userpk' => $userpk, 'roleid' => $role];
-        }, (array)$roles));
-        return $result;
+        return $muserroles->saveBatchRoles(['userpk' => $userpk, 'roles' => $roles]);
     }
 
     private function _preFormat($data)
@@ -157,13 +155,25 @@ class MuserModel extends Model
 
     public function get($where, $sidx, $sord, $limit, $start)
     {
-        $sort = " userid asc ";
+        if ($sidx == 'rolename') {
+            $sidx = 'tbluser.userid'; // Mencegah error sort pada kolom rolename
+        }
+
+        $sort = " tbluser.userid asc ";
         if ($sidx != "1") {
             $sort = " $sidx $sord ";
         }
+
         $sql = "SELECT tbluser.*,
         FORMAT(tbluser.modifiedon,'dd-MM-yyyy hh:mm:ss') modifiedonview
-        FROM tbluser  " . $where . "  ORDER BY $sort
+        FROM tbluser  
+        WHERE tbluser.userpk IN (
+            SELECT tbluser.userpk FROM tbluser 
+            LEFT JOIN tbluserroles ur ON ur.userpk = tbluser.userpk 
+            LEFT JOIN tblroles r ON r.roleid=ur.roleid  
+            $where
+        )
+        ORDER BY $sort
             OFFSET $start ROWS FETCH NEXT $limit ROWS ONLY
         ";
         return $this->db->query($sql);

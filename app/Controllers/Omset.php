@@ -103,7 +103,7 @@ class Omset extends BaseController
             
             $responce->rows[$i]['id']   = $i + $start;
             $responce->rows[$i]['cell'] = array(
-                $row->FTgl,
+                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
                 $row->FJumlahMuatan,
                 $row->FJumlahBongkaran,
                 $row->FJumlahExim,

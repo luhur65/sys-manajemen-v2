@@ -204,9 +204,14 @@ class App extends BaseConfig
     public function __construct()
     {
         if (isset($_SERVER['HTTP_HOST'])) {
-            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-                ? 'https'
-                : 'http';
+            // Respect X-Forwarded-Proto from Cloudflare Tunnel or other reverse proxies
+            if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+                $scheme = 'https';
+            } else {
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                    ? 'https'
+                    : 'http';
+            }
 
             $host = $_SERVER['HTTP_HOST'];
 

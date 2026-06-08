@@ -129,10 +129,6 @@
                     name: 'FTgl',
                     index: 'FTgl',
                     width: (isDesktop ? sm_dekstop_2 : sm_mobile_2),
-                    formatter: 'date',
-                    formatoptions: {
-                        newformat: 'd-M-Y'
-                    },
                     sorttype: 'date'
                 },
                 {
@@ -185,10 +181,6 @@
                     name: 'FTglJT',
                     index: 'FTglJT',
                     width: (isDesktop ? sm_dekstop_2 : sm_mobile_2),
-                    formatter: 'date',
-                    formatoptions: {
-                        newformat: 'd-M-Y'
-                    },
                     sorttype: 'date'
                 },
                 {
@@ -250,7 +242,7 @@
             ],
             autowidth: true,
             shrinkToFit: false,
-            height: 350,
+            height: 400,
             rowNum: 50,
             toolbar: [true, "top"],
             rowList: [10, 20, 30, 50, 100],

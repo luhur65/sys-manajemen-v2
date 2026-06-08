@@ -109,25 +109,23 @@
                     name: 'FTgl',
                     index: 'FTgl',
                     width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
-                    formatter: 'date',
-                    formatoptions: { newformat: 'd-M-Y' },
                     sorttype: 'date',
-                    searchoptions: {
-                        sopt: ['eq'],
-                        dataInit: function(elem) {
-                            $(elem).datepicker({
-                                dateFormat: 'yy-mm-dd',
-                                changeYear: true,
-                                changeMonth: true,
-                                showWeek: true,
-                                onSelect: function() {
-                                    setTimeout(function() {
-                                        $grid[0].triggerToolbar();
-                                    }, 100);
-                                }
-                            });
-                        }
-                    }
+                    // searchoptions: {
+                    //     sopt: ['eq'],
+                    //     dataInit: function(elem) {
+                    //         $(elem).datepicker({
+                    //             dateFormat: 'yy-mm-dd',
+                    //             changeYear: true,
+                    //             changeMonth: true,
+                    //             showWeek: true,
+                    //             onSelect: function() {
+                    //                 setTimeout(function() {
+                    //                     $grid[0].triggerToolbar();
+                    //                 }, 100);
+                    //             }
+                    //         });
+                    //     }
+                    // }
                 },
                 {
                     label: 'Muatan',
@@ -209,7 +207,7 @@
             ],
             autowidth: true,
             shrinkToFit: false,
-            height: 350,
+            height: 400,
             rowNum: rowNum,
             toolbar: [true, "top"],
             rowList: [10, 20, 50, 100, 500],
@@ -249,7 +247,7 @@
                 }
 
                 $(document).off('keydown.grid');
-                if(typeof setCustomBindKeys === 'function') setCustomBindKeys($gridObj);
+                setCustomBindKeys($gridObj);
 
                 sortname = $(this).jqGrid("getGridParam", "sortname")
                 sortorder = $(this).jqGrid("getGridParam", "sortorder")
@@ -313,6 +311,13 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
+                var postData = $grid.jqGrid('getGridParam', 'postData');
+                if (postData.filters) {
+                    var filtersObj = JSON.parse(postData.filters);
+                    postData._search = (filtersObj.rules && filtersObj.rules.length > 0);
+                }
+                $grid.jqGrid('setGridParam', { postData: postData });
+                
                 if (typeof cachedData !== 'undefined') cachedData = {};
                 $grid.jqGrid('clearGridData');
                 if(typeof loadGridData === 'function') {

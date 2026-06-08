@@ -40,7 +40,10 @@ class Parameter extends BaseController
         $where = " WHERE 1=1 ";
 
         if ($search == "true") {
-            $where .= " AND (" . $this->operation($filters) . ")";
+            $operation = $this->operation($filters);
+            if (!empty($operation)) {
+                $where .= " AND (" . $operation . ")";
+            }
         }
 
         if (!empty($filters)) {
