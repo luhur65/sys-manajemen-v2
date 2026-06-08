@@ -18,7 +18,7 @@
     <script src="<?= asset('libraries/adminlte/plugins/select2/js/select2.full.min.js') ?>"></script>
 
     <!-- AutoNumeric -->
-    <script src="<?= asset('libraries/autonumeric/4.5.4/autoNumeric.min.js') ?>"></script>
+    <script src="<?= asset('libraries/autonumeric/4.5.4/autonumeric.min.js') ?>"></script>
 
     <!-- Inputmask -->
     <script src="<?= asset('libraries/inputmask/5.0.6/jquery.inputmask.min.js') ?>"></script>
