@@ -62,10 +62,18 @@
       50%       { transform: rotate(3deg) translateY(-8px); }
     }
 
+    .verdant-outer-shell {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+    
     .verdant-outer-shell *,
     .verdant-outer-shell *::before,
     .verdant-outer-shell *::after {
       text-transform: none !important;
+      box-sizing: border-box !important;
     }
 
     body {
@@ -287,9 +295,12 @@
     body.dark-mode .verdant-footnote { color: var(--muted-dark); }
     
     @media (max-width: 576px) {
+      .verdant-nav { padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem 1rem; }
+      .verdant-main-wrapper { padding: 6rem 1rem 4rem 1rem; }
       .verdant-login-card { padding: 3.5rem 1.25rem 2rem 1.25rem; }
       .verdant-nav-text { display: none; }
-      .verdant-seal { letter-spacing: 0.15em; font-size: 0.75rem; }
+      .verdant-seal { letter-spacing: 0.1em; font-size: 0.7rem; }
+      .verdant-heading { font-size: 2.25rem; }
     }
   </style>
 </head>
