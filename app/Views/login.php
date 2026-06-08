@@ -266,7 +266,7 @@
     .verdant-btn {
       width: 100%; border-radius: 50px; background-color: var(--sage-deep-light);
       color: var(--paper-light); font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.01em;
-      padding: 1.6rem 2rem; border: none; cursor: pointer;
+      padding: 1.15rem 2rem; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 0.5rem;
       transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
       margin-top: 1rem; margin-bottom: 0.5rem;
