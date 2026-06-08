@@ -126,3 +126,5 @@ _modules/*
 /phpunit*.xml
 
 update_omset.php
+
+writable/*
