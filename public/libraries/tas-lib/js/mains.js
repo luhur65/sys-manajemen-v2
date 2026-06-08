@@ -18,22 +18,6 @@ let lg_dekstop_3 = "550px";
 let lg_dekstop_4 = "600px";
 let lg_dekstop_5 = "650px";
 
-// Disable jqGrid row hover globally
-if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
-    $.extend($.jgrid.defaults, { hoverrows: false });
-}
-// Remove table-hover class from Bootstrap UI defaults if it exists
-if (typeof $.jgrid !== 'undefined' && $.jgrid.styleUI) {
-    if ($.jgrid.styleUI.Bootstrap && $.jgrid.styleUI.Bootstrap.table) {
-        $.jgrid.styleUI.Bootstrap.table.className = $.jgrid.styleUI.Bootstrap.table.className.replace('table-hover', '');
-    }
-    if ($.jgrid.styleUI.Bootstrap4 && $.jgrid.styleUI.Bootstrap4.table) {
-        $.jgrid.styleUI.Bootstrap4.table.className = $.jgrid.styleUI.Bootstrap4.table.className.replace('table-hover', '');
-    }
-    if ($.jgrid.styleUI.Bootstrap5 && $.jgrid.styleUI.Bootstrap5.table) {
-        $.jgrid.styleUI.Bootstrap5.table.className = $.jgrid.styleUI.Bootstrap5.table.className.replace('table-hover', '');
-    }
-}
 let sm_mobile_1 = "150px";
 let sm_mobile_2 = "200px";
 let sm_mobile_3 = "250px";
@@ -62,6 +46,55 @@ let lg_extendSize_1 = 450;
 let lg_extendSize_2 = 500;
 let lg_extendSize_3 = 550;
 let lg_extendSize_4 = 600;
+
+
+// Disable jqGrid row hover globally
+if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
+    $.extend($.jgrid.defaults, { hoverrows: false });
+}
+// Remove table-hover class from Bootstrap UI defaults if it exists
+if (typeof $.jgrid !== 'undefined' && $.jgrid.styleUI) {
+    if ($.jgrid.styleUI.Bootstrap) {
+        if ($.jgrid.styleUI.Bootstrap.table && $.jgrid.styleUI.Bootstrap.table.className) {
+            $.jgrid.styleUI.Bootstrap.table.className = $.jgrid.styleUI.Bootstrap.table.className.replace('table-hover', '');
+        }
+    }
+    if ($.jgrid.styleUI.Bootstrap4) {
+        if ($.jgrid.styleUI.Bootstrap4.table && $.jgrid.styleUI.Bootstrap4.table.className) {
+            $.jgrid.styleUI.Bootstrap4.table.className = $.jgrid.styleUI.Bootstrap4.table.className.replace('table-hover', '');
+        }
+        // if ($.jgrid.styleUI.Bootstrap4.base) {
+        //     $.jgrid.styleUI.Bootstrap4.base.icon_asc = 'fa-arrow-up';
+        //     $.jgrid.styleUI.Bootstrap4.base.icon_desc = 'fa-arrow-down';
+        // }
+    }
+    if ($.jgrid.styleUI.Bootstrap5) {
+        if ($.jgrid.styleUI.Bootstrap5.table && $.jgrid.styleUI.Bootstrap5.table.className) {
+            $.jgrid.styleUI.Bootstrap5.table.className = $.jgrid.styleUI.Bootstrap5.table.className.replace('table-hover', '');
+        }
+        // if ($.jgrid.styleUI.Bootstrap5.base) {
+        //     $.jgrid.styleUI.Bootstrap5.base.icon_asc = 'fa-arrow-up';
+        //     $.jgrid.styleUI.Bootstrap5.base.icon_desc = 'fa-arrow-down';
+        // }
+    }
+
+    // Explicitly inject fontAwesome mapping if missing or override if present
+    // if (!$.jgrid.styleUI.fontAwesome) {
+    //     $.jgrid.styleUI.fontAwesome = {
+    //         common: { icon_base: "fas" },
+    //         base: {
+    //             icon_asc: 'fa-arrow-up',
+    //             icon_desc: 'fa-arrow-down'
+    //         }
+    //     };
+    // } else if ($.jgrid.styleUI.fontAwesome.base) {
+    //     $.jgrid.styleUI.fontAwesome.base.icon_asc = 'fa-arrow-up';
+    //     $.jgrid.styleUI.fontAwesome.base.icon_desc = 'fa-arrow-down';
+    // }
+}
+
+// Inject CSS to hide disabled sort icons and align active arrows perfectly inline
+$('<style>th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; } th.ui-th-column .s-ico { display: inline-block !important; } th.ui-th-column .ui-grid-ico-sort { position: static !important; margin-top: 0 !important; margin-left: 6px !important; font-size: 0.9em !important; transform: translateY(1px) !important; }</style>').appendTo('head');
 
 $(document).ready(function () {
     // setFormats();
@@ -104,7 +137,7 @@ $(document).ready(function () {
         let breadcrumbString = [];
 
         // Find the element by checking if its href's controller matches pathLink
-        var activeElement = $('.nav-sidebar a').filter(function() {
+        var activeElement = $('.nav-sidebar a').filter(function () {
             let href = $(this).attr('href');
             if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
                 let hrefArray = href.split('/');
@@ -145,9 +178,9 @@ $(document).ready(function () {
             //   activeElement.removeClass('active-parrent');
             //   topNavItem.children('a.nav-link').addClass('active');
             breadcrumbString.reverse();
-            
+
             let breadcrumbHtml = '<li class="breadcrumb-item"><a href="' + appUrl + 'home">Home</a></li>';
-            breadcrumbString.forEach(function(text, index) {
+            breadcrumbString.forEach(function (text, index) {
                 if (index === breadcrumbString.length - 1) {
                     breadcrumbHtml += '<li class="breadcrumb-item active">' + text + '</li>';
                 } else {
@@ -3622,3 +3655,17 @@ function deleteSelectedRowLazyLoad(gridSelector) {
         }
     }
 }
+
+// console.log('ICON ASC BEFORE OVERRIDE: ', $.jgrid.styleUI.fontAwesome ? $.jgrid.styleUI.fontAwesome.base.icon_asc : 'fontAwesome is missing');
+
+// console.log('STYLEUI KEYS:', Object.keys($.jgrid.styleUI));
+
+// console.log('BOOTSTRAP4 ICON ASC:', $.jgrid.styleUI.Bootstrap4 ? $.jgrid.styleUI.Bootstrap4.base.icon_asc : 'Bootstrap4 missing');
+
+$(document).ready(function () {
+    if ($('.fa-caret-up').length || $('.fa-caret-down').length) {
+        $('.fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
+        $('.fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
+    }
+});
+

@@ -186,7 +186,7 @@
                     name: 'rolename', 
                     index: 'rolename', 
                     width: (isDesktop ? sm_dekstop_3 : sm_mobile_3), 
-                    
+                    sortable: false,
                 },
                 {
                     label: 'Modified By', 
