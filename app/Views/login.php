@@ -209,6 +209,7 @@
     .verdant-label {
       font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.005em;
       color: var(--ink-light); margin: 0;
+      text-transform: uppercase !important;
     }
     body.dark-mode .verdant-label { color: var(--ink-dark); }
     
@@ -227,8 +228,9 @@
       font-size: 1.0625rem;
       border: 1px solid var(--line-light); background-color: var(--paper-light);
       color: var(--ink-light); outline: none; transition: all 0.2s;
+      text-transform: uppercase !important;
     }
-    .verdant-input::placeholder { color: #a8a294; }
+    .verdant-input::placeholder { color: #a8a294; text-transform: none !important; }
     body.dark-mode .verdant-input {
       border-color: var(--line-dark); background-color: var(--paper-dark);
       color: var(--ink-dark);
