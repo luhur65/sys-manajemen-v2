@@ -87,8 +87,8 @@
       display: block !important; /* override AdminLTE default flex */
     }
     body.dark-mode {
-      background-color: var(--bg-dark);
-      color: var(--ink-dark);
+      background-color: var(--bg-dark) !important;
+      color: var(--ink-dark) !important;
     }
 
     .verdant-blob-1 {
@@ -115,7 +115,7 @@
     body.dark-mode .verdant-svg-2 { opacity: 0.35; }
 
     .verdant-nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
       display: flex; align-items: center; justify-content: space-between;
       padding: max(2rem, env(safe-area-inset-top)) 2rem 1rem 2rem;
     }
@@ -160,10 +160,10 @@
     .verdant-main-wrapper {
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; padding: 7rem 1.5rem 5rem 1.5rem;
-      position: relative; z-index: 10;
+      position: relative;
     }
     .verdant-login-card {
-      position: relative; width: 100%; max-width: 480px;
+      position: relative; width: 100%; max-width: 480px; z-index: 10;
       border-radius: 28px; border: 1px solid var(--line-light);
       background-color: var(--card-light);
       padding: 3.5rem 3.5rem 3rem 3.5rem;
