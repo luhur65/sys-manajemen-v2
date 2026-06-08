@@ -233,7 +233,7 @@
 
     .verdant-input-wrapper { position: relative; }
     .verdant-input {
-      width: 100%; border-radius: 14px; padding: 1.6rem 1.25rem;
+      width: 100%; border-radius: 14px; padding: 1.15rem 1.125rem;
       font-size: 1.0625rem;
       border: 1px solid var(--line-light); background-color: var(--paper-light);
       color: var(--ink-light); outline: none; transition: all 0.2s;
@@ -298,6 +298,7 @@
       .verdant-nav { padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem 1rem; }
       .verdant-main-wrapper { padding: 6rem 1rem 4rem 1rem; }
       .verdant-login-card { padding: 3.5rem 1.25rem 2rem 1.25rem; }
+      .verdant-input { padding: 1.6rem 1.25rem; }
       .verdant-nav-text { display: none; }
       .verdant-seal { letter-spacing: 0.1em; font-size: 0.7rem; }
       .verdant-heading { font-size: 2.25rem; }
