@@ -62,6 +62,12 @@
       50%       { transform: rotate(3deg) translateY(-8px); }
     }
 
+    .verdant-outer-shell *,
+    .verdant-outer-shell *::before,
+    .verdant-outer-shell *::after {
+      text-transform: none !important;
+    }
+
     body {
       background-color: var(--bg-light);
       font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
