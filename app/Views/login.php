@@ -109,10 +109,11 @@
     .verdant-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
       display: flex; align-items: center; justify-content: space-between;
-      padding: max(1rem, env(safe-area-inset-top)) 1.5rem 1rem 1.5rem;
+      padding: max(2rem, env(safe-area-inset-top)) 2rem 1rem 2rem;
     }
     .verdant-brand {
       display: flex; align-items: center; gap: 0.625rem;
+      font-size: 1.25rem;
       font-weight: 600; letter-spacing: -0.005em; color: var(--ink-light);
     }
     body.dark-mode .verdant-brand { color: var(--ink-dark); }
@@ -131,7 +132,7 @@
 
     .verdant-nav-right {
       display: flex; align-items: center; gap: 1rem;
-      color: var(--muted-light); font-size: 1rem;
+      color: var(--muted-light); font-size: 1.25rem;
     }
     body.dark-mode .verdant-nav-right { color: var(--muted-dark); }
     .verdant-theme-toggle {
