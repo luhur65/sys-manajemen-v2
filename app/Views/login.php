@@ -210,7 +210,6 @@
     .verdant-label {
       font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.005em;
       color: var(--ink-light); margin: 0;
-      text-transform: uppercase !important;
     }
     body.dark-mode .verdant-label { color: var(--ink-dark); }
     
@@ -231,7 +230,7 @@
       color: var(--ink-light); outline: none; transition: all 0.2s;
       text-transform: uppercase !important;
     }
-    .verdant-input::placeholder { color: #a8a294; text-transform: none !important; }
+    .verdant-input::placeholder { color: #a8a294; text-transform: uppercase !important; }
     body.dark-mode .verdant-input {
       border-color: var(--line-dark); background-color: var(--paper-dark);
       color: var(--ink-dark);
@@ -369,7 +368,7 @@
               <label class="verdant-label" for="user">Username</label>
             </div>
             <div class="verdant-input-wrapper">
-              <input type="text" name="userid" id="user" class="verdant-input <?= (isset($validationErrors['userid'])) ? 'is-invalid' : '' ?>" value="<?= old('userid') ?>" placeholder="username anda" autofocus autocomplete="off">
+              <input type="text" name="userid" id="user" class="verdant-input <?= (isset($validationErrors['userid'])) ? 'is-invalid' : '' ?>" value="<?= old('userid') ?>" placeholder="USERNAME ANDA" autofocus autocomplete="off">
             </div>
             <?php if (isset($validationErrors['userid'])): ?>
               <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= $validationErrors['userid'] ?></div>
