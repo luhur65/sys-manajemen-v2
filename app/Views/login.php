@@ -163,10 +163,10 @@
       position: relative;
     }
     .verdant-login-card {
-      position: relative; width: 100%; max-width: 480px; z-index: 10;
+      position: relative; width: 100%; max-width: 520px; z-index: 10;
       border-radius: 28px; border: 1px solid var(--line-light);
       background-color: var(--card-light);
-      padding: 3.5rem 3.5rem 3rem 3.5rem;
+      padding: 3.5rem 2.5rem 3rem 2.5rem;
       box-shadow: 0 1px 1px rgba(31,36,28,0.04), 0 30px 60px -25px rgba(31,36,28,0.15);
     }
     body.dark-mode .verdant-login-card {
@@ -289,7 +289,7 @@
     body.dark-mode .verdant-footer-bold { color: var(--ink-dark); }
 
     .verdant-footnote {
-      position: fixed; bottom: 1.5rem; left: 0; right: 0; z-index: 10;
+      position: absolute; bottom: 1.5rem; left: 0; right: 0; z-index: 10;
       text-align: center; color: var(--muted-light); font-size: 0.875rem; letter-spacing: 0.03em;
     }
     body.dark-mode .verdant-footnote { color: var(--muted-dark); }
