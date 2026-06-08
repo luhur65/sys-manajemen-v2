@@ -168,7 +168,7 @@
     body.dark-mode .verdant-card-mark { background-color: var(--terracotta-dark); }
 
     .verdant-seal {
-      color: var(--sage-deep-light); text-transform: uppercase;
+      color: var(--sage-deep-light);
       font-size: 0.8rem; font-weight: 600; letter-spacing: 0.32em; text-align: center;
       margin-top: 1rem; margin-bottom: 1.5rem;
       animation: verdant-reveal 0.8s cubic-bezier(0.16,1,0.3,1) 0.08s both;
@@ -218,11 +218,11 @@
     .verdant-input-wrapper { position: relative; }
     .verdant-input {
       width: 100%; border-radius: 14px; padding: 1rem 1.125rem;
-      font-size: 1.0625rem; text-transform: uppercase;
+      font-size: 1.0625rem;
       border: 1px solid var(--line-light); background-color: var(--paper-light);
       color: var(--ink-light); outline: none; transition: all 0.2s;
     }
-    .verdant-input::placeholder { color: #a8a294; text-transform: none; }
+    .verdant-input::placeholder { color: #a8a294; }
     body.dark-mode .verdant-input {
       border-color: var(--line-dark); background-color: var(--paper-dark);
       color: var(--ink-dark);
