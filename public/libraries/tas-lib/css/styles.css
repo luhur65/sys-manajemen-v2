@@ -2318,3 +2318,28 @@ body.dark-mode .ui-datepicker .ui-state-hover { background: #454d55 !important; 
 body.dark-mode .ui-datepicker .ui-state-active { background: #007bff !important; color: #fff !important; }
 body.dark-mode .ui-widget-content { background: #343a40; color: #fff; }
 body.dark-mode .ui-widget-header a { color: #fff; }
+/* Fix text too close to right border in grid */
+.ui-jqgrid .ui-jqgrid-btable tbody tr.jqgrow td { padding-right: 7px !important; }
+
+/* Remove pure CSS hover effect from jqGrid rows */
+.ui-jqgrid-btable.table-hover tbody tr:hover { background-color: transparent; }
+
+
+.table td {
+    padding: .5rem !important;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.table tr.ui-search-toolbar th {
+    padding: 0rem !important;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+
+/* Hide disabled sort icons so only the active arrow is shown */
+th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; }
+
+/* Hide disabled sort icons so only the active arrow is shown */
+th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; }

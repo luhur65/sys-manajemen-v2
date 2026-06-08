@@ -155,13 +155,25 @@ class MuserModel extends Model
 
     public function get($where, $sidx, $sord, $limit, $start)
     {
-        $sort = " userid asc ";
+        if ($sidx == 'rolename') {
+            $sidx = 'tbluser.userid'; // Mencegah error sort pada kolom rolename
+        }
+
+        $sort = " tbluser.userid asc ";
         if ($sidx != "1") {
             $sort = " $sidx $sord ";
         }
+
         $sql = "SELECT tbluser.*,
         FORMAT(tbluser.modifiedon,'dd-MM-yyyy hh:mm:ss') modifiedonview
-        FROM tbluser  " . $where . "  ORDER BY $sort
+        FROM tbluser  
+        WHERE tbluser.userpk IN (
+            SELECT tbluser.userpk FROM tbluser 
+            LEFT JOIN tbluserroles ur ON ur.userpk = tbluser.userpk 
+            LEFT JOIN tblroles r ON r.roleid=ur.roleid  
+            $where
+        )
+        ORDER BY $sort
             OFFSET $start ROWS FETCH NEXT $limit ROWS ONLY
         ";
         return $this->db->query($sql);

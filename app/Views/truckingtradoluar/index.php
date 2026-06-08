@@ -186,7 +186,7 @@
             sortorder: 'desc',
             viewrecords: false,
             autowidth: true,
-            height: 350,
+            height: 400,
             shrinkToFit: false,
             rownumbers: true,
             footerrow: true,
