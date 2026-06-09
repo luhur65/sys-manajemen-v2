@@ -80,7 +80,6 @@
         
         $gridAcos.jqGrid({
             datatype: "local",
-            data: mydata,
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
@@ -104,6 +103,11 @@
                 }
             }
         });
+        
+        // Loop over data to explicitly insert it (maximum compatibility)
+        for(var i = 0; i < mydata.length; i++) {
+            $gridAcos.jqGrid('addRowData', mydata[i].acosid, mydata[i]);
+        }
         
         $gridAcos.jqGrid('filterToolbar', {
             stringResult: true,
