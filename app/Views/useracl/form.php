@@ -58,8 +58,8 @@
                         
                         $gridData[] = [
                             'acosid' => $aco->acosid,
-                            'class_name' => $className,
-                            'method_name' => $methodName
+                            'class' => $className,
+                            'method' => $methodName
                         ];
                     }
                     ?>
@@ -91,12 +91,14 @@
         
         $gridAcos.jqGrid({
             datatype: "local",
+            data: mydata,
+            localReader: { id: "acosid" },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
                 { label: 'ID', name: 'acosid', key: true, hidden: true },
-                { label: 'Class / Modul', name: 'class_name', width: 200, searchoptions:{sopt:['cn']} },
-                { label: 'Method / Aksi', name: 'method_name', width: 250, searchoptions:{sopt:['cn']} }
+                { label: 'Class / Modul', name: 'class', width: 200, searchoptions:{sopt:['cn']} },
+                { label: 'Method / Aksi', name: 'method', width: 250, searchoptions:{sopt:['cn']} }
             ],
             viewrecords: true,
             autowidth: true,
@@ -114,11 +116,6 @@
                 }
             }
         });
-        
-        // Loop over data to explicitly insert it (maximum compatibility)
-        for(var i = 0; i < mydata.length; i++) {
-            $gridAcos.jqGrid('addRowData', mydata[i].acosid, mydata[i]);
-        }
         
         $gridAcos.jqGrid('filterToolbar', {
             stringResult: true,

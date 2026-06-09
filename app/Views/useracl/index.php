@@ -20,6 +20,7 @@
             url: gridAclUrl,
             mtype: "POST",
             datatype: "json",
+            jsonReader: { repeatitems: true },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             height: 250,
@@ -123,18 +124,23 @@
         $('.modal-loader').removeClass('d-none');
         var page = "<?= base_url('useracl/userroles/') ?>" + userpk;
         
-        // Memuat konten modal secara dinamis dan menampilkannya
-        $.get(page, function(html) {
-            $('.modal-loader').addClass('d-none');
-            // Cek apakah #aclModal sudah ada
-            if ($('#aclModal').length) {
-                $('#aclModal').remove(); // Hapus yang lama jika ada
+        // Memuat konten modal secara dinamis dan menampilkannya dengan cache: false
+        $.ajax({
+            url: page,
+            type: 'GET',
+            cache: false,
+            success: function(html) {
+                $('.modal-loader').addClass('d-none');
+                if ($('#aclModal').length) {
+                    $('#aclModal').remove(); 
+                }
+                $('body').append(html);
+                $('#aclModal').modal('show');
+            },
+            error: function() {
+                $('.modal-loader').addClass('d-none');
+                alert('Gagal memuat form User Roles');
             }
-            $('body').append(html);
-            $('#aclModal').modal('show');
-        }).fail(function() {
-            $('.modal-loader').addClass('d-none');
-            alert('Gagal memuat form User Roles');
         });
     }
 </script>
