@@ -59,8 +59,19 @@
 		    });
 	    });
 
+	    $("#btnRegisterBiometric").on('click',function(){
+            startWebAuthnRegister(
+                '<?= base_url() ?>webauthn/getRegisterArgs',
+                '<?= base_url() ?>webauthn/processRegister',
+                function() {
+                    alert("Pendaftaran biometrik berhasil! Anda sekarang bisa login menggunakan sidik jari/wajah.");
+                }
+            );
+        });
+
 	});
 </script>
+<script src="<?= asset('libraries/tas-lib/js/webauthn.js?version=' . time()) ?>"></script>
 
 <div class="row">
     <div class="col-md">
@@ -111,6 +122,16 @@
             </div>
             <div class="card-footer text-right">
                 <button type="button" class="btn btn-primary" id="btnsimpanpassword"><i class="fas fa-save"></i> Simpan</button>
+            </div>
+        </div>
+        
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title">Login Biometrik (Sidik Jari / Passkey)</h3>
+            </div>
+            <div class="card-body">
+                <p>Anda dapat mendaftarkan perangkat ini (Sidik Jari, Face ID, atau Windows Hello) agar bisa digunakan untuk login ke depannya tanpa memasukkan password.</p>
+                <button type="button" class="btn btn-success" id="btnRegisterBiometric"><i class="fas fa-fingerprint"></i> Daftarkan Perangkat Ini</button>
             </div>
         </div>
     </div>
