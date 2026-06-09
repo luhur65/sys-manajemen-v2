@@ -423,6 +423,10 @@
             </svg>
           </button>
 
+          <button type="button" class="verdant-btn" style="background-color: transparent; color: var(--ink-light); border: 2px solid var(--line-light); margin-top: 0.5rem;" id="btnWebAuthnLogin">
+            <i class="fas fa-fingerprint" style="margin-right: 0.25rem; font-size: 1.2rem;"></i> Login Biometrik / Passkey
+          </button>
+
           <div class="verdant-footer">
             <p style="margin-bottom: 0.25rem;">Halaman dimuat dalam <span class="verdant-footer-bold"><?= number_format(timer()->getElapsedTime('total_execution'), 2) ?></span> detik</p>
             <p>Copyright &copy; <?= date('Y') ?> PT. Transporindo Agung Sejahtera</p>
@@ -445,6 +449,7 @@
   <!-- AdminLTE App -->
   <script src="<?= asset('libraries/adminlte/dist/js/adminlte.min.js') ?>"></script>
   <script src="<?= asset('libraries/tas-lib/js/connectionToast.js?version=' . time()) ?>"></script>
+  <script src="<?= asset('libraries/tas-lib/js/webauthn.js?version=' . time()) ?>"></script>
 
   <script>
     $(document).ready(function() {
@@ -587,6 +592,15 @@
         } else {
           applyDarkMode();
         }
+      });
+
+      // WebAuthn Login Button
+      $('#btnWebAuthnLogin').on('click', function() {
+          startWebAuthnLogin(
+              '<?= base_url() ?>webauthn/getLoginArgs',
+              '<?= base_url() ?>webauthn/processLogin',
+              '<?= base_url() ?>home'
+          );
       });
     })
 

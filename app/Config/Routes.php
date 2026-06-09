@@ -14,6 +14,12 @@ $routes->setAutoRoute(false);
 
 $routes->get('/', 'Login::index');
 
+// Webauthn Routes
+$routes->get('webauthn/getRegisterArgs', 'Webauthn::getRegisterArgs');
+$routes->post('webauthn/processRegister', 'Webauthn::processRegister');
+$routes->get('webauthn/getLoginArgs', 'Webauthn::getLoginArgs');
+$routes->post('webauthn/processLogin', 'Webauthn::processLogin');
+
 // Routes for App\Controllers\Cabang (Cabang)
 $routes->match(['GET', 'POST'], 'Cabang', 'Cabang::index');
 $routes->match(['GET', 'POST'], 'cabang', 'Cabang::index');
