@@ -62,6 +62,20 @@
       50%       { transform: rotate(3deg) translateY(-8px); }
     }
 
+    .verdant-outer-shell {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+    
+    .verdant-outer-shell *,
+    .verdant-outer-shell *::before,
+    .verdant-outer-shell *::after {
+      text-transform: none !important;
+      box-sizing: border-box !important;
+    }
+
     body {
       background-color: var(--bg-light);
       font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -73,8 +87,8 @@
       display: block !important; /* override AdminLTE default flex */
     }
     body.dark-mode {
-      background-color: var(--bg-dark);
-      color: var(--ink-dark);
+      background-color: var(--bg-dark) !important;
+      color: var(--ink-dark) !important;
     }
 
     .verdant-blob-1 {
@@ -101,12 +115,13 @@
     body.dark-mode .verdant-svg-2 { opacity: 0.35; }
 
     .verdant-nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
       display: flex; align-items: center; justify-content: space-between;
-      padding: max(1rem, env(safe-area-inset-top)) 1.5rem 1rem 1.5rem;
+      padding: max(2rem, env(safe-area-inset-top)) 2rem 1rem 2rem;
     }
     .verdant-brand {
       display: flex; align-items: center; gap: 0.625rem;
+      font-size: 1.25rem;
       font-weight: 600; letter-spacing: -0.005em; color: var(--ink-light);
     }
     body.dark-mode .verdant-brand { color: var(--ink-dark); }
@@ -125,7 +140,7 @@
 
     .verdant-nav-right {
       display: flex; align-items: center; gap: 1rem;
-      color: var(--muted-light); font-size: 1rem;
+      color: var(--muted-light); font-size: 1.25rem;
     }
     body.dark-mode .verdant-nav-right { color: var(--muted-dark); }
     .verdant-theme-toggle {
@@ -145,10 +160,10 @@
     .verdant-main-wrapper {
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; padding: 7rem 1.5rem 5rem 1.5rem;
-      position: relative; z-index: 10;
+      position: relative;
     }
     .verdant-login-card {
-      position: relative; width: 100%; max-width: 480px;
+      position: relative; width: 100%; max-width: 480px; z-index: 10;
       border-radius: 28px; border: 1px solid var(--line-light);
       background-color: var(--card-light);
       padding: 3.5rem 3.5rem 3rem 3.5rem;
@@ -168,9 +183,10 @@
     body.dark-mode .verdant-card-mark { background-color: var(--terracotta-dark); }
 
     .verdant-seal {
-      color: var(--sage-deep-light); text-transform: uppercase;
+      color: var(--sage-deep-light);
       font-size: 0.8rem; font-weight: 600; letter-spacing: 0.32em; text-align: center;
       margin-top: 1rem; margin-bottom: 1.5rem;
+      text-transform: uppercase !important;
       animation: verdant-reveal 0.8s cubic-bezier(0.16,1,0.3,1) 0.08s both;
     }
     body.dark-mode .verdant-seal { color: var(--sage-deep-dark); }
@@ -217,12 +233,13 @@
 
     .verdant-input-wrapper { position: relative; }
     .verdant-input {
-      width: 100%; border-radius: 14px; padding: 1rem 1.125rem;
-      font-size: 1.0625rem; text-transform: uppercase;
+      width: 100%; border-radius: 14px; padding: 1.15rem 1.125rem;
+      font-size: 1.0625rem;
       border: 1px solid var(--line-light); background-color: var(--paper-light);
       color: var(--ink-light); outline: none; transition: all 0.2s;
+      text-transform: uppercase !important;
     }
-    .verdant-input::placeholder { color: #a8a294; text-transform: none; }
+    .verdant-input::placeholder { color: #a8a294; text-transform: uppercase !important; }
     body.dark-mode .verdant-input {
       border-color: var(--line-dark); background-color: var(--paper-dark);
       color: var(--ink-dark);
@@ -249,7 +266,7 @@
     .verdant-btn {
       width: 100%; border-radius: 50px; background-color: var(--sage-deep-light);
       color: var(--paper-light); font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.01em;
-      padding: 1.1rem; border: none; cursor: pointer;
+      padding: 1.15rem 2rem; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 0.5rem;
       transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
       margin-top: 1rem; margin-bottom: 0.5rem;
@@ -272,15 +289,19 @@
     body.dark-mode .verdant-footer-bold { color: var(--ink-dark); }
 
     .verdant-footnote {
-      position: fixed; bottom: 1.5rem; left: 0; right: 0; z-index: 10;
+      position: absolute; bottom: 1.5rem; left: 0; right: 0; z-index: 10;
       text-align: center; color: var(--muted-light); font-size: 0.875rem; letter-spacing: 0.03em;
     }
     body.dark-mode .verdant-footnote { color: var(--muted-dark); }
     
     @media (max-width: 576px) {
-      .verdant-login-card { padding: 3.5rem 1.25rem 2rem 1.25rem; border: none; background: transparent; box-shadow: none; }
-      body.dark-mode .verdant-login-card { background: transparent; border: none; box-shadow: none; }
+      .verdant-nav { padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem 1rem; }
+      .verdant-main-wrapper { padding: 6rem 1rem 4rem 1rem; }
+      .verdant-login-card { padding: 3.5rem 1.25rem 2rem 1.25rem; }
+      .verdant-input { padding: 1.6rem 1.25rem; }
       .verdant-nav-text { display: none; }
+      .verdant-seal { letter-spacing: 0.1em; font-size: 0.7rem; }
+      .verdant-heading { font-size: 2.25rem; }
     }
   </style>
 </head>
@@ -336,7 +357,11 @@
       <div class="verdant-nav-right">
         <span class="verdant-nav-text d-none d-sm-inline">Management Information System</span>
         <button type="button" class="verdant-theme-toggle" id="themeToggleBtn" aria-label="Toggle theme">
-          <i class="fas fa-moon" id="themeIcon"></i>
+          <span id="themeIconContainer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </span>
         </button>
       </div>
     </nav>
@@ -360,7 +385,7 @@
               <label class="verdant-label" for="user">Username</label>
             </div>
             <div class="verdant-input-wrapper">
-              <input type="text" name="userid" id="user" class="verdant-input <?= (isset($validationErrors['userid'])) ? 'is-invalid' : '' ?>" value="<?= old('userid') ?>" placeholder="username anda" autofocus autocomplete="off">
+              <input type="text" name="userid" id="user" class="verdant-input <?= (isset($validationErrors['userid'])) ? 'is-invalid' : '' ?>" value="<?= old('userid') ?>" placeholder="USERNAME ANDA" autofocus autocomplete="off">
             </div>
             <?php if (isset($validationErrors['userid'])): ?>
               <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= $validationErrors['userid'] ?></div>
@@ -573,11 +598,14 @@
       // $('form').submit();
     }
 
+    const sunSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>`;
+    const moonSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>`;
+
     function applyDarkMode() {
       const $body = $('body');
       localStorage.setItem('theme', 'dark');
       $body.addClass('dark-mode');
-      $('#themeIcon').removeClass('fa-moon').addClass('fa-sun');
+      $('#themeIconContainer').html(sunSvg);
       $('.dark-italic').css('color', 'var(--ink-dark)');
     }
 
@@ -585,7 +613,7 @@
       const $body = $('body');
       localStorage.setItem('theme', 'light');
       $body.removeClass('dark-mode');
-      $('#themeIcon').removeClass('fa-sun').addClass('fa-moon');
+      $('#themeIconContainer').html(moonSvg);
       $('.dark-italic').css('color', 'var(--ink-light)');
     }
 
