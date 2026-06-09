@@ -1,5 +1,5 @@
 <div class="modal fade" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="aclModalLabel">Manage User Roles</h5>
@@ -21,14 +21,7 @@
                         </div>
                     </div>
                     
-                    <h6 class="font-weight-bold border-bottom pb-2 mb-3">User Permission</h6>
-                    
-                    <div class="mb-3">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="checkall">
-                            <label class="custom-control-label font-weight-bold" for="checkall">Check All</label>
-                        </div>
-                    </div>
+                    <h6 class="font-weight-bold border-bottom pb-2 mb-3">User Permission (Pilih Menu/Aksi)</h6>
                     
                     <?php 
                     // Siapkan array data yang terpilih dari User saat ini
@@ -36,35 +29,26 @@
                     if (!empty($data) && isset($data->acos)) {
                         $selectedAcos = array_map('trim', explode(',', $data->acos));
                     }
-                    ?>
 
+                    // Format data untuk jqGrid
+                    $gridData = [];
+                    foreach($acos as $aco) {
+                        $gridData[] = [
+                            'acosid' => $aco->acosid,
+                            'class' => $aco->class,
+                            'method' => $aco->method
+                        ];
+                    }
+                    ?>
+                    
                     <div class="row">
-                        <?php 
-                        $currentClass = '';
-                        foreach($acos as $aco): 
-                            if ($currentClass != $aco->class) {
-                                if ($currentClass != '') echo '</div></div></div>'; // Tutup grid sebelumnya
-                                $currentClass = $aco->class;
-                                echo '<div class="col-md-3 mb-4">';
-                                echo '<div class="card shadow-sm h-100">';
-                                echo '<div class="card-header py-2 bg-light font-weight-bold text-uppercase" style="font-size: 0.85rem;">' . esc($aco->class) . '</div>';
-                                echo '<div class="card-body p-2" style="max-height: 250px; overflow-y: auto;">';
-                            }
-                            
-                            $isChecked = in_array($aco->acosid, $selectedAcos) ? 'checked' : '';
-                        ?>
-                            <div class="custom-control custom-checkbox mb-1">
-                                <input type="checkbox" class="custom-control-input checkbox-<?= $aco->acosid ?>" 
-                                       id="aco_<?= $aco->acosid ?>" 
-                                       name="role_permission[acos][]" 
-                                       value="<?= $aco->acosid ?>" <?= $isChecked ?>>
-                                <label class="custom-control-label" style="font-size: 0.85rem;" for="aco_<?= $aco->acosid ?>">
-                                    <?= esc($aco->method) ?>
-                                </label>
-                            </div>
-                        <?php endforeach; ?>
-                        <?php if ($currentClass != '') echo '</div></div></div>'; // Tutup yang terakhir ?>
+                        <div class="col-12">
+                            <table id="jqGridAcos"></table>
+                            <div id="jqGridAcosPager"></div>
+                        </div>
                     </div>
+                    
+                    <div id="hidden-inputs-container"></div>
                 </form>
             </div>
             <div class="modal-footer justify-content-start">
@@ -77,32 +61,84 @@
 
 <script>
     $(document).ready(function() {
-        // Toggle Check All
-        $('#checkall').click(function () {
-            $('input[name="role_permission[acos][]"]').prop('checked', this.checked);
+        var mydata = <?= json_encode($gridData) ?>;
+        var selectedIds = <?= json_encode($selectedAcos) ?>;
+        
+        $gridAcos = $("#jqGridAcos");
+        
+        $gridAcos.jqGrid({
+            datatype: "local",
+            data: mydata,
+            styleUI: 'Bootstrap4',
+            iconSet: 'fontAwesome',
+            colModel: [
+                { label: 'ID', name: 'acosid', key: true, hidden: true },
+                { label: 'Class / Modul', name: 'class', width: 200, searchoptions:{sopt:['cn']} },
+                { label: 'Method / Aksi', name: 'method', width: 250, searchoptions:{sopt:['cn']} }
+            ],
+            viewrecords: true,
+            autowidth: true,
+            shrinkToFit: true,
+            height: 300,
+            rowNum: 10000,
+            multiselect: true,
+            pager: '#jqGridAcosPager',
+            gridComplete: function() {
+                var grid = $("#jqGridAcos");
+                // Cegah trigger event onSelectRow saat setSelection awal
+                var i;
+                for (i = 0; i < selectedIds.length; i++) {
+                    grid.jqGrid('setSelection', selectedIds[i], false);
+                }
+            }
         });
+        
+        $gridAcos.jqGrid('filterToolbar', {
+            stringResult: true,
+            searchOnEnter: false,
+            defaultSearch: 'cn'
+        });
+
+        // Hapus elemen pager bawaan jqGrid yang tidak diperlukan untuk data lokal
+        $('#jqGridAcosPager_center').hide();
 
         // Event saat combo roles diganti
         $("#comboroles").change(function(){
             var nilai = $(this).val();
-            var ex = nilai.split(", ");
+            var ex = nilai.split(",");
 
             // Uncheck all
-            $('input[name="role_permission[acos][]"]').prop("checked", false);
+            $gridAcos.jqGrid('resetSelection');
             
             // Check based on selected role
             for (var j = 0; j < ex.length; j++) {
-                if (ex[j] !== "") {
-                    $(".checkbox-" + ex[j]).prop("checked", true);
+                if (ex[j].trim() !== "") {
+                    $gridAcos.jqGrid('setSelection', ex[j].trim(), false);
                 }
             }
         });
         
         // Simpan Data ACL
         $('#btnSaveAcl').click(function() {
-            var form = $('#fmacl');
             var url = "<?= base_url('useracl/userroles/') . $userpk ?>";
             
+            // Dapatkan ID yang dipilih di jqGrid
+            var selRowIds = $gridAcos.jqGrid('getGridParam', 'selarrrow');
+            
+            // Masukkan ke dalam hidden inputs agar bisa di-serialize()
+            var container = $('#hidden-inputs-container');
+            container.empty();
+            
+            $.each(selRowIds, function(index, value) {
+                container.append('<input type="hidden" name="role_permission[acos][]" value="' + value + '">');
+            });
+            
+            // Jika kosong, tambahkan array kosong agar dikirim ke server
+            if (selRowIds.length === 0) {
+                container.append('<input type="hidden" name="role_permission[acos][]" value="">');
+            }
+            
+            var form = $('#fmacl');
             $('.modal-loader').removeClass('d-none');
             
             $.ajax({
@@ -114,10 +150,10 @@
                     $('.modal-loader').addClass('d-none');
                     if (res.status === 'sukses') {
                         $('#aclModal').modal('hide');
-                        if (typeof $gridAcl !== 'undefined') {
-                            $gridAcl.trigger("reloadGrid");
+                        if (typeof window.$gridAcl !== 'undefined') {
+                            window.$gridAcl.trigger("reloadGrid");
                         }
-                        alert('Hak akses berhasil disimpan!');
+                        alert('Hak akses berhasil disimpan! Perubahan akan langsung aktif.');
                     } else {
                         alert('Gagal menyimpan hak akses.');
                     }

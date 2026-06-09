@@ -137,7 +137,7 @@ class UserAclModel extends Model
             } else {
                 $records = $this->getListByGroup(['userpk' => $data['userpk']]);
                 
-                $acos = strpos($records[0]['acos'], ',') === false ? [trim($records[0]['acos'])] : explode(', ', trim($records[0]['acos']));
+                $acos = strpos($records[0]['acos'], ',') === false ? [trim($records[0]['acos'])] : explode(',', trim($records[0]['acos']));
                 
                 $inserts = array_diff($data['acos'], $acos);
                 $removes = array_diff($acos, $data['acos']);
