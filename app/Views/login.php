@@ -303,6 +303,11 @@
       .verdant-seal { letter-spacing: 0.1em; font-size: 0.7rem; }
       .verdant-heading { font-size: 2.25rem; }
     }
+
+    #btnWebAuthnLogin { display: none !important; }
+    @media (max-width: 991.98px) {
+      #btnWebAuthnLogin { display: flex !important; }
+    }
   </style>
 </head>
 
