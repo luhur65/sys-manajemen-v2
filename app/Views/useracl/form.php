@@ -1,5 +1,11 @@
-<div class="modal fade modal-fullscreen" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
+<style>
+#aclModal .modal-dialog {
+    max-width: 98% !important;
+    margin: 1% auto;
+}
+</style>
+<div class="modal fade" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="aclModalLabel">Manage User Roles</h5>
