@@ -30,8 +30,10 @@ function recursiveBase64ToArrayBuffer(obj) {
         if (typeof obj[key] === 'object' && obj[key] !== null) {
             recursiveBase64ToArrayBuffer(obj[key]);
         } else if (typeof obj[key] === 'string') {
-            if (key === 'id' || key === 'challenge' || key === 'userHandle' || key === 'rawId') {
-                obj[key] = base64ToArrayBuffer(obj[key]);
+            // lbuchs/WebAuthn encodes binary properties as =?BINARY?B?{base64}?=
+            if (obj[key].startsWith('=?BINARY?B?') && obj[key].endsWith('?=')) {
+                let base64 = obj[key].substring(11, obj[key].length - 2);
+                obj[key] = base64ToArrayBuffer(base64);
             }
         }
     }
