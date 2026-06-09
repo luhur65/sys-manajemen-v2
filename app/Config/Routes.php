@@ -706,6 +706,8 @@ $routes->match(['GET', 'POST'], 'UserAcl/grid/(:any)', 'UserAcl::grid/$1');
 $routes->match(['GET', 'POST'], 'useracl/grid/(:any)', 'UserAcl::grid/$1');
 $routes->match(['GET', 'POST'], 'UserAcl/operation/(:any)', 'UserAcl::operation/$1');
 $routes->match(['GET', 'POST'], 'useracl/operation/(:any)', 'UserAcl::operation/$1');
+$routes->match(['GET', 'POST'], 'UserAcl/getAcos', 'UserAcl::getAcos');
+$routes->match(['GET', 'POST'], 'useracl/getAcos', 'UserAcl::getAcos');
 
 // Routes for App\Controllers\Usermenu (Usermenu)
 $routes->match(['GET', 'POST'], 'Usermenu', 'Usermenu::index');
