@@ -45,10 +45,21 @@
                     // Format data untuk jqGrid
                     $gridData = [];
                     foreach($acos as $aco) {
+                        $className = trim($aco->class ?? '');
+                        $methodName = trim($aco->method ?? '');
+                        $displayName = trim($aco->display_name ?? '');
+                        
+                        if ($className === '') {
+                            $className = $displayName !== '' ? '[MENU] ' . $displayName : '[PARENT MENU / SEPARATOR]';
+                        }
+                        if ($methodName === '') {
+                            $methodName = '-';
+                        }
+                        
                         $gridData[] = [
                             'acosid' => $aco->acosid,
-                            'class_name' => $aco->class,
-                            'method_name' => $aco->method
+                            'class_name' => $className,
+                            'method_name' => $methodName
                         ];
                     }
                     ?>
