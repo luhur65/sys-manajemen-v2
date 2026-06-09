@@ -130,6 +130,41 @@ class UserAcl extends BaseController
         }
         return $this->response->setJSON($responce);
     }
+
+    public function getAcos()
+    {
+        $db = \Config\Database::connect();
+        $acos = $db->table('tblacos')->orderBy('class', 'ASC')->orderBy('method', 'ASC')->get()->getResult();
+        
+        $responce = new \stdClass();
+        $responce->page = 1;
+        $responce->total = 1;
+        $responce->records = count($acos);
+        $responce->rows = [];
+        
+        $i = 0;
+        foreach ($acos as $aco) {
+            $className = trim($aco->class ?? '');
+            $methodName = trim($aco->method ?? '');
+            $displayName = trim($aco->display_name ?? '');
+            
+            if ($className === '') {
+                $className = $displayName !== '' ? '[MENU] ' . $displayName : '[PARENT MENU / SEPARATOR]';
+            }
+            if ($methodName === '') {
+                $methodName = '-';
+            }
+            
+            $responce->rows[$i]['id'] = $aco->acosid;
+            $responce->rows[$i]['cell'] = array(
+                $className,
+                $methodName
+            );
+            $i++;
+        }
+        
+        return $this->response->setJSON($responce);
+    }
     
     // Adapted from old CI3 operation
     protected function operation($filters)

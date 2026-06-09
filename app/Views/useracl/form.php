@@ -42,26 +42,6 @@
                         $selectedAcos = array_map('trim', explode(',', $data->acos));
                     }
 
-                    // Format data untuk jqGrid
-                    $gridData = [];
-                    foreach($acos as $aco) {
-                        $className = trim($aco->class ?? '');
-                        $methodName = trim($aco->method ?? '');
-                        $displayName = trim($aco->display_name ?? '');
-                        
-                        if ($className === '') {
-                            $className = $displayName !== '' ? '[MENU] ' . $displayName : '[PARENT MENU / SEPARATOR]';
-                        }
-                        if ($methodName === '') {
-                            $methodName = '-';
-                        }
-                        
-                        $gridData[] = [
-                            'acosid' => $aco->acosid,
-                            'class' => $className,
-                            'method' => $methodName
-                        ];
-                    }
                     ?>
                     
                     <div class="row">
@@ -84,15 +64,15 @@
 
 <script>
     $(document).ready(function() {
-        var mydata = <?= json_encode($gridData) ?>;
         var selectedIds = <?= json_encode($selectedAcos) ?>;
         
         $gridAcos = $("#jqGridAcos");
         
         $gridAcos.jqGrid({
-            datatype: "local",
-            data: mydata,
-            localReader: { id: "acosid" },
+            url: "<?= base_url('useracl/getAcos') ?>",
+            mtype: "GET",
+            datatype: "json",
+            jsonReader: { repeatitems: true },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
@@ -112,6 +92,12 @@
                 // Cegah trigger event onSelectRow saat setSelection awal
                 var i;
                 for (i = 0; i < selectedIds.length; i++) {
+                    grid.jqGrid('setSelection', selectedIds[i], false);
+                }
+            },
+            loadComplete: function() {
+                var grid = $("#jqGridAcos");
+                for (var i = 0; i < selectedIds.length; i++) {
                     grid.jqGrid('setSelection', selectedIds[i], false);
                 }
             }
