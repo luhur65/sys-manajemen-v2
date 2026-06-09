@@ -1,10 +1,16 @@
 <style>
-#aclModal .modal-dialog {
-    max-width: 98% !important;
-    margin: 1% auto;
+.modal-fullscreen .modal-dialog {
+    max-width: 100% !important;
+    margin: 0 !important;
+    height: 100vh;
+}
+.modal-fullscreen .modal-content {
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
 }
 </style>
-<div class="modal fade" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
+<div class="modal fade modal-fullscreen" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
