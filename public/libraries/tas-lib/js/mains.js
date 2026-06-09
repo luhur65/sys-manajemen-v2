@@ -2063,10 +2063,8 @@ function initMonthpicker(classDatepicker = "monthpicker") {
             })
             .css({
                 height: "31px",
-                "background-color": "#e0ecff",
                 width: "35px",
                 display: "inline-flex",
-                "border-color": "#adcdff",
                 "align-items": "center",
                 "justify-content": "center",
                 cursor: "pointer",
