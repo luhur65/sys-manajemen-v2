@@ -1,5 +1,5 @@
-<div class="modal fade" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal fade modal-fullscreen" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="aclModalLabel">Manage User Roles</h5>
@@ -35,8 +35,8 @@
                     foreach($acos as $aco) {
                         $gridData[] = [
                             'acosid' => $aco->acosid,
-                            'class' => $aco->class,
-                            'method' => $aco->method
+                            'class_name' => $aco->class,
+                            'method_name' => $aco->method
                         ];
                     }
                     ?>
@@ -73,13 +73,13 @@
             iconSet: 'fontAwesome',
             colModel: [
                 { label: 'ID', name: 'acosid', key: true, hidden: true },
-                { label: 'Class / Modul', name: 'class', width: 200, searchoptions:{sopt:['cn']} },
-                { label: 'Method / Aksi', name: 'method', width: 250, searchoptions:{sopt:['cn']} }
+                { label: 'Class / Modul', name: 'class_name', width: 200, searchoptions:{sopt:['cn']} },
+                { label: 'Method / Aksi', name: 'method_name', width: 250, searchoptions:{sopt:['cn']} }
             ],
             viewrecords: true,
             autowidth: true,
             shrinkToFit: true,
-            height: 300,
+            height: 'calc(100vh - 350px)',
             rowNum: 10000,
             multiselect: true,
             pager: '#jqGridAcosPager',
