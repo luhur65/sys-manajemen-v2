@@ -70,9 +70,17 @@
 
 <script>
     $(document).ready(function() {
+        let limit;
+        let sortname = '';
+        let sortorder = '';
+        let rowNum = 50;
+
+        let indexRow = 0;
+        let triggerClick = true;
+        let id = '';
+
         const apiUrl = `<?= base_url('truckingtradoluardetailexp/grid') ?>`;
         const $grid = $("#jqGrid");
-        var triggerClick = false;
 
         if($('.select2').length > 0) {
             $('.select2').select2({ theme: 'bootstrap4' });

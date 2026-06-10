@@ -56,6 +56,8 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        let id = '';
+
         let indexRow = 0
         let triggerClick = true
         let limit
