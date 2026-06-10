@@ -101,7 +101,7 @@
 
     function loadAclGrid(userpk) {
         $('.modal-loader').removeClass('d-none');
-        var page = "<?= base_url('useracl/index') ?>?userpk=" + userpk;
+        var page = "<?= base_url('useracl/index') ?>?userpk=" + userpk + "&_=" + new Date().getTime();
         $('#dataacl').load(page, function() {
             $('.modal-loader').addClass('d-none');
         });

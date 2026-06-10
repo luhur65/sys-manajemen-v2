@@ -41,12 +41,7 @@ class MyAuth {
 	}
 
 	private function _validatePermission($class=null,$method=null){
-        // Bypass for superadmin if needed, but let's follow DB rules first
-        $username = session()->get(SESSION_NAME.'username');
-        if (strtolower($username ?: '') === 'admin') {
-            return true; 
-        }
-
+        // Bypass removed to enforce DB ACL for admin
 		if($this->isLogin==0){
 			if($class!=$this->authController){
 				if(strtolower($class)!='extension'){

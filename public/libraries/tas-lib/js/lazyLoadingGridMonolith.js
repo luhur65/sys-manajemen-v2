@@ -365,7 +365,8 @@ function updateGridInfoFast(grid) {
     var actual = cachedData[currentViewPage] ? cachedData[currentViewPage].length : rowsPerPage;
     var end = start + actual - 1;
     if (totalRecord > 0 && end > totalRecord) end = totalRecord;
-    $('#jqGridInfoHandler').text('View ' + start + ' - ' + end + ' of ' + totalRecord);
+    var gridIdStr = grid.attr('id') || grid.getGridParam('id');
+    $('#' + gridIdStr + 'InfoHandler').text('View ' + start + ' - ' + end + ' of ' + totalRecord);
 }
 
 function detectCurrentViewPage(grid) {

@@ -118,11 +118,13 @@ class UserAclModel extends Model
 
     public function saveBatchData($data)
     {
-        $insert = [];
-        if (isset($data['acos'])) {
-            $records = $this->getListAll('tbluseracl', ['userpk' => $data['userpk']], true);
-            if (empty($records)) {
-                foreach ($data['acos'] as $aco) {
+        if (isset($data['acos']) && is_array($data['acos'])) {
+            // Delete all existing ACLs for this user
+            $this->db->table('tbluseracl')->where('userpk', $data['userpk'])->delete();
+            
+            $insert = [];
+            foreach ($data['acos'] as $aco) {
+                if (!empty($aco)) {
                     $insert[] = [
                         'userpk' => $data['userpk'],
                         'acoid' => $aco,
@@ -130,41 +132,12 @@ class UserAclModel extends Model
                         'modifiedon' => date("Y-m-d H:i:s")
                     ];
                 }
-                if(count($insert) > 0) {
-                    $this->db->table('tbluseracl')->insertBatch($insert);
-                }
-                return true;
-            } else {
-                $records = $this->getListByGroup(['userpk' => $data['userpk']]);
-                
-                $acos = strpos($records[0]['acos'], ',') === false ? [trim($records[0]['acos'])] : explode(', ', trim($records[0]['acos']));
-                
-                $inserts = array_diff($data['acos'], $acos);
-                $removes = array_diff($acos, $data['acos']);
-                
-                if (!empty($inserts)) {
-                    $insert = [];
-                    foreach ($inserts as $val) {
-                        $insert[] = [
-                            'userpk' => $data['userpk'],
-                            'acoid' => $val,
-                            'modifiedby' => strtoupper(session()->get('username') ?? 'SYSTEM'),
-                            'modifiedon' => date("Y-m-d H:i:s")
-                        ];
-                    }
-                    $this->db->table('tbluseracl')->insertBatch($insert);
-                }
-                
-                if (!empty($removes)) {
-                    foreach ($removes as $val) {
-                        $this->db->table('tbluseracl')
-                                 ->where(['userpk' => $data['userpk'], 'acoid' => $val])
-                                 ->delete();
-                    }
-                }
-               
-                return true;
             }
+            
+            if (count($insert) > 0) {
+                $this->db->table('tbluseracl')->insertBatch($insert);
+            }
+            return true;
         }
         return false;
     }
