@@ -119,7 +119,7 @@
                 if (indexRow >= limit) indexRow = (indexRow - limit * (page - 1));
             },
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -172,7 +172,7 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
@@ -268,7 +268,7 @@
             pager: '#jqGridAcosPager',
             loadonce: false,
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $("#jqGridAcos").jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -354,7 +354,7 @@
                 }
                 $gridAcos.jqGrid('setGridParam', { postData: postData });
                 
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $gridAcos.jqGrid('clearGridData');
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $gridAcos.jqGrid('getGridParam', 'postData'), 1, $gridAcos.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');

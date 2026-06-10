@@ -143,7 +143,7 @@
                 indexRow = indexRow - rows * (page - 1);
             },
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if (typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -180,7 +180,7 @@
                 }
                 $grid.jqGrid('setGridParam', { postData: postData });
                 
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
                 if (typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
@@ -193,7 +193,7 @@
             $(this).addClass('disabled');
             triggerClick = true;
             
-            if (typeof cachedData !== 'undefined') cachedData = {};
+            var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid("setGridParam", {
                 postData: {
                     cabang: $('#cabangSelect').val()

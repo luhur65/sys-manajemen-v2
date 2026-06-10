@@ -216,7 +216,7 @@
                 if (indexRow >= limit) indexRow = (indexRow - limit * (page - 1));
             },
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -269,7 +269,7 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
                 return false;
