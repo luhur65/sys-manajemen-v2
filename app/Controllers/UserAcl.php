@@ -146,7 +146,7 @@ class UserAcl extends BaseController
         foreach ($acos as $aco) {
             $className = trim($aco->class ?? '');
             $methodName = trim($aco->method ?? '');
-            $displayName = trim($aco->display_name ?? '');
+            $displayName = trim($aco->displayname ?? '');
             
             if ($className === '') {
                 $className = $displayName !== '' ? '[MENU] ' . $displayName : '[PARENT MENU / SEPARATOR]';
