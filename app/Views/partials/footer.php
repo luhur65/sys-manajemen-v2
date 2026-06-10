@@ -34,12 +34,12 @@
     <script src="<?= asset('libraries/jqgrid/570/js/jquery.jqGrid.min.js') ?>" type="text/javascript"></script>
 
     <!-- TAS Libraries -->
-    <script src="<?= asset('libraries/tas-lib/js/mains.js?version=' . time()) ?>"></script>
-    <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridMonolith.js?version=' . time()) ?>"></script>
-    <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridHelper.js?version=' . time()) ?>"></script>
-    <!-- <script src="<?= asset('libraries/tas-lib/js/lookup-columns.js?version=' . time()) ?>"></script> -->
-    <script src="<?= asset('libraries/tas-lib/js/pager.js?version=' . time()) ?>"></script>
-    <script src="<?= asset('libraries/tas-lib/js/YearPicker.js?version=' . time()) ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/mains.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridMonolith.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridHelper.js') ?>"></script>
+    <!-- <script src="<?= asset('libraries/tas-lib/js/lookup-columns.js') ?>"></script> -->
+    <script src="<?= asset('libraries/tas-lib/js/pager.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/YearPicker.js') ?>"></script>
 
     <script>
         $(document).ready(function() {

@@ -132,14 +132,25 @@
                 sortorder = $(this).jqGrid("getGridParam", "sortorder");
                 limit = $(this).jqGrid('getGridParam', 'postData').limit;
                 postData = $(this).jqGrid('getGridParam', 'postData');
+                if (indexRow > $(this).getDataIDs().length - 1) {
+                    indexRow = $(this).getDataIDs().length - 1;
+                }
 
-                setTimeout(function() {
-                    var currentGridIds = $('#jqGrid').getDataIDs();
-                    var currentSelection = $('#jqGrid').jqGrid('getGridParam', 'selrow');
-                    if (!currentSelection && currentGridIds.length > 0 && typeof minPageLoaded !== 'undefined' && minPageLoaded === 1) {
-                        $('#jqGrid').setSelection(currentGridIds[0], false);
+                if (triggerClick) {
+                    if (id != '') {
+                        indexRow = parseInt($('#jqGrid').jqGrid('getInd', id)) - 1;
+                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[indexRow]}"]`).click();
+                        id = '';
+                    } else if (indexRow != undefined) {
+                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[indexRow]}"]`).click();
                     }
-                }, 50);
+                    if ($('#jqGrid').getDataIDs()[indexRow] == undefined) {
+                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[0]}"]`).click();
+                    }
+                    triggerClick = false;
+                } else {
+                    $('#jqGrid').setSelection($('#jqGrid').getDataIDs()[indexRow]);
+                }
 
                 if (typeof initJqGridInfo === 'function') {
                     initJqGridInfo($(this));

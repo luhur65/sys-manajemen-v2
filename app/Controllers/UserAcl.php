@@ -133,13 +133,59 @@ class UserAcl extends BaseController
 
     public function getAcos()
     {
+        $page = $this->request->getPost('page') ?? $this->request->getGet('page') ?? 1;
+        $limit = $this->request->getPost('rows') ?? $this->request->getGet('rows') ?? 50;
+        $sidx = $this->request->getPost('sidx') ?? $this->request->getGet('sidx');
+        $sord = $this->request->getPost('sord') ?? $this->request->getGet('sord') ?? 'asc';
+        
+        $filters = $this->request->getPost('filters') ?? $this->request->getGet('filters');
+        $search = $this->request->getPost('_search') ?? $this->request->getGet('_search');
+        
         $db = \Config\Database::connect();
-        $acos = $db->table('tblacos')->orderBy('class', 'ASC')->orderBy('method', 'ASC')->get()->getResult();
+        $builder = $db->table('tblacos');
+
+        if ($search === "true" && !empty($filters)) {
+            $parsedFilters = json_decode($filters);
+            if (!empty($parsedFilters->rules)) {
+                $whereCondition = $this->operation($filters);
+                if (!empty($whereCondition)) {
+                    $builder->where($whereCondition);
+                }
+            }
+        }
+
+        $countBuilder = clone $builder;
+        $count = $countBuilder->countAllResults(false);
+
+        if ($count > 0) {
+            $total_pages = ceil($count / $limit);
+        } else {
+            $total_pages = 0;
+        }
+
+        if ($page > $total_pages) {
+            $page = $total_pages;
+        }
+        if ($limit < 0) {
+            $limit = 0;
+        }
+        $start = $limit * $page - $limit;
+        if ($start < 0) {
+            $start = 0;
+        }
+
+        if (!empty($sidx)) {
+            $builder->orderBy($sidx, $sord);
+        } else {
+            $builder->orderBy('class', 'ASC')->orderBy('method', 'ASC');
+        }
+
+        $acos = $builder->limit($limit, $start)->get()->getResult();
         
         $responce = new \stdClass();
-        $responce->page = 1;
-        $responce->total = 1;
-        $responce->records = count($acos);
+        $responce->page = $page;
+        $responce->total = $total_pages;
+        $responce->records = $count;
         $responce->rows = [];
         
         $i = 0;

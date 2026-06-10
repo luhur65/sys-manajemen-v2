@@ -10,32 +10,32 @@
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/fontawesome-free/css/all.min.css?version=' . $siteConfig->siteVersion) ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/fontawesome-free/css/all.min.css') ?>">
     <!-- Theme style -->
-    <link rel="stylesheet" href="<?= asset('libraries/adminlte/dist/css/adminlte-customized.min.css?version=' . $siteConfig->siteVersion) ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/adminlte/dist/css/adminlte-customized.min.css') ?>">
     <!-- overlayScrollbars -->
-    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css?version=' . $siteConfig->siteVersion) ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') ?>">
     
     <!-- JQGrid 570 Bootstrap 4 (From Trucking) -->
-    <link rel="stylesheet" href="<?= base_url('libraries/jqgrid/570/css/ui.jqgrid-bootstrap4.css?version=' . $siteConfig->siteVersion) ?>" />
+    <link rel="stylesheet" href="<?= asset('libraries/jqgrid/570/css/ui.jqgrid-bootstrap4.css') ?>" />
 
     <!-- Select2 -->
-    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/select2/css/select2.min.css?version=' . $siteConfig->siteVersion) ?>">
-    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css?version=' . $siteConfig->siteVersion) ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/select2/css/select2.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') ?>">
 
     <!-- Nestable2 -->
-    <link rel="stylesheet" href="<?= base_url('libraries/nestable2/1.6.0/css/jquery.nestable.min.css?version=' . $siteConfig->siteVersion) ?>" />
+    <link rel="stylesheet" href="<?= asset('libraries/nestable2/1.6.0/css/jquery.nestable.min.css') ?>" />
 
     <!-- Jquery UI -->
     <link id="jquery-theme" rel="stylesheet" href="<?= asset('libraries/jquery-ui/cupertino/jquery-ui.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('libraries/jquery-ui/1.13.1/jquery-ui.min.css') ?>">
 
     <!-- Custom Style (From Trucking) -->
-    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/pager.css?version=' . $siteConfig->siteVersion) ?>">
-    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/MonthPicker.min.css?version=' . $siteConfig->siteVersion) ?>">
-    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/YearPicker.css?version=' . $siteConfig->siteVersion) ?>">
-    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/styles.css?version=' . $siteConfig->siteVersion) ?>">
-    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/button-styles.css?version=' . $siteConfig->siteVersion) ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/pager.css') ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/MonthPicker.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/YearPicker.css') ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/styles.css') ?>">
+    <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/button-styles.css') ?>">
 
     <!-- Scripts - Moved to header to support legacy inline scripts in views (Matching Trucking placement) -->
     <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
