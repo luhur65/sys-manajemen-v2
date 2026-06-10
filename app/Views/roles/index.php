@@ -311,18 +311,6 @@
                     $('#gview_jqGridAcos .fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
                     $('#gview_jqGridAcos .fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
                 }, 10);
-                
-                // Add View Text correctly for modal grid
-                $('#jqGridAcosPager_center').css('width', '405px');
-                var start = 1;
-                var end = grid.jqGrid('getDataIDs').length;
-                var records = grid.jqGrid('getGridParam', 'records');
-                if (records === 0) start = 0;
-                
-                if ($("#showListAcos").length == 0) {
-                    $("#jqGridAcosPager_center table tbody tr").append(`<td><span id="showListAcos"></span></td>`);
-                }
-                $("#showListAcos").html(`View ${start} - ${end} of ${records}`);
             }
         }).customPager({
             buttons: []
@@ -333,6 +321,9 @@
             searchOnEnter: false, 
             defaultSearch: 'cn'
         });
+        
+        // Hapus elemen pager bawaan jqGrid yang tidak diperlukan untuk data lokal
+        $('#jqGridAcosPager_center').hide();
 
         if(typeof loadGridData === 'function') {
             loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
