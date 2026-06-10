@@ -309,6 +309,7 @@
                     $secondFooter.children("td").each(function() { this.style.width = ""; });
                     $secondFooter.insertAfter($footerRow);
                 }
+                    $footerRow.hide();
 
                 var totalRecords = $gridObj.jqGrid("getGridParam", "records");
                 if (userData && parseInt(totalRecords, 10) > 0) {
