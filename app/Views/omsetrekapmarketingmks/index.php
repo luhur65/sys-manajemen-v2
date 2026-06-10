@@ -366,6 +366,7 @@
                     if ($secondFooter.length === 0) {
                         $secondFooter = $footer.clone().removeClass("footrow").addClass("myfootrow").insertAfter($footer);
                     }
+                    $footer.hide();
                     
                     $secondFooter.find("td").empty();
                     

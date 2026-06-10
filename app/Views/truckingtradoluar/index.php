@@ -241,6 +241,7 @@
                         $secondFooter.children("td").each(function() { this.style.width = ""; });
                         $secondFooter.insertAfter($footerRow);
                     }
+                    $footerRow.hide();
 
                     if (parseInt($gridObj.jqGrid("getGridParam", "records"), 10) > 0) {
                         $secondFooter.show();
