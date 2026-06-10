@@ -64,9 +64,11 @@
 
 <script>
     $(document).ready(function() {
+        window.firstLoadAcos = true;
+        
         var selectedIds = <?= json_encode($selectedAcos) ?>;
         
-        $gridAcos = $("#jqGridAcos");
+        var $gridAcos = $("#jqGridAcos");
         
         $gridAcos.jqGrid({
             url: "<?= base_url('useracl/getAcos') ?>",
@@ -87,10 +89,17 @@
             rowNum: 10000,
             multiselect: true,
             pager: '#jqGridAcosPager',
+            loadonce: true,
             loadComplete: function() {
-                var grid = $("#jqGridAcos");
-                for (var i = 0; i < selectedIds.length; i++) {
-                    grid.jqGrid('setSelection', selectedIds[i], false);
+                if (window.firstLoadAcos === undefined) {
+                    window.firstLoadAcos = true;
+                }
+                if (window.firstLoadAcos) {
+                    var grid = $("#jqGridAcos");
+                    for (var i = 0; i < selectedIds.length; i++) {
+                        grid.jqGrid('setSelection', selectedIds[i], false);
+                    }
+                    window.firstLoadAcos = false;
                 }
             }
         });
