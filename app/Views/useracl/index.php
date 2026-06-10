@@ -5,7 +5,6 @@
         <!-- <h5 class="mb-3">Detail Hak Akses (ACL) - User ID: <?= esc($userpk) ?></h5> -->
         <h5 class="mb-3">Detail Hak Akses (ACL) - User</h5>
         <table id="jqGridAcl"></table>
-        <div id="jqGridAclPager"></div>
     </div>
 </div>
 
@@ -64,7 +63,7 @@
             rownumbers: true,
             rownumWidth: 35,
             gridview: true,
-            // pager: '#jqGridAclPager',
+            pager: '#jqGridAclPager',
             viewrecords: false,
             sortname: 'useraclid',
             sortorder: 'asc',
