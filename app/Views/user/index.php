@@ -228,7 +228,7 @@
                 loadAclGrid(id);
             },
             onSortCol: function(index, iCol, sortorder) {
-                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -289,7 +289,7 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
-                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
                 return false;

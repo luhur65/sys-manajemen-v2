@@ -268,7 +268,7 @@
 
             },
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof gridState !== 'undefined' && gridState["#jqGrid"]) gridState["#jqGrid"].cachedData = {};
+                if (typeof lazyStates !== 'undefined' && lazyStates["jqGrid"]) lazyStates["jqGrid"].cachedData = {};
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 return 'stop';
             },
@@ -319,9 +319,9 @@
                 var TotalFNominal = 0;
                 var TotalFSisa = 0;
 
-                if (typeof gridState !== 'undefined' && gridState["#jqGrid"] && gridState["#jqGrid"].cachedData) {
-                    for (var pg in gridState["#jqGrid"].cachedData) {
-                        gridState["#jqGrid"].cachedData[pg].forEach(function(row) {
+                if (typeof lazyStates !== 'undefined' && lazyStates["jqGrid"] && lazyStates["jqGrid"].cachedData) {
+                    for (var pg in lazyStates["jqGrid"].cachedData) {
+                        lazyStates["jqGrid"].cachedData[pg].forEach(function(row) {
                             // Menjumlahkan nilai murni mengabaikan format tampilan
                             TotalFNominal += parseFloat(row.FNominal) || 0;
                             TotalFSisa += parseFloat(row.FSisa) || 0;
@@ -369,7 +369,7 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
-                if (typeof gridState !== 'undefined' && gridState["#jqGrid"]) gridState["#jqGrid"].cachedData = {};
+                if (typeof lazyStates !== 'undefined' && lazyStates["jqGrid"]) lazyStates["jqGrid"].cachedData = {};
                 $grid.jqGrid('clearGridData');
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 return false;
@@ -396,7 +396,7 @@
         });
 
         $('#btnFilter').click(function() {
-            if (typeof gridState !== 'undefined' && gridState["#jqGrid"]) gridState["#jqGrid"].cachedData = {};
+            if (typeof lazyStates !== 'undefined' && lazyStates["jqGrid"]) lazyStates["jqGrid"].cachedData = {};
             $grid.jqGrid('setGridParam', {
                 postData: {
                     cabang: $('#cabangSelect').val(),

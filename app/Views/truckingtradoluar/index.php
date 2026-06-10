@@ -202,7 +202,7 @@
             userDataOnFooter: true,
             toolbar: [true, 'top'],
             onSortCol: function(index, iCol, sortorder) {
-                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -324,7 +324,7 @@
                 }
                 $("#jqGrid").jqGrid('setGridParam', { postData: postData });
                 
-                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $("#jqGrid").jqGrid('clearGridData');
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
@@ -357,7 +357,7 @@
                                 $("#jqGridDetail").jqGrid('setGridParam', {
                                     postData: { cabang: cabangValue, ftgl: ftglValue }
                                 });
-                                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+                                var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                                 $("#jqGridDetail").jqGrid('clearGridData');
                                 if (typeof loadGridData === 'function') {
                                     loadGridData("#jqGridDetail", apiDetailUrl, $("#jqGridDetail").jqGrid('getGridParam', 'postData'), 1, 50, 'down', 'reload');
@@ -516,7 +516,7 @@
                     }
                     $("#jqGridDetail").jqGrid('setGridParam', { postData: postData });
                     
-                    var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+                    var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                     $("#jqGridDetail").jqGrid('clearGridData');
                     if(typeof loadGridData === 'function') {
                         loadGridData("#jqGridDetail", apiDetailUrl, $("#jqGridDetail").jqGrid('getGridParam', 'postData'), 1, $("#jqGridDetail").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
@@ -532,7 +532,7 @@
 
         // Trigger filter
         $('#btnFilter').click(function() {
-            var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
+            var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $("#jqGrid").jqGrid('setGridParam', {
                 postData: {
                     cabang: $('#cabangSelect').val(),
