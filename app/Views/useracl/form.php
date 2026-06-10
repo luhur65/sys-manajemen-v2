@@ -64,9 +64,8 @@
 
 <script>
     $(document).ready(function() {
-        window.firstLoadAcos = true;
-        
-        var selectedIds = <?= json_encode($selectedAcos) ?>;
+        // Track ID secara global untuk mengatasi bug checkbox hilang saat filter lokal
+        window.selectedAcosIds = <?= json_encode($selectedAcos) ?>.map(String);
         
         var $gridAcos = $("#jqGridAcos");
         
@@ -90,16 +89,42 @@
             multiselect: true,
             pager: '#jqGridAcosPager',
             loadonce: true,
-            loadComplete: function() {
-                if (window.firstLoadAcos === undefined) {
-                    window.firstLoadAcos = true;
-                }
-                if (window.firstLoadAcos) {
-                    var grid = $("#jqGridAcos");
-                    for (var i = 0; i < selectedIds.length; i++) {
-                        grid.jqGrid('setSelection', selectedIds[i], false);
+            onSelectRow: function(rowid, status, e) {
+                var strId = String(rowid);
+                if (status) {
+                    if (window.selectedAcosIds.indexOf(strId) === -1) {
+                        window.selectedAcosIds.push(strId);
                     }
-                    window.firstLoadAcos = false;
+                } else {
+                    var idx = window.selectedAcosIds.indexOf(strId);
+                    if (idx > -1) {
+                        window.selectedAcosIds.splice(idx, 1);
+                    }
+                }
+            },
+            onSelectAll: function(aRowids, status) {
+                for (var i = 0; i < aRowids.length; i++) {
+                    var strId = String(aRowids[i]);
+                    if (status) {
+                        if (window.selectedAcosIds.indexOf(strId) === -1) {
+                            window.selectedAcosIds.push(strId);
+                        }
+                    } else {
+                        var idx = window.selectedAcosIds.indexOf(strId);
+                        if (idx > -1) {
+                            window.selectedAcosIds.splice(idx, 1);
+                        }
+                    }
+                }
+            },
+            loadComplete: function() {
+                var grid = $("#jqGridAcos");
+                var visibleIds = grid.jqGrid('getDataIDs');
+                // Restore selection for visible rows silently
+                for (var i = 0; i < visibleIds.length; i++) {
+                    if (window.selectedAcosIds.indexOf(String(visibleIds[i])) > -1) {
+                        grid.jqGrid('setSelection', visibleIds[i], false);
+                    }
                 }
             }
         });
@@ -120,11 +145,14 @@
 
             // Uncheck all
             $gridAcos.jqGrid('resetSelection');
+            window.selectedAcosIds = [];
             
             // Check based on selected role
             for (var j = 0; j < ex.length; j++) {
-                if (ex[j].trim() !== "") {
-                    $gridAcos.jqGrid('setSelection', ex[j].trim(), false);
+                var t = ex[j].trim();
+                if (t !== "") {
+                    window.selectedAcosIds.push(t);
+                    $gridAcos.jqGrid('setSelection', t, false);
                 }
             }
         });
@@ -133,8 +161,8 @@
         $('#btnSaveAcl').click(function() {
             var url = "<?= base_url('useracl/userroles/') . $userpk ?>";
             
-            // Dapatkan ID yang dipilih di jqGrid
-            var selRowIds = $gridAcos.jqGrid('getGridParam', 'selarrrow');
+            // Dapatkan ID dari array tracking kita, BUKAN dari grid (karena grid membuang data yang ter-filter)
+            var selRowIds = window.selectedAcosIds;
             
             // Masukkan ke dalam hidden inputs agar bisa di-serialize()
             var container = $('#hidden-inputs-container');
