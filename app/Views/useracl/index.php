@@ -19,7 +19,7 @@
         $gridAcl.jqGrid({
             url: gridAclUrl,
             mtype: "POST",
-            datatype: "json",
+            datatype: "local",
             jsonReader: { repeatitems: true },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
@@ -57,19 +57,26 @@
                     // }
                 }
             ],
-            rowNum: 10,
+            rowNum: 50,
             toolbar: [true, "top"],
-            rowList: [10, 20, 50, 100],
+            // rowList: [10, 20, 50, 100],
             mtype: "POST",
             rownumbers: true,
             rownumWidth: 35,
             gridview: true,
-            pager: '#jqGridAclPager',
-            viewrecords: true,
+            // pager: '#jqGridAclPager',
+            viewrecords: false,
             sortname: 'useraclid',
             sortorder: 'asc',
             altRows: true,
             altclass: 'myAltRowClass',
+            onSortCol: function(index, iCol, sortorder) {
+                if (typeof cachedData !== 'undefined') cachedData = {};
+                if(typeof loadGridData === 'function') {
+                    loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                }
+                return 'stop';
+            },
             loadComplete: function(data) {
                 $('#gsh_' + $.jgrid.jqID($gridAcl[0].id) + '_rn').html($("<div id='resetFilterOptionsAcl' class='clearsearchclass text-center' style='cursor: pointer;' title='Clear Filter'><span id='resetFilterOptionsAclSpan'><i class='fas fa-times text-danger'></i></span></div>"));
                 $("#resetFilterOptionsAcl").click(function(){
@@ -94,6 +101,18 @@
                 if(typeof setHighlight === 'function') {
                     setHighlight($gridAcl);
                 }
+                
+                if(typeof setupLazyLoadScrollHandler === 'function') {
+                    setupLazyLoadScrollHandler("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'));
+                }
+                
+                // Add View Text
+                $('#jqGridAclPager_center').css('width', '405px');
+                var jumlah = data.rows == undefined ? 0 : data.rows.length;
+                if ($("#showListAcl").length == 0) {
+                    $("#jqGridAclPager_center table tbody tr").append(`<td><span id="showListAcl"></span></td>`);
+                }
+                $("#showListAcl").html(`View 1 - ${jumlah} of ${data.records}`);
             }
         }).customPager({
             lazyLoading: true,
@@ -116,8 +135,19 @@
         
         $gridAcl.jqGrid('filterToolbar', {
             stringResult: true,
-            searchOnEnter: false
+            searchOnEnter: false,
+            defaultSearch: 'cn',
+            beforeSearch: function() {
+                if (typeof cachedData !== 'undefined') cachedData = {};
+                $gridAcl.jqGrid('clearGridData');
+                loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $gridAcl.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
+                return false;
+            }
         });
+        
+        if(typeof loadGridData === 'function') {
+            loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $gridAcl.jqGrid('getGridParam', 'rowNum'), 'down', 'init');
+        }
     });
 
     function newAcl(userpk) {
