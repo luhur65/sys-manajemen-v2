@@ -627,11 +627,16 @@ function setCustomBindKeys(grid) {
                 // LAZY LOAD LOGIC
                 // =================================================================
                 else {
+                    var state = (typeof getGridState === 'function') ? getGridState(grid) : {};
+                    var s_minPageLoaded = state.minPageLoaded || 1;
+                    var s_maxPageLoaded = state.maxPageLoaded || 1;
+                    var s_totalRecord = state.totalRecord || parseInt(grid.getGridParam("records")) || 0;
+
                     var apiUrl = grid.jqGrid('getGridParam', 'url');
                     var postData = grid.jqGrid('getGridParam', 'postData');
 
                     var safeIndex = Math.max(0, currentIndex);
-                    var totRec = (typeof totalRecord !== 'undefined' && totalRecord > 0) ? totalRecord : parseInt(grid.getGridParam("records")) || 0;
+                    var totRec = s_totalRecord;
 
                     var currentAbsIndex = 0;
                     var firstDomAbsIndex = 0;
@@ -655,7 +660,7 @@ function setCustomBindKeys(grid) {
                             scrollRowIntoView(grid, gridIds[currentIndex - 1]);
                         } else if (firstDomAbsIndex > 0) {
                             var targetAbsIndex = currentAbsIndex - 1;
-                            var targetPageLoad = (typeof minPageLoaded !== 'undefined') ? minPageLoaded - 1 : 1;
+                            var targetPageLoad = Math.max(1, s_minPageLoaded - 1);
 
                             // Arrow Up TETAP menggunakan 'up', 'page' karena menyisip data
                             loadGridData(gridSelector, apiUrl, postData, targetPageLoad, serverPageSize, 'up', 'page', function () {
@@ -676,7 +681,7 @@ function setCustomBindKeys(grid) {
                             scrollRowIntoView(grid, gridIds[currentIndex + 1]);
                         } else if (lastDomAbsIndex < totRec - 1) {
                             var targetAbsIndex = currentAbsIndex + 1;
-                            var targetPageLoad = (typeof maxPageLoaded !== 'undefined') ? maxPageLoaded + 1 : 2;
+                            var targetPageLoad = s_maxPageLoaded + 1;
 
                             // Arrow Down TETAP menggunakan 'down', 'page' karena menyisip data
                             loadGridData(gridSelector, apiUrl, postData, targetPageLoad, serverPageSize, 'down', 'page', function () {
