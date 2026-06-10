@@ -28,42 +28,9 @@
 
                     <h6 class="font-weight-bold border-bottom pb-2 mb-3 mt-4">Role Permissions (ACL)</h6>
                     
-                    <div class="mb-3">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="checkall">
-                            <label class="custom-control-label font-weight-bold" for="checkall">Check All</label>
-                        </div>
-                    </div>
-                    
-                    <div class="row" id="acl-container">
-                        <?php 
-                        $currentClass = '';
-                        if (isset($acos)) {
-                            foreach($acos as $aco): 
-                                if ($currentClass != $aco->class) {
-                                    if ($currentClass != '') echo '</div></div></div>'; // Tutup grid sebelumnya
-                                    $currentClass = $aco->class;
-                                    echo '<div class="col-md-3 mb-4">';
-                                    echo '<div class="card shadow-sm h-100">';
-                                    echo '<div class="card-header py-2 bg-light font-weight-bold text-uppercase" style="font-size: 0.85rem;">' . esc($aco->class) . '</div>';
-                                    echo '<div class="card-body p-2" style="max-height: 250px; overflow-y: auto;">';
-                                }
-                            ?>
-                                <div class="custom-control custom-checkbox mb-1">
-                                    <input type="checkbox" class="custom-control-input acl-checkbox checkbox-<?= $aco->acosid ?>" 
-                                           id="aco_<?= $aco->acosid ?>" 
-                                           name="role_permission[acos][]" 
-                                           value="<?= $aco->acosid ?>">
-                                    <label class="custom-control-label" style="font-size: 0.85rem;" for="aco_<?= $aco->acosid ?>">
-                                        <?= esc($aco->method) ?>
-                                    </label>
-                                </div>
-                            <?php 
-                            endforeach; 
-                            if ($currentClass != '') echo '</div></div></div>'; // Tutup yang terakhir 
-                        }
-                        ?>
-                    </div>
+                    <div id="hidden-inputs-container"></div>
+                    <table id="jqGridAcos"></table>
+                    <div id="jqGridAcosPager"></div>
                 </div>
                 <div class="modal-footer justify-content-start">
                     <button type="submit" class="btn btn-primary" id="btnSave"><i class="fa fa-save"></i> Save</button>
@@ -95,10 +62,6 @@
 
         // Detect Device Widths (Inspired by Trucking)
         const isDesktop = (detectDeviceType() == "desktop");
-
-        $('#checkall').click(function () {
-            $('.acl-checkbox').prop('checked', this.checked);
-        });
 
         $grid.jqGrid({
             url: apiUrl,
@@ -279,6 +242,98 @@
             $('.modal-loader').addClass('d-none');
         });
 
+        // ====================== GRID ACOS (MODAL) ======================
+        var $gridAcos = $("#jqGridAcos");
+        window.selectedAcosIds = [];
+
+        $gridAcos.jqGrid({
+            url: "<?= base_url('useracl/getAcos') ?>",
+            mtype: "GET",
+            datatype: "json",
+            jsonReader: { repeatitems: true },
+            styleUI: 'Bootstrap4',
+            iconSet: 'fontAwesome',
+            colModel: [
+                { label: 'ID', name: 'acosid', key: true, hidden: true },
+                { label: 'Class / Modul', name: 'class', width: (isDesktop ? sm_dekstop_4 : sm_mobile_4), searchoptions:{sopt:['cn']} },
+                { label: 'Method / Aksi', name: 'method', width: (isDesktop ? sm_dekstop_4 : sm_mobile_4), searchoptions:{sopt:['cn']} },
+                { label: 'Display Name', name: 'displayname', width: (isDesktop ? md_dekstop_4 : sm_mobile_4), searchoptions:{sopt:['cn']} }
+            ],
+            viewrecords: false,
+            autowidth: true,
+            shrinkToFit: false,
+            height: 300,
+            rowNum: 50,
+            scroll: 1,
+            multiselect: true,
+            pager: '#jqGridAcosPager',
+            loadonce: true,
+            onSelectRow: function(rowid, status, e) {
+                var strId = String(rowid);
+                if (status) {
+                    if (window.selectedAcosIds.indexOf(strId) === -1) {
+                        window.selectedAcosIds.push(strId);
+                    }
+                } else {
+                    var idx = window.selectedAcosIds.indexOf(strId);
+                    if (idx > -1) {
+                        window.selectedAcosIds.splice(idx, 1);
+                    }
+                }
+            },
+            onSelectAll: function(aRowids, status) {
+                for (var i = 0; i < aRowids.length; i++) {
+                    var strId = String(aRowids[i]);
+                    if (status) {
+                        if (window.selectedAcosIds.indexOf(strId) === -1) {
+                            window.selectedAcosIds.push(strId);
+                        }
+                    } else {
+                        var idx = window.selectedAcosIds.indexOf(strId);
+                        if (idx > -1) {
+                            window.selectedAcosIds.splice(idx, 1);
+                        }
+                    }
+                }
+            },
+            loadComplete: function() {
+                var grid = $("#jqGridAcos");
+                var visibleIds = grid.jqGrid('getDataIDs');
+                // Restore selection
+                for (var i = 0; i < visibleIds.length; i++) {
+                    if (window.selectedAcosIds.indexOf(String(visibleIds[i])) > -1) {
+                        grid.jqGrid('setSelection', visibleIds[i], false);
+                    }
+                }
+                
+                // Ganti icon sorting
+                setTimeout(function() {
+                    $('#gview_jqGridAcos .fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
+                    $('#gview_jqGridAcos .fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
+                }, 10);
+                
+                // Add View Text correctly for modal grid
+                $('#jqGridAcosPager_center').css('width', '405px');
+                var start = 1;
+                var end = grid.jqGrid('getDataIDs').length;
+                var records = grid.jqGrid('getGridParam', 'records');
+                if (records === 0) start = 0;
+                
+                if ($("#showListAcos").length == 0) {
+                    $("#jqGridAcosPager_center table tbody tr").append(`<td><span id="showListAcos"></span></td>`);
+                }
+                $("#showListAcos").html(`View ${start} - ${end} of ${records}`);
+            }
+        }).customPager({
+            buttons: []
+        });
+        
+        $gridAcos.jqGrid('filterToolbar', {
+            stringResult: true,
+            searchOnEnter: false, 
+            defaultSearch: 'cn'
+        });
+
         if(typeof loadGridData === 'function') {
             loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
         }
@@ -303,15 +358,19 @@
     function newData() {
         $('.modal-loader').addClass('d-none');
         $('#fm')[0].reset();
-        $('.acl-checkbox').prop('checked', false);
-        $('#checkall').prop('checked', false);
+        
+        window.selectedAcosIds = [];
+        $("#jqGridAcos").jqGrid('resetSelection');
         
         $('#action').val('add');
         $('#id').val('');
         
         $('#fm input:not([type="hidden"]), #fm select').prop('disabled', false);
-        $('.acl-checkbox').prop('disabled', false);
-        $('#checkall').prop('disabled', false);
+        
+        // Panggil re-layout autowidth saat modal ditampilkan agar grid ukurannya pas
+        setTimeout(function() {
+            $("#jqGridAcos").jqGrid('setGridWidth', $("#jqGridAcos").closest('.modal-body').width());
+        }, 300);
         
         $('#btnSave').show();
         $('#btnSave').removeClass('btn-danger').addClass('btn-primary');
@@ -326,8 +385,9 @@
             $('.modal-loader').addClass('d-none');
             
             $('#fm')[0].reset();
-            $('.acl-checkbox').prop('checked', false);
-            $('#checkall').prop('checked', false);
+            
+            window.selectedAcosIds = [];
+            $("#jqGridAcos").jqGrid('resetSelection');
             
             $('#action').val('edit');
             $('#id').val(id);
@@ -336,13 +396,17 @@
             // Check the ACL boxes
             if (res.role_permission && res.role_permission.length > 0) {
                 res.role_permission.forEach(function(acoid) {
-                    $('.checkbox-' + acoid.trim()).prop('checked', true);
+                    var strId = String(acoid.trim());
+                    window.selectedAcosIds.push(strId);
+                    $("#jqGridAcos").jqGrid('setSelection', strId, false);
                 });
             }
             
             $('#fm input:not([type="hidden"]), #fm select').prop('disabled', false);
-            $('.acl-checkbox').prop('disabled', false);
-            $('#checkall').prop('disabled', false);
+            
+            setTimeout(function() {
+                $("#jqGridAcos").jqGrid('setGridWidth', $("#jqGridAcos").closest('.modal-body').width());
+            }, 300);
             $('#btnSave').show();
             $('#btnSave').removeClass('btn-danger').addClass('btn-primary');
             $('#btnSave').html('<i class="fa fa-save"></i> Save');
@@ -360,8 +424,9 @@
             $('.modal-loader').addClass('d-none');
             
             $('#fm')[0].reset();
-            $('.acl-checkbox').prop('checked', false);
-            $('#checkall').prop('checked', false);
+            
+            window.selectedAcosIds = [];
+            $("#jqGridAcos").jqGrid('resetSelection');
             
             $('#action').val('view');
             $('#id').val(id);
@@ -370,13 +435,17 @@
             // Check the ACL boxes
             if (res.role_permission && res.role_permission.length > 0) {
                 res.role_permission.forEach(function(acoid) {
-                    $('.checkbox-' + acoid.trim()).prop('checked', true);
+                    var strId = String(acoid.trim());
+                    window.selectedAcosIds.push(strId);
+                    $("#jqGridAcos").jqGrid('setSelection', strId, false);
                 });
             }
             
             $('#fm input, #fm select').prop('disabled', true);
-            $('.acl-checkbox').prop('disabled', true);
-            $('#checkall').prop('disabled', true);
+            
+            setTimeout(function() {
+                $("#jqGridAcos").jqGrid('setGridWidth', $("#jqGridAcos").closest('.modal-body').width());
+            }, 300);
             $('#btnSave').hide();
             $('#crudModalLabel').text('View Role');
             $('#crudModal').modal('show');
@@ -392,8 +461,9 @@
             $('.modal-loader').addClass('d-none');
             
             $('#fm')[0].reset();
-            $('.acl-checkbox').prop('checked', false);
-            $('#checkall').prop('checked', false);
+            
+            window.selectedAcosIds = [];
+            $("#jqGridAcos").jqGrid('resetSelection');
             
             $('#action').val('del');
             $('#id').val(id);
@@ -402,13 +472,17 @@
             // Check the ACL boxes
             if (res.role_permission && res.role_permission.length > 0) {
                 res.role_permission.forEach(function(acoid) {
-                    $('.checkbox-' + acoid.trim()).prop('checked', true);
+                    var strId = String(acoid.trim());
+                    window.selectedAcosIds.push(strId);
+                    $("#jqGridAcos").jqGrid('setSelection', strId, false);
                 });
             }
             
             $('#fm input:not([type="hidden"]), #fm select').prop('disabled', true);
-            $('.acl-checkbox').prop('disabled', true);
-            $('#checkall').prop('disabled', true);
+            
+            setTimeout(function() {
+                $("#jqGridAcos").jqGrid('setGridWidth', $("#jqGridAcos").closest('.modal-body').width());
+            }, 300);
             
             $('#btnSave').show();
             $('#btnSave').removeClass('btn-primary').addClass('btn-danger');
@@ -429,6 +503,17 @@
         
         let action = $('#action').val();
         let url = crudUrl;
+        
+        // Inject selected Acos IDs into hidden inputs before serializing
+        var selRowIds = window.selectedAcosIds;
+        var container = $('#hidden-inputs-container');
+        container.empty();
+        $.each(selRowIds, function(index, value) {
+            container.append('<input type="hidden" name="role_permission[acos][]" value="' + value + '">');
+        });
+        if (selRowIds.length === 0) {
+            container.append('<input type="hidden" name="role_permission[acos][]" value="">');
+        }
         
         let data = $(this).serializeArray();
         let operFound = false;
