@@ -268,8 +268,8 @@
 
             },
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
-                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                if (typeof gridState !== 'undefined' && gridState["#jqGrid"]) gridState["#jqGrid"].cachedData = {};
+                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 return 'stop';
             },
             loadComplete: function(res) {
@@ -319,9 +319,9 @@
                 var TotalFNominal = 0;
                 var TotalFSisa = 0;
 
-                if (typeof cachedData !== 'undefined') {
-                    for (var pg in cachedData) {
-                        cachedData[pg].forEach(function(row) {
+                if (typeof gridState !== 'undefined' && gridState["#jqGrid"] && gridState["#jqGrid"].cachedData) {
+                    for (var pg in gridState["#jqGrid"].cachedData) {
+                        gridState["#jqGrid"].cachedData[pg].forEach(function(row) {
                             // Menjumlahkan nilai murni mengabaikan format tampilan
                             TotalFNominal += parseFloat(row.FNominal) || 0;
                             TotalFSisa += parseFloat(row.FSisa) || 0;
@@ -369,9 +369,9 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                if (typeof gridState !== 'undefined' && gridState["#jqGrid"]) gridState["#jqGrid"].cachedData = {};
                 $grid.jqGrid('clearGridData');
-                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 return false;
             }
         });
@@ -395,9 +395,8 @@
             $(this).attr('style', 'display: none !important');
         });
 
-        // Filter Action
         $('#btnFilter').click(function() {
-            if (typeof cachedData !== 'undefined') cachedData = {};
+            if (typeof gridState !== 'undefined' && gridState["#jqGrid"]) gridState["#jqGrid"].cachedData = {};
             $grid.jqGrid('setGridParam', {
                 postData: {
                     cabang: $('#cabangSelect').val(),

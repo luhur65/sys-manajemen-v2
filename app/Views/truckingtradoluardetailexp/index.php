@@ -154,7 +154,7 @@
             gridview: true,
             footerrow: true,
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
                 if (typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -285,7 +285,7 @@
                 }
                 $grid.jqGrid('setGridParam', { postData: postData });
                 
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
                 if (typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
@@ -313,7 +313,7 @@
         $('#btnFilter').click(function() {
             triggerClick = true;
             
-            if (typeof cachedData !== 'undefined') cachedData = {};
+            var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
             $grid.jqGrid("setGridParam", {
                 postData: {
                     cabang: $('#cabangSelect').val(),

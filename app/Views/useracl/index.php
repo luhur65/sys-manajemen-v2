@@ -70,7 +70,7 @@
             altRows: true,
             altclass: 'myAltRowClass',
             onSortCol: function(index, iCol, sortorder) {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -137,7 +137,7 @@
             searchOnEnter: false,
             defaultSearch: 'cn',
             beforeSearch: function() {
-                if (typeof cachedData !== 'undefined') cachedData = {};
+                var targetGridId = this.id ? '#' + this.id : '#jqGrid'; if (typeof gridState !== 'undefined' && gridState[targetGridId]) gridState[targetGridId].cachedData = {};
                 $gridAcl.jqGrid('clearGridData');
                 loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $gridAcl.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
                 return false;
