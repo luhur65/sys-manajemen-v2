@@ -264,10 +264,16 @@
             shrinkToFit: false,
             height: 300,
             rowNum: 50,
-            scroll: 1,
             multiselect: true,
             pager: '#jqGridAcosPager',
-            loadonce: true,
+            loadonce: false,
+            onSortCol: function(index, iCol, sortorder) {
+                if (typeof cachedData !== 'undefined') cachedData = {};
+                if(typeof loadGridData === 'function') {
+                    loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $("#jqGridAcos").jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                }
+                return 'stop';
+            },
             onSelectRow: function(rowid, status, e) {
                 var strId = String(rowid);
                 if (status) {
@@ -301,14 +307,18 @@
                 var visibleIds = grid.jqGrid('getDataIDs');
                 var selRows = grid.jqGrid('getGridParam', 'selarrrow') || [];
                 // Restore selection
-                for (var i = 0; i < visibleIds.length; i++) {
-                    var strId = String(visibleIds[i]);
-                    if (window.selectedAcosIds.indexOf(strId) > -1) {
-                        if (selRows.indexOf(strId) === -1) {
-                            grid.jqGrid('setSelection', strId, false);
+                setTimeout(function() {
+                    var visibleIds = grid.jqGrid('getDataIDs');
+                    var selRows = grid.jqGrid('getGridParam', 'selarrrow') || [];
+                    for (var i = 0; i < visibleIds.length; i++) {
+                        var strId = String(visibleIds[i]);
+                        if (window.selectedAcosIds.indexOf(strId) > -1) {
+                            if (selRows.indexOf(strId) === -1) {
+                                grid.jqGrid('setSelection', strId, false);
+                            }
                         }
                     }
-                }
+                }, 50);
                 
                 // Ganti icon sorting
                 setTimeout(function() {
@@ -322,6 +332,10 @@
                 var records = grid.jqGrid('getGridParam', 'records');
                 if (records === 0) start = 0;
                 $('#jqGridAcosInfoHandler').html(`View ${start} - ${end} of ${records}`);
+
+                if (typeof setupLazyLoadScrollHandler === 'function') {
+                    setupLazyLoadScrollHandler("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", grid.jqGrid('getGridParam', 'postData'));
+                }
             }
         }).customPager({
             lazyLoading: true,
@@ -331,7 +345,22 @@
         $gridAcos.jqGrid('filterToolbar', {
             stringResult: true,
             searchOnEnter: false, 
-            defaultSearch: 'cn'
+            defaultSearch: 'cn',
+            beforeSearch: function() {
+                var postData = $gridAcos.jqGrid('getGridParam', 'postData');
+                if (postData.filters) {
+                    var filtersObj = JSON.parse(postData.filters);
+                    postData._search = (filtersObj.rules && filtersObj.rules.length > 0);
+                }
+                $gridAcos.jqGrid('setGridParam', { postData: postData });
+                
+                if (typeof cachedData !== 'undefined') cachedData = {};
+                $gridAcos.jqGrid('clearGridData');
+                if(typeof loadGridData === 'function') {
+                    loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $gridAcos.jqGrid('getGridParam', 'postData'), 1, $gridAcos.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                }
+                return false;
+            }
         });
         
         // Hapus elemen pager bawaan jqGrid yang tidak diperlukan untuk data lokal
@@ -339,6 +368,9 @@
 
         if(typeof loadGridData === 'function') {
             loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
+            loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $gridAcos.jqGrid('getGridParam', 'postData'), 1, $gridAcos.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
+        } else {
+            $gridAcos.jqGrid('setGridParam',{datatype:'json'}).trigger('reloadGrid');
         }
 
         // Logic for clear search button
