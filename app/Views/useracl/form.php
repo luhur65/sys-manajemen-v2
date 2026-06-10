@@ -1,17 +1,8 @@
 <style>
-.modal-fullscreen .modal-dialog {
-    max-width: 100% !important;
-    margin: 0 !important;
-    height: 100vh;
-}
-.modal-fullscreen .modal-content {
-    height: 100vh;
-    border: 0;
-    border-radius: 0;
-}
+
 </style>
-<div class="modal fade modal-fullscreen" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal modal-fullscreen" id="aclModal" tabindex="-1" aria-labelledby="aclModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="aclModalLabel">Manage User Roles</h5>
@@ -44,12 +35,8 @@
 
                     ?>
                     
-                    <div class="row">
-                        <div class="col-12">
-                            <table id="jqGridAcos"></table>
-                            <div id="jqGridAcosPager"></div>
-                        </div>
-                    </div>
+                    <table id="jqGridAcos"></table>
+                    <div id="jqGridAcosPager"></div>
                     
                     <div id="hidden-inputs-container"></div>
                 </form>
@@ -68,6 +55,7 @@
         window.selectedAcosIds = <?= json_encode($selectedAcos) ?>.map(String);
         
         var $gridAcos = $("#jqGridAcos");
+        const isDesktop = (detectDeviceType() == "desktop");
         
         $gridAcos.jqGrid({
             url: "<?= base_url('useracl/getAcos') ?>",
@@ -77,16 +65,37 @@
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
-                { label: 'ID', name: 'acosid', key: true, hidden: true },
-                { label: 'Class / Modul', name: 'class', width: 200, searchoptions:{sopt:['cn']} },
-                { label: 'Method / Aksi', name: 'method', width: 250, searchoptions:{sopt:['cn']} },
-                { label: 'Display Name', name: 'displayname', width: 250, searchoptions:{sopt:['cn']} }
+                { 
+                    label: 'ID', 
+                    name: 'acosid', 
+                    key: true, 
+                    hidden: true 
+                },
+                { 
+                    label: 'Class / Modul', 
+                    name: 'class', 
+                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4),  
+                    searchoptions:{sopt:['cn']} 
+                },
+                { 
+                    label: 'Method / Aksi', 
+                    name: 'method', 
+                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4),  
+                    searchoptions:{sopt:['cn']} 
+                },
+                { 
+                    label: 'Display Name', 
+                    name: 'displayname', 
+                    width: (isDesktop ? md_dekstop_4 : sm_mobile_4),  
+                    searchoptions:{sopt:['cn']} 
+                }
             ],
-            viewrecords: true,
+            viewrecords: false,
             autowidth: true,
-            shrinkToFit: true,
+            shrinkToFit: false,
             height: 'calc(100vh - 350px)',
-            rowNum: 10000,
+            rowNum: 50,
+            scroll: 1,
             multiselect: true,
             pager: '#jqGridAcosPager',
             loadonce: true,
@@ -133,7 +142,21 @@
                     $('#gview_jqGridAcos .fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
                     $('#gview_jqGridAcos .fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
                 }, 10);
+                
+                // Add View Text correctly for modal grid
+                $('#jqGridAcosPager_center').css('width', '405px');
+                var start = 1;
+                var end = grid.jqGrid('getDataIDs').length;
+                var records = grid.jqGrid('getGridParam', 'records');
+                if (records === 0) start = 0;
+                
+                if ($("#showListAcos").length == 0) {
+                    $("#jqGridAcosPager_center table tbody tr").append(`<td><span id="showListAcos"></span></td>`);
+                }
+                $("#showListAcos").html(`View ${start} - ${end} of ${records}`);
             }
+        }).customPager({
+            buttons: []
         });
         
         $gridAcos.jqGrid('filterToolbar', {
