@@ -96,7 +96,7 @@
                 }
             }
         }).customPager({
-            lazyLoading: false,
+            lazyLoading: true,
             buttons: [
                 {
                     id: 'addAcl_' + userpk,

@@ -159,7 +159,8 @@ class UserAcl extends BaseController
             $responce->rows[$i]['cell'] = array(
                 $aco->acosid,
                 $className,
-                $methodName
+                $methodName,
+                $displayName
             );
             $i++;
         }

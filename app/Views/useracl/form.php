@@ -79,7 +79,8 @@
             colModel: [
                 { label: 'ID', name: 'acosid', key: true, hidden: true },
                 { label: 'Class / Modul', name: 'class', width: 200, searchoptions:{sopt:['cn']} },
-                { label: 'Method / Aksi', name: 'method', width: 250, searchoptions:{sopt:['cn']} }
+                { label: 'Method / Aksi', name: 'method', width: 250, searchoptions:{sopt:['cn']} },
+                { label: 'Display Name', name: 'displayname', width: 250, searchoptions:{sopt:['cn']} }
             ],
             viewrecords: true,
             autowidth: true,
