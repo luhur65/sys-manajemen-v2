@@ -135,17 +135,19 @@
             },
             loadComplete: function() {
                 var grid = $("#jqGridAcos");
-                var visibleIds = grid.jqGrid('getDataIDs');
-                var selRows = grid.jqGrid('getGridParam', 'selarrrow') || [];
                 // Restore selection
-                for (var i = 0; i < visibleIds.length; i++) {
-                    var strId = String(visibleIds[i]);
-                    if (window.selectedAcosIds.indexOf(strId) > -1) {
-                        if (selRows.indexOf(strId) === -1) {
-                            grid.jqGrid('setSelection', strId, false);
+                setTimeout(function() {
+                    var visibleIds = grid.jqGrid('getDataIDs');
+                    var selRows = grid.jqGrid('getGridParam', 'selarrrow') || [];
+                    for (var i = 0; i < visibleIds.length; i++) {
+                        var strId = String(visibleIds[i]);
+                        if (window.selectedAcosIds.indexOf(strId) > -1) {
+                            if (selRows.indexOf(strId) === -1) {
+                                grid.jqGrid('setSelection', strId, false);
+                            }
                         }
                     }
-                }
+                }, 50);
                 
                 // Ganti icon sorting dari caret ke arrow (menyamai jqgrid utama)
                 setTimeout(function() {
