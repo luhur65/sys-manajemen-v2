@@ -157,6 +157,7 @@ class UserAcl extends BaseController
             
             $responce->rows[$i]['id'] = $aco->acosid;
             $responce->rows[$i]['cell'] = array(
+                $aco->acosid,
                 $className,
                 $methodName
             );
