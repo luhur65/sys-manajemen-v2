@@ -87,14 +87,6 @@
             rowNum: 10000,
             multiselect: true,
             pager: '#jqGridAcosPager',
-            gridComplete: function() {
-                var grid = $("#jqGridAcos");
-                // Cegah trigger event onSelectRow saat setSelection awal
-                var i;
-                for (i = 0; i < selectedIds.length; i++) {
-                    grid.jqGrid('setSelection', selectedIds[i], false);
-                }
-            },
             loadComplete: function() {
                 var grid = $("#jqGridAcos");
                 for (var i = 0; i < selectedIds.length; i++) {
@@ -105,7 +97,7 @@
         
         $gridAcos.jqGrid('filterToolbar', {
             stringResult: true,
-            searchOnEnter: false,
+            searchOnEnter: false, 
             defaultSearch: 'cn'
         });
 
@@ -178,6 +170,10 @@
         // Menghapus elemen form saat modal ditutup (cleanup)
         $('#aclModal').on('hidden.bs.modal', function () {
             $(this).remove();
+        });
+
+        $('#aclModal').on('shown.bs.modal', function () {
+            $("#jqGridAcos").jqGrid('setGridWidth', $('#aclModal .modal-body').width());
         });
     });
 </script>
