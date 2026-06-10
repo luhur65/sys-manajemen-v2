@@ -565,6 +565,48 @@ input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
 }
 
 
+#aclModal {
+    padding-right: 0px !important;
+    padding-left: 0px !important;
+}
+#aclModal .modal-dialog {
+    max-width: 100%;
+    margin: 0;
+    height: 100%;
+}
+#aclModal .modal-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    /* padding: 0!important; */
+    background-color: #ffcc99;
+}
+#aclModal .modal-body {
+    overflow-y: auto;
+    height: calc(100vh - 81px);
+    /* height: calc(92vh); */
+    /* height: 100%; */
+    border: 0;
+    border-radius: 0;
+    padding-bottom: 4rem;
+}
+#aclModal .modal-footer {
+    position: sticky;
+    bottom: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: #dcdcdc;
+    z-index: 9999;
+}
+
+#aclModal .modal-header .modal-title {
+    position: sticky;
+    top: 0;
+    border: 0;
+    border-radius: 0;
+    z-index: 9999;
+}
+
 .modal-full {
     padding-right: 0px !important;
     padding-left: 0px !important;
