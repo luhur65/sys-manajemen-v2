@@ -121,6 +121,15 @@
 <!-- Number formatter for JS -->
 <script>
     $(document).ready(function() {
+        let limit;
+        let sortname = '';
+        let sortorder = '';
+        let rowNum = 50;
+
+        let indexRow = 0;
+        let triggerClick = true;
+        let id = '';
+
         // Initialize Select2
         if($('.select2').length > 0) {
             $('.select2').select2({ theme: 'bootstrap4' });
