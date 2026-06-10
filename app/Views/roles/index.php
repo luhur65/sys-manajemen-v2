@@ -299,10 +299,14 @@
             loadComplete: function() {
                 var grid = $("#jqGridAcos");
                 var visibleIds = grid.jqGrid('getDataIDs');
+                var selRows = grid.jqGrid('getGridParam', 'selarrrow') || [];
                 // Restore selection
                 for (var i = 0; i < visibleIds.length; i++) {
-                    if (window.selectedAcosIds.indexOf(String(visibleIds[i])) > -1) {
-                        grid.jqGrid('setSelection', visibleIds[i], false);
+                    var strId = String(visibleIds[i]);
+                    if (window.selectedAcosIds.indexOf(strId) > -1) {
+                        if (selRows.indexOf(strId) === -1) {
+                            grid.jqGrid('setSelection', strId, false);
+                        }
                     }
                 }
                 
