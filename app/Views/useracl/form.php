@@ -126,6 +126,12 @@
                         grid.jqGrid('setSelection', visibleIds[i], false);
                     }
                 }
+                
+                // Ganti icon sorting dari caret ke arrow (menyamai jqgrid utama)
+                setTimeout(function() {
+                    $('#gview_jqGridAcos .fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
+                    $('#gview_jqGridAcos .fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
+                }, 10);
             }
         });
         
