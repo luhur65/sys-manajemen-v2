@@ -311,8 +311,16 @@
                     $('#gview_jqGridAcos .fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
                     $('#gview_jqGridAcos .fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
                 }, 10);
+                
+                // Add View Text correctly for modal grid since we bypass native loadPagerInfo
+                var start = 1;
+                var end = grid.jqGrid('getDataIDs').length;
+                var records = grid.jqGrid('getGridParam', 'records');
+                if (records === 0) start = 0;
+                $('#jqGridAcosInfoHandler').html(`View ${start} - ${end} of ${records}`);
             }
         }).customPager({
+            lazyLoading: true,
             buttons: []
         });
         
