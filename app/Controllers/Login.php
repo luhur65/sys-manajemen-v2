@@ -100,7 +100,8 @@ class Login extends BaseController
         $check = $this->request->getPost('check');
         
         $muserModel = new \App\Models\MuserModel();
-        $userRow = $muserModel->where('userid', $username)->first();
+        // Use asArray to handle potential SQL Server column case sensitivity
+        $userRow = $muserModel->asArray()->where('userid', $username)->first();
 
         if (!$userRow) {
             return $this->response->setStatusCode(400)->setJSON([
@@ -108,9 +109,12 @@ class Login extends BaseController
                 'csrfToken' => csrf_hash()
             ]);
         }
+        
+        // Lowercase all keys to avoid issues if they created columns like 'Email' or 'EMAIL'
+        $userRow = array_change_key_case($userRow, CASE_LOWER);
 
-        $email = $userRow->email;
-        $nowhatsapp = $userRow->nowhatsapp;
+        $email = $userRow['email'] ?? '';
+        $nowhatsapp = $userRow['nowhatsapp'] ?? '';
 
         if (empty($email) && empty($nowhatsapp)) {
             return $this->response->setStatusCode(400)->setJSON([

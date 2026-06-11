@@ -113,6 +113,8 @@ class User extends BaseController
                 $row->userid,
                 $row->username,
                 $row->dashboard,
+                $row->email,
+                $row->nowhatsapp,
                 $row->rolename,
                 $row->modifiedby,
                 $row->modifiedonview
@@ -188,6 +190,8 @@ class User extends BaseController
         $data = [
             'userid'     => $this->request->getPost('userid'),
             'username'   => $this->request->getPost('username'),
+            'email'      => $this->request->getPost('email'),
+            'nowhatsapp' => $this->request->getPost('nowhatsapp'),
             'password'   => $this->request->getPost('password'),
             'dashboard'  => $this->request->getPost('dashboard'),
             'user_roles' => $this->request->getPost('user_roles')
