@@ -120,7 +120,9 @@ function print_sidebar_menu($data)
                     href="' . $menuexe . '" 
                     class="nav-link">';
 
-        // TANPA ICON
+        // DENGAN ICON
+        $iconClass = !empty($list['menuicon']) ? $list['menuicon'] : 'far fa-circle';
+        $str .= '<i class="nav-icon ' . $iconClass . '"></i>';
         $str .= '<p>';
         $str .= strtoupper($list['menuname']);
 
