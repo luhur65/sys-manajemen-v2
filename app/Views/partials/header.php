@@ -36,6 +36,19 @@
     <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/YearPicker.css') ?>">
     <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/styles.css') ?>">
     <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/button-styles.css') ?>">
+    
+    <!-- Legacy Icons -->
+    <link rel="stylesheet" href="<?= asset('libraries/menu/menustyle.css') ?>">
+    <style>
+        /* Patch for legacy background-image icons inside AdminLTE nav-link */
+        .nav-icon[class*="icon-"] {
+            display: inline-block;
+            height: 16px !important;
+            width: 16px !important;
+            background-size: contain !important;
+            vertical-align: sub;
+        }
+    </style>
 
     <!-- Scripts - Moved to header to support legacy inline scripts in views (Matching Trucking placement) -->
     <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
