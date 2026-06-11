@@ -232,7 +232,6 @@
                     
                     if ($secondFooter.length === 0) {
                         $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow");
-                        $secondFooter.children("td").each(function() { this.style.width = ""; });
                         $secondFooter.insertAfter($footerRow);
                     }
                     $footerRow.hide();
@@ -446,7 +445,6 @@
                         var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow1");
                         if ($secondFooter.length === 0) {
                             $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow1 ui-widget-content");
-                            $secondFooter.children("td").each(function() { this.style.width = ""; });
                             $secondFooter.insertAfter($footerRow);
                         }
                         
@@ -454,7 +452,6 @@
                         var $thirdFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow2");
                         if ($thirdFooter.length === 0) {
                             $thirdFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow2 ui-widget-content");
-                            $thirdFooter.children("td").each(function() { this.style.width = ""; });
                             $thirdFooter.insertAfter($secondFooter);
                         }
                         
@@ -462,7 +459,6 @@
                         var $fourthFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow3");
                         if ($fourthFooter.length === 0) {
                             $fourthFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow3 ui-widget-content");
-                            $fourthFooter.children("td").each(function() { this.style.width = ""; });
                             $fourthFooter.insertAfter($thirdFooter);
                         }
                         
@@ -470,7 +466,6 @@
                         var $fifthFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow4");
                         if ($fifthFooter.length === 0) {
                             $fifthFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow4 ui-widget-content");
-                            $fifthFooter.children("td").each(function() { this.style.width = ""; });
                             $fifthFooter.insertAfter($fourthFooter);
                         }
                         

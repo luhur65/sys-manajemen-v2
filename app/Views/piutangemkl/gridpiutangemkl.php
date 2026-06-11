@@ -345,9 +345,6 @@
 
                 if ($secondFooter.length === 0) {
                     $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow");
-                    $secondFooter.children("td").each(function() {
-                        this.style.width = "";
-                    });
                     $secondFooter.insertAfter($footerRow);
                 }
 
