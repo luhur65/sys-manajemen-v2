@@ -27,7 +27,7 @@
   <!-- Jquery UI -->
   <link rel="stylesheet" href="<?= asset('libraries/jquery-ui/cupertino/jquery-ui.min.css') ?>">
   <!-- Custom Style -->
-  <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/styles.css?version=' . $siteConfig->siteVersion) ?>">
+  <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/styles.css') ?>">
 
   <style>
     /* VERDANT CUSTOM STYLES */
@@ -453,8 +453,8 @@
   <script src="<?= asset('libraries/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
   <!-- AdminLTE App -->
   <script src="<?= asset('libraries/adminlte/dist/js/adminlte.min.js') ?>"></script>
-  <script src="<?= asset('libraries/tas-lib/js/connectionToast.js?version=' . time()) ?>"></script>
-  <script src="<?= asset('libraries/tas-lib/js/webauthn.js?version=' . time()) ?>"></script>
+  <script src="<?= asset('libraries/tas-lib/js/connectionToast.js') ?>"></script>
+  <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 
   <script>
     $(document).ready(function() {
