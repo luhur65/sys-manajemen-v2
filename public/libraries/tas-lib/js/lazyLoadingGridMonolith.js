@@ -147,13 +147,22 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
     state.loading = true;
     $('.loaderGrid').removeClass('d-none');
 
+    var currentFilters = grid.jqGrid('getGridParam', 'postData').filters;
+    var _isSearch = grid.jqGrid('getGridParam', 'postData')._search;
+    if (currentFilters) {
+        try {
+            var filtersObj = JSON.parse(currentFilters);
+            _isSearch = (filtersObj.rules && filtersObj.rules.length > 0);
+        } catch(e) {}
+    }
+
     var fullPostData = $.extend({}, postData, {
         page: pageNumber,
         rows: rowsCount,
         sidx: grid.jqGrid('getGridParam', 'sortname'),
         sord: grid.jqGrid('getGridParam', 'sortorder'),
-        filters: grid.jqGrid('getGridParam', 'postData').filters,
-        _search: grid.jqGrid('getGridParam', 'postData')._search
+        filters: currentFilters,
+        _search: _isSearch
     });
 
     $.ajax({
@@ -279,7 +288,6 @@ function renderFromCache(grid, data, direction, rowsPerPage, currentPage, res) {
         });
         let validPage = currentPage || state.maxPageLoaded;
         state.maxPageLoaded = Math.max(state.maxPageLoaded, validPage);
-        state.currentViewPage = currentPage;
         trimGridRows(grid, 'down', rowsPerPage);
     } else if (direction === 'up') {
         var scrollDiv = grid.parents('.ui-jqgrid-bdiv');
@@ -304,7 +312,6 @@ function renderFromCache(grid, data, direction, rowsPerPage, currentPage, res) {
             scrollDiv.scrollTop(newScrollTop);
             state.lastScrollTop = newScrollTop;
         }
-        state.currentViewPage = currentPage;
         trimGridRows(grid, 'up', rowsPerPage);
     } else if (direction === 'jump' || direction === 'reload') {
         grid.jqGrid('clearGridData');
@@ -382,8 +389,9 @@ function detectCurrentViewPage(grid) {
     var state = getGridState(grid);
     var scrollDiv = grid.parents('.ui-jqgrid-bdiv');
     var scrollTop = scrollDiv.scrollTop();
+    var viewHeight = scrollDiv.height();
     var rowHeight = grid.find('tr[id]').height() || 30;
-    var visibleIndex = Math.floor(scrollTop / rowHeight);
+    var visibleIndex = Math.floor((scrollTop + (viewHeight / 2)) / rowHeight);
     var recordNumber = (state.minPageLoaded - 1) * rowsPerPage + visibleIndex + 1;
     var page = Math.ceil(recordNumber / rowsPerPage);
     return Math.max(1, Math.min(page, state.totalPages));
