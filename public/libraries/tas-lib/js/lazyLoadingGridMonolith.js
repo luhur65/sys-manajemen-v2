@@ -147,13 +147,22 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
     state.loading = true;
     $('.loaderGrid').removeClass('d-none');
 
+    var currentFilters = grid.jqGrid('getGridParam', 'postData').filters;
+    var _isSearch = grid.jqGrid('getGridParam', 'postData')._search;
+    if (currentFilters) {
+        try {
+            var filtersObj = JSON.parse(currentFilters);
+            _isSearch = (filtersObj.rules && filtersObj.rules.length > 0);
+        } catch(e) {}
+    }
+
     var fullPostData = $.extend({}, postData, {
         page: pageNumber,
         rows: rowsCount,
         sidx: grid.jqGrid('getGridParam', 'sortname'),
         sord: grid.jqGrid('getGridParam', 'sortorder'),
-        filters: grid.jqGrid('getGridParam', 'postData').filters,
-        _search: grid.jqGrid('getGridParam', 'postData')._search
+        filters: currentFilters,
+        _search: _isSearch
     });
 
     $.ajax({
