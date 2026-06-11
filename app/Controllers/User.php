@@ -18,7 +18,7 @@ class User extends BaseController
     public function index()
     {
         $data = [
-            'title' => 'System -> User'
+            'title' => 'User'
         ];
         return $this->render('user/index', $data);
     }

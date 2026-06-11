@@ -67,8 +67,8 @@
                             <label class="col-form-label">Roles <span class="text-danger">*</span></label>
                         </div>
                         <div class="col-12 col-sm-9 col-md-10">
-                            <link href="<?= base_url('libraries/select2-3.4.6/select2.css') ?>" rel="stylesheet"/>
-                            <script src="<?= base_url('libraries/select2-3.4.6/select2.js') ?>"></script>
+                            <link href="<?= asset('libraries/select2-3.4.6/select2.css') ?>" rel="stylesheet"/>
+                            <script src="<?= asset('libraries/select2-3.4.6/select2.js') ?>"></script>
                             <select id="user_roles" name="user_roles[]" multiple="multiple" style="width:100%;" required>
                             </select>
                         </div>
