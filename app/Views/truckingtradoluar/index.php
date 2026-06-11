@@ -112,12 +112,6 @@
         </div>
     </div>
 </div>
-
-<!-- jqGrid JS -->
-<script src="<?= base_url('libraries/jqgrid/js/jquery.jqGrid.min.js') ?>"></script>
-<script src="<?= base_url('libraries/jqgrid/js/i18n/grid.locale-en.js') ?>"></script>
-<!-- Select2 -->
-<script src="<?= base_url('libraries/adminlte/plugins/select2/js/select2.full.min.js') ?>"></script>
 <!-- Number formatter for JS -->
 <script>
     $(document).ready(function() {
