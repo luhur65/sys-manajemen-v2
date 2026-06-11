@@ -389,8 +389,9 @@ function detectCurrentViewPage(grid) {
     var state = getGridState(grid);
     var scrollDiv = grid.parents('.ui-jqgrid-bdiv');
     var scrollTop = scrollDiv.scrollTop();
+    var viewHeight = scrollDiv.height();
     var rowHeight = grid.find('tr[id]').height() || 30;
-    var visibleIndex = Math.floor(scrollTop / rowHeight);
+    var visibleIndex = Math.floor((scrollTop + (viewHeight / 2)) / rowHeight);
     var recordNumber = (state.minPageLoaded - 1) * rowsPerPage + visibleIndex + 1;
     var page = Math.ceil(recordNumber / rowsPerPage);
     return Math.max(1, Math.min(page, state.totalPages));
