@@ -105,13 +105,6 @@
                     setupLazyLoadScrollHandler("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'));
                 }
                 
-                // Add View Text
-                $('#jqGridAclPager_center').css('width', '405px');
-                var jumlah = data.rows == undefined ? 0 : data.rows.length;
-                if ($("#showListAcl").length == 0) {
-                    $("#jqGridAclPager_center table tbody tr").append(`<td><span id="showListAcl"></span></td>`);
-                }
-                $("#showListAcl").html(`View 1 - ${jumlah} of ${data.records}`);
             }
         }).customPager({
             lazyLoading: true,

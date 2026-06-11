@@ -288,7 +288,6 @@ function renderFromCache(grid, data, direction, rowsPerPage, currentPage, res) {
         });
         let validPage = currentPage || state.maxPageLoaded;
         state.maxPageLoaded = Math.max(state.maxPageLoaded, validPage);
-        state.currentViewPage = currentPage;
         trimGridRows(grid, 'down', rowsPerPage);
     } else if (direction === 'up') {
         var scrollDiv = grid.parents('.ui-jqgrid-bdiv');
@@ -313,7 +312,6 @@ function renderFromCache(grid, data, direction, rowsPerPage, currentPage, res) {
             scrollDiv.scrollTop(newScrollTop);
             state.lastScrollTop = newScrollTop;
         }
-        state.currentViewPage = currentPage;
         trimGridRows(grid, 'up', rowsPerPage);
     } else if (direction === 'jump' || direction === 'reload') {
         grid.jqGrid('clearGridData');
