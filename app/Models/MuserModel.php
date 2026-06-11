@@ -12,7 +12,7 @@ class MuserModel extends Model
     protected $primaryKey = 'userpk';
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
-    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif'];
+    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp'];
     protected $useTimestamps = false;
 
     protected $alias = 'u';

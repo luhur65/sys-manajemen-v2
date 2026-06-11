@@ -14,6 +14,10 @@ $routes->setAutoRoute(false);
 
 $routes->get('/', 'Login::index');
 
+// Password Reset Routes
+$routes->post('forgot-password', 'Login::forgotPassword');
+$routes->get('reset-password', 'Login::resetPasswordForm');
+$routes->post('reset-password', 'Login::resetPasswordSubmit');
 // Webauthn Routes
 $routes->get('webauthn/getRegisterArgs', 'Webauthn::getRegisterArgs');
 $routes->post('webauthn/processRegister', 'Webauthn::processRegister');

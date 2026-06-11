@@ -16,8 +16,11 @@ class Webauthn extends BaseController
     public function __construct()
     {
         // Require the lbuchs webauthn
-        // Determine the relying party ID based on the host
         $rpId = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        // Remove port if exists to prevent WebAuthn library from throwing an exception
+        if (($pos = strpos($rpId, ':')) !== false) {
+            $rpId = substr($rpId, 0, $pos);
+        }
         
         // Formats: name, relying party id, array of supported formats
         $this->webauthn = new LbWebAuthn($this->appname, $rpId, ['apple', 'android-key', 'android-safetynet', 'fido-u2f', 'tpm', 'none']);
