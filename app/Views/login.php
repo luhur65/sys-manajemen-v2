@@ -477,8 +477,10 @@
 
       $(document).on('click', '#resetPassword', function() {
         let user = $('#user').val();
+        let csrfTokenName = $('input[name="<?= csrf_token() ?>"]').attr('name') || '<?= csrf_token() ?>';
+        let csrfTokenValue = $('input[name="<?= csrf_token() ?>"]').val() || '<?= csrf_hash() ?>';
 
-        checkValidation(user)
+        checkValidation(user, csrfTokenName, csrfTokenValue)
           .then((response) => {
             $('#processingLoader').removeClass('d-none')
             $.ajax({
@@ -486,7 +488,8 @@
               method: 'POST',
               dataType: "JSON",
               data: {
-                user: user
+                user: user,
+                [csrfTokenName]: csrfTokenValue
               },
               success: (response) => {
                 $('#processingLoader').addClass('d-none')
@@ -566,7 +569,7 @@
 
       });
 
-      function checkValidation(user) {
+      function checkValidation(user, csrfTokenName, csrfTokenValue) {
         return new Promise((resolve, reject) => {
           $('#processingLoader').removeClass('d-none')
           $.ajax({
@@ -575,7 +578,8 @@
               dataType: "JSON",
               data: {
                 user: user,
-                check: true
+                check: true,
+                [csrfTokenName]: csrfTokenValue
               },
               success: (response) => {
                 resolve(response);
