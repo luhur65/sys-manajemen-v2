@@ -81,14 +81,8 @@
             <h3 class="card-title" id="gridTitle" style="font-weight: bold; margin-bottom: 0;">DATA PENGGUNAAN TRADO LUAR - CABANG MEDAN</h3><br>
             <small id="lastUpdateHandler" class="text-muted ">Last Update : -</small>
         </div>
-        <div class="card-body p-0">
-            <table id="jqGrid"></table>
-            
-            <div class="d-flex justify-content-end align-items-center p-2 mt-0">
-                <div id="jqGridInfoHandler"></div>
-            </div>
-        </div>
     </div>
+    <table id="jqGrid"></table>
 </div>
 
 <!-- Modal Detail -->
