@@ -103,18 +103,28 @@ class Login extends BaseController
         $userRow = $muserModel->where('userid', $username)->first();
 
         if (!$userRow) {
-            return $this->response->setStatusCode(400)->setJSON(['errors' => ['user' => 'Username tidak ditemukan']]);
-        }
-
-        if ($check) {
-            return $this->response->setJSON(['status' => 200, 'message' => 'Jika username ada, link reset akan dikirim ke email/WhatsApp.']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'errors' => ['user' => 'Username tidak ditemukan'],
+                'csrfToken' => csrf_hash()
+            ]);
         }
 
         $email = $userRow->email;
         $nowhatsapp = $userRow->nowhatsapp;
 
         if (empty($email) && empty($nowhatsapp)) {
-            return $this->response->setStatusCode(400)->setJSON(['errors' => ['user' => 'Akun ini tidak memiliki email atau nomor WhatsApp terdaftar.']]);
+            return $this->response->setStatusCode(400)->setJSON([
+                'errors' => ['user' => 'Akun ini tidak memiliki email atau nomor WhatsApp terdaftar.'],
+                'csrfToken' => csrf_hash()
+            ]);
+        }
+
+        if ($check) {
+            return $this->response->setJSON([
+                'status' => 200, 
+                'message' => 'Jika username ada, link reset akan dikirim ke email/WhatsApp.',
+                'csrfToken' => csrf_hash()
+            ]);
         }
 
         $resetModel = new \App\Models\PasswordResetModel();
@@ -146,7 +156,11 @@ class Login extends BaseController
             // TODO: Implement WA API Call Here
         }
 
-        return $this->response->setJSON(['status' => 200, 'message' => 'Link reset sudah dikirim ke email / WhatsApp Anda.']);
+        return $this->response->setJSON([
+            'status' => 200, 
+            'message' => 'Link reset sudah dikirim ke email / WhatsApp Anda.',
+            'csrfToken' => csrf_hash()
+        ]);
     }
 
     public function resetPasswordForm()
