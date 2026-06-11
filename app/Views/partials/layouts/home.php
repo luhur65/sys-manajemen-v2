@@ -7,8 +7,11 @@
                 <div class="col-sm-12">
                     <ol class="breadcrumb float-sm-left">
                         <li class="breadcrumb-item"><a href="<?= base_url('home') ?>">Home</a></li>
-                        <?php if (isset($title) && strtolower($title) != 'dashboard'): ?>
-                            <li class="breadcrumb-item active"><?= $title ?></li>
+                        <?php 
+                        $pageTitle = $data['title'] ?? ($title ?? 'Dashboard');
+                        if (strtolower($pageTitle) != 'dashboard'): 
+                        ?>
+                            <li class="breadcrumb-item active"><?= esc($pageTitle) ?></li>
                         <?php else: ?>
                             <li class="breadcrumb-item active">Dashboard</li>
                         <?php endif; ?>
