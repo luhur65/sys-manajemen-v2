@@ -132,17 +132,23 @@ $(document).ready(function () {
     });
 
     function activeUrl() {
-        const myArray = window.location.href.split("/");
-        const pathLink = myArray[4] ? myArray[4].split("?")[0].split("#")[0].toLowerCase() : '';  // Ignore hash part
+        // Use appUrl to find the relative path
+        const currentUrl = window.location.href;
+        let relativePath = currentUrl.replace(appUrl, '');
+        // Extract the controller part (first segment after base url)
+        const pathLink = relativePath.split('/')[0].split('?')[0].split('#')[0].toLowerCase();
+        
         let breadcrumbString = [];
 
         // Find the element by checking if its href's controller matches pathLink
         var activeElement = $('.nav-sidebar a').filter(function () {
             let href = $(this).attr('href');
             if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
-                let hrefArray = href.split('/');
-                if (hrefArray.length > 4) {
-                    let hrefPath = hrefArray[4].split("?")[0].split("#")[0].toLowerCase();
+                let hrefRelative = href.replace(appUrl, '');
+                let hrefPath = hrefRelative.split('/')[0].split('?')[0].split('#')[0].toLowerCase();
+                
+                // Only match if both have valid path lengths and they match
+                if (hrefPath !== '' && pathLink !== '') {
                     return hrefPath === pathLink;
                 }
             }
