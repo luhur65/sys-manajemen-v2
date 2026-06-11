@@ -93,10 +93,6 @@
             
 </div>
 
-<!-- Scripts -->
-<script src="<?= base_url('libraries/tas-lib/js/MonthPicker.min.js') ?>"></script>
-<script src="<?= base_url('libraries/tas-lib/js/YearPicker.js') ?>"></script>
-<script src="<?= base_url('libraries/tas-lib/js/lazyLoadingGridMonolith.js') ?>"></script>
 
 <script>
     $(document).ready(function() {

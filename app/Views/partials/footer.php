@@ -39,6 +39,7 @@
     <script src="<?= asset('libraries/tas-lib/js/lazyLoadingGridHelper.js') ?>"></script>
     <!-- <script src="<?= asset('libraries/tas-lib/js/lookup-columns.js') ?>"></script> -->
     <script src="<?= asset('libraries/tas-lib/js/pager.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/MonthPicker.min.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/YearPicker.js') ?>"></script>
 
     <script>

@@ -2342,7 +2342,7 @@ body.dark-mode .ui-jqgrid tr.myfootrow td {
 .month-picker-month-table td { text-align: center; padding: 2px; }
 .month-picker-month-table a { padding: 5px 10px; display: block; cursor: pointer; text-decoration: none;}
 .month-picker-month-table a:hover { background: #007bff; color: white; border-radius: 4px; }
-.month-picker-month-table a.ui-state-active { background: #e0e4e9ff; color: white; border-radius: 4px; font-weight: bold;}
+.month-picker-month-table a.ui-state-active { background: #e0e4e9ff; color: rgb(14, 13, 13); border-radius: 4px; font-weight: bold;}
 .month-picker-header { text-align: center; margin-bottom: 5px; font-weight: bold; }
 .month-picker-year-table { width: 100%; }
 

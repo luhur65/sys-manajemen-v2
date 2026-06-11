@@ -164,21 +164,21 @@
                     label: 'User ID', 
                     name: 'userid', 
                     index: 'userid', 
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2), 
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_2), 
                     
                 },
                 {
                     label: 'Username', 
                     name: 'username', 
                     index: 'username', 
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2), 
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_2), 
                     
                 },
                 {
                     label: 'Dashboard', 
                     name: 'dashboard', 
                     index: 'dashboard', 
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2), 
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_2), 
                     
                 },
                 {
