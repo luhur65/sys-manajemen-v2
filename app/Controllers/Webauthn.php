@@ -106,7 +106,8 @@ class Webauthn extends BaseController
             $model = new MWebauthnModel();
             
             // Check if credential ID already exists to avoid duplicates
-            $existing = $model->where('credentialId', base64_encode($data->credentialId))->first();
+            // SQL Server does not support '=' for TEXT columns, so we use LIKE
+            $existing = $model->like('credentialId', base64_encode($data->credentialId), 'none')->first();
             if (!$existing) {
                 $model->insert([
                     'userpk' => $userPk,
@@ -203,10 +204,9 @@ class Webauthn extends BaseController
             
             // Look up the credential public key from our database
             $model = new MWebauthnModel();
-            $cred = $model->where('credentialId', base64_encode($id))->first();
-
+            $cred = $model->like('credentialId', base64_encode($id), 'none')->first();
             if (!$cred) {
-                throw new \Exception('Credential not found.');
+                return $this->response->setJSON(['error' => 'Credential not found in database'])->setStatusCode(400);
             }
 
             // Verify the login
