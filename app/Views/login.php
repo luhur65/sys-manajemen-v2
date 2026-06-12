@@ -456,11 +456,24 @@
   <!-- AdminLTE App -->
   <script src="<?= asset('libraries/adminlte/dist/js/adminlte.min.js') ?>"></script>
   <script src="<?= asset('libraries/tas-lib/js/connectionToast.js') ?>"></script>
-  <!-- Main TAS JS (for showDialog) -->
-  <script src="<?= asset('libraries/tas-lib/js/mains.js?version=' . time()) ?>"></script>
   <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 
   <script>
+    // Standalone showDialog untuk halaman login tanpa memuat seluruh mains.js
+    function showDialog(message) {
+        $("#dialog-message").html('<div class="text-center"><i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i><p>' + message + '</p></div>');
+        $("#dialog-message").dialog({
+            modal: true,
+            width: 400,
+            dialogClass: 'dialog-login-error',
+            buttons: {
+                Ok: function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    }
+
     $(document).ready(function() {
       $("input").attr("autocomplete", "off");
 
