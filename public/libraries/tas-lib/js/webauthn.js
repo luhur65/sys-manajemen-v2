@@ -42,7 +42,7 @@ function recursiveBase64ToArrayBuffer(obj) {
 // Function to handle login via WebAuthn
 function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
     if (!window.PublicKeyCredential) {
-        alert("Browser Anda tidak mendukung WebAuthn / Login Biometrik.");
+        showDialog("Browser Anda tidak mendukung WebAuthn / Login Biometrik.");
         return;
     }
 
@@ -52,7 +52,7 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
         dataType: 'json',
         success: function(options) {
             if (options.error) {
-                showDialog(options.error);
+                showDialog(options.message || options.error);
                 return;
             }
 
@@ -78,11 +78,11 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
                             if (res.success) {
                                 window.location.href = redirectUrl;
                             } else {
-                                showDialog("Login Gagal: " + res.error);
+                                showDialog("Login Gagal: " + (res.message || res.error));
                             }
                         },
                         error: function(err) {
-                            showDialog("Login Error: " + (err.responseJSON ? err.responseJSON.error : "Unknown error"));
+                            showDialog("Login Error: " + (err.responseJSON && err.responseJSON.message ? err.responseJSON.message : "Unknown error"));
                         }
                     });
                 })
@@ -101,7 +101,7 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
 // Function to handle registration via WebAuthn
 function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
     if (!window.PublicKeyCredential) {
-        alert("Browser Anda tidak mendukung WebAuthn / Biometrik.");
+        showDialog("Browser Anda tidak mendukung WebAuthn / Biometrik.");
         return;
     }
 
@@ -111,7 +111,7 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
         dataType: 'json',
         success: function(options) {
             if (options.error) {
-                showDialog(options.error);
+                showDialog(options.message || options.error);
                 return;
             }
 
@@ -142,11 +142,11 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
                                 if (successCallback) successCallback();
                                 else showDialog("Pendaftaran biometrik berhasil!");
                             } else {
-                                showDialog("Pendaftaran Gagal: " + res.error);
+                                showDialog("Pendaftaran Gagal: " + (res.message || res.error));
                             }
                         },
                         error: function(err) {
-                            showDialog("Pendaftaran Error: " + (err.responseJSON ? err.responseJSON.error : "Unknown error"));
+                            showDialog("Pendaftaran Error: " + (err.responseJSON && err.responseJSON.message ? err.responseJSON.message : "Unknown error"));
                         }
                     });
                 })

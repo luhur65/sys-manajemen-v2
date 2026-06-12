@@ -464,7 +464,7 @@
         $("#dialog-message").html('<div class="text-center"><i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i><p>' + message + '</p></div>');
         $("#dialog-message").dialog({
             modal: true,
-            width: 400,
+            width: $(window).width() > 400 ? 400 : '90%',
             dialogClass: 'dialog-login-error',
             buttons: {
                 Ok: function() {
