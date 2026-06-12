@@ -151,7 +151,7 @@ class Login extends BaseController
             $emailService = \Config\Services::email();
             $emailService->setMailType('html');
             $emailService->setTo($email);
-            $emailService->setSubject('Reset Password Sys-Modern');
+            $emailService->setSubject('Reset Password SYS TRANSPORINDO');
             
             $htmlMessage = view('auth/email_reset_password', [
                 'userName' => $username,
