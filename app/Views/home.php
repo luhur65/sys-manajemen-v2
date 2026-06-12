@@ -48,39 +48,14 @@ $(document).ready(function() {
                 '<?= base_url('webauthn/processRegister') ?>',
                 function() {
                     localStorage.setItem(regKey, '1');
-                    $('#webauthnPromoModal').modal('hide');
                     console.log('Perangkat berhasil didaftarkan.');
-                    alert('Berhasil! Perangkat siap digunakan untuk Quick Login.');
                 }
             );
             
             // Tandai dismissed agar tidak nge-loop auto-trigger 
             // jika user membatalkan (cancel) prompt native browser
             localStorage.setItem(disKey, '1');
-            $('#webauthnPromoModal').modal('hide');
-        });
+        }
     }
 });
 </script>
-
-<!-- Bootstrap Modal untuk WebAuthn (Auto Popup) -->
-<div class="modal fade" id="webauthnPromoModal" tabindex="-1" role="dialog" aria-labelledby="webauthnPromoModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title text-primary" id="webauthnPromoModalLabel"><i class="fas fa-fingerprint"></i> Daftarkan Perangkat</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btn-modal-dismiss-x">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body text-center">
-        <p>Perangkat ini belum terdaftar untuk akun Anda.</p>
-        <p class="text-muted small">Aktifkan fitur <strong>Quick Login</strong> sekarang agar Anda bisa masuk dengan cepat menggunakan sidik jari atau pemindai wajah (tanpa mengetik password).</p>
-      </div>
-      <div class="modal-footer border-0 pt-0 justify-content-center">
-        <button type="button" class="btn btn-light" id="btn-modal-dismiss">Lain Kali</button>
-        <button type="button" class="btn btn-primary" id="btn-modal-register-passkey">Ya, Daftarkan Sekarang</button>
-      </div>
-    </div>
-  </div>
-</div>
