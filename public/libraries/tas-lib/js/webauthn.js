@@ -82,7 +82,11 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
                             }
                         },
                         error: function(err) {
-                            showDialog("Login Error: " + (err.responseJSON && err.responseJSON.message ? err.responseJSON.message : "Unknown error"));
+                            let errMsg = "Unknown error";
+                            if (err.responseJSON) {
+                                errMsg = err.responseJSON.error || err.responseJSON.message || errMsg;
+                            }
+                            showDialog("Login Error: " + errMsg);
                         }
                     });
                 })
@@ -146,7 +150,11 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
                             }
                         },
                         error: function(err) {
-                            showDialog("Pendaftaran Error: " + (err.responseJSON && err.responseJSON.message ? err.responseJSON.message : "Unknown error"));
+                            let errMsg = "Unknown error";
+                            if (err.responseJSON) {
+                                errMsg = err.responseJSON.error || err.responseJSON.message || errMsg;
+                            }
+                            showDialog("Pendaftaran Error: " + errMsg);
                         }
                     });
                 })
