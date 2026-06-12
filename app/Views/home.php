@@ -29,33 +29,34 @@
     </div>
 </div>
 
-<!-- Biometric Registration Prompt (Runs once per login if enabled) -->
-<?php if (session()->getFlashdata('prompt_webauthn')): ?>
 <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 <script>
 $(document).ready(function() {
     // Check if browser supports WebAuthn
     if (window.PublicKeyCredential) {
-        // Check if user already registered any device
-        $.ajax({
-            url: '<?= base_url('webauthn/checkRegistered') ?>',
-            type: 'GET',
-            dataType: 'json',
-            success: function(res) {
-                if (!res.registered) {
-                    // Directly trigger the native browser WebAuthn prompt without Swal
-                    startWebAuthnRegister(
-                        '<?= base_url('webauthn/getRegisterArgs') ?>',
-                        '<?= base_url('webauthn/processRegister') ?>',
-                        function() {
-                            // Optional: Silently success or small toast
-                            console.log('Perangkat berhasil didaftarkan untuk Quick Login.');
-                        }
-                    );
+        let userId = '<?= session()->get(SESSION_NAME . "userid") ?>';
+        let regKey = 'webauthn_registered_' + userId;
+        let disKey = 'webauthn_dismissed_' + userId;
+
+        let isRegistered = localStorage.getItem(regKey);
+        let isDismissed = localStorage.getItem(disKey);
+
+        if (!isRegistered && !isDismissed) {
+            // Langsung panggil native WebAuthn prompt tanpa Swal
+            startWebAuthnRegister(
+                '<?= base_url('webauthn/getRegisterArgs') ?>',
+                '<?= base_url('webauthn/processRegister') ?>',
+                function() {
+                    // Jika sukses
+                    localStorage.setItem(regKey, '1');
+                    console.log('Perangkat berhasil didaftarkan.');
                 }
-            }
-        });
+            );
+            
+            // Tandai sudah pernah diprompt agar jika native prompt di-cancel, 
+            // tidak terus-terusan muncul tiap refresh (bisa dihapus jika ingin selalu muncul)
+            localStorage.setItem(disKey, '1');
+        }
     }
 });
 </script>
-<?php endif; ?>
