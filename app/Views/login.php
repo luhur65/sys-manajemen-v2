@@ -477,18 +477,29 @@
 
       $(document).on('click', '#resetPassword', function() {
         let user = $('#user').val();
+        let csrfTokenName = $('input[name="<?= csrf_token() ?>"]').attr('name') || '<?= csrf_token() ?>';
+        let csrfTokenValue = $('input[name="<?= csrf_token() ?>"]').val() || '<?= csrf_hash() ?>';
 
-        checkValidation(user)
+        checkValidation(user, csrfTokenName, csrfTokenValue)
           .then((response) => {
+            if (response.csrfToken) {
+              csrfTokenValue = response.csrfToken;
+              $('input[name="<?= csrf_token() ?>"]').val(csrfTokenValue);
+            }
+
             $('#processingLoader').removeClass('d-none')
             $.ajax({
               url: `<?= base_url() ?>forgot-password`,
               method: 'POST',
               dataType: "JSON",
               data: {
-                user: user
+                user: user,
+                [csrfTokenName]: csrfTokenValue
               },
               success: (response) => {
+                if (response.csrfToken) {
+                  $('input[name="<?= csrf_token() ?>"]').val(response.csrfToken);
+                }
                 $('#processingLoader').addClass('d-none')
 
                 $("#dialog-success-message").find("p").remove();
@@ -530,16 +541,36 @@
                   }
                 });
               },
-            }).always(() => {
-              $('#processingLoader').addClass('d-none')
-            });
+              error: (error) => {
+                $('#processingLoader').addClass('d-none');
+                if (error.responseJSON && error.responseJSON.csrfToken) {
+                  $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
+                }
+                let errorMsg = error.responseJSON?.errors?.user || 'Terjadi kesalahan sistem';
+                $("#dialog-message").html(`
+                            <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
+                          <br>${errorMsg}`);
+                $("#dialog-message").dialog({
+                  modal: true,
+                  buttons: [{ text: "Ok", click: function() { $(this).dialog("close"); } }],
+                  create: function() {
+                    $(this).closest(".ui-dialog").find(".ui-dialog-buttonset button").addClass("ui-button ui-corner-all ui-widget custom-success-btn");
+                    $(this).closest(".ui-dialog").find(".ui-dialog-titlebar button").addClass("ui-button ui-corner-all ui-widget ui-button-icon-only").append(`<span class="ui-button-icon ui-icon ui-icon-closethick"></span>`);
+                  }
+                });
+              }
+            })
           })
           .catch((error) => {
+            if (error.responseJSON && error.responseJSON.csrfToken) {
+              $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
+            }
+            let errorMsg = error.responseJSON?.errors?.user || 'Terjadi kesalahan sistem';
             $("#dialog-message").html(`
                             <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
                           `)
             $("#dialog-message").append(
-              `<br>${error.responseJSON.errors.user}`
+              `<br>${errorMsg}`
             );
             $("#dialog-message").dialog({
               modal: true,
@@ -566,7 +597,7 @@
 
       });
 
-      function checkValidation(user) {
+      function checkValidation(user, csrfTokenName, csrfTokenValue) {
         return new Promise((resolve, reject) => {
           $('#processingLoader').removeClass('d-none')
           $.ajax({
@@ -575,7 +606,8 @@
               dataType: "JSON",
               data: {
                 user: user,
-                check: true
+                check: true,
+                [csrfTokenName]: csrfTokenValue
               },
               success: (response) => {
                 resolve(response);

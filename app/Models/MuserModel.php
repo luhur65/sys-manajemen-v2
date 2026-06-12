@@ -12,7 +12,7 @@ class MuserModel extends Model
     protected $primaryKey = 'userpk';
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
-    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif'];
+    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp'];
     protected $useTimestamps = false;
 
     protected $alias = 'u';
@@ -29,7 +29,7 @@ class MuserModel extends Model
         $table = $this->table;
         $alias = $this->alias;
         $builder = $this->db->table($table . ' as ' . $alias);
-        $select = "$alias.userpk, $alias.username, $alias.userid, $alias.password,$alias.dashboard, '' as roles,'' as roles_name";
+        $select = "$alias.userpk, $alias.username, $alias.userid, $alias.password, $alias.email, $alias.nowhatsapp, $alias.dashboard, '' as roles,'' as roles_name";
         if (!empty($conditions)) {
             $builder->where($conditions);
         }

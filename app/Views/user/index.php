@@ -55,6 +55,24 @@
                     
                     <div class="row form-group">
                         <div class="col-12 col-sm-3 col-md-2">
+                            <label class="col-form-label">Email</label>
+                        </div>
+                        <div class="col-12 col-sm-9 col-md-10">
+                            <input type="email" class="form-control" name="email" id="email" placeholder="example@domain.com">
+                        </div>
+                    </div>
+
+                    <div class="row form-group">
+                        <div class="col-12 col-sm-3 col-md-2">
+                            <label class="col-form-label">No WhatsApp</label>
+                        </div>
+                        <div class="col-12 col-sm-9 col-md-10">
+                            <input type="text" class="form-control" name="nowhatsapp" id="nowhatsapp" placeholder="08123456789">
+                        </div>
+                    </div>
+                    
+                    <div class="row form-group">
+                        <div class="col-12 col-sm-3 col-md-2">
                             <label class="col-form-label">Dashboard <span class="text-danger">*</span></label>
                         </div>
                         <div class="col-12 col-sm-9 col-md-10">
@@ -179,6 +197,20 @@
                     name: 'dashboard', 
                     index: 'dashboard', 
                     width: (isDesktop ? sm_dekstop_3 : sm_mobile_2), 
+                    
+                },
+                {
+                    label: 'Email', 
+                    name: 'email', 
+                    index: 'email', 
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3), 
+                    
+                },
+                {
+                    label: 'No WhatsApp', 
+                    name: 'nowhatsapp', 
+                    index: 'nowhatsapp', 
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3), 
                     
                 },
                 {
@@ -407,6 +439,8 @@
             
             $('#userid').val(res.userid);
             $('#username').val(res.username);
+            $('#email').val(res.email);
+            $('#nowhatsapp').val(res.nowhatsapp);
             $('#dashboard').val(res.dashboard);
             loadRoles(res.user_roles);
             $('#crudModal').modal('show');
