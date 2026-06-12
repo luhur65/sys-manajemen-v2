@@ -43,31 +43,15 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(res) {
                 if (!res.registered) {
-                    // Not registered yet, prompt user
-                    Swal.fire({
-                        title: 'Daftar Quick Login?',
-                        text: "Browser Anda mendukung Quick Login (Biometrik/Face ID). Apakah Anda ingin mendaftarkan perangkat ini agar bisa login tanpa password di kemudian hari?",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Daftarkan!',
-                        cancelButtonText: 'Lain kali'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            startWebAuthnRegister(
-                                '<?= base_url('webauthn/getRegisterArgs') ?>',
-                                '<?= base_url('webauthn/processRegister') ?>',
-                                function() {
-                                    Swal.fire(
-                                        'Berhasil!',
-                                        'Perangkat Anda telah didaftarkan. Anda dapat menggunakan tombol Login Biometrik di halaman login berikutnya.',
-                                        'success'
-                                    );
-                                }
-                            );
+                    // Directly trigger the native browser WebAuthn prompt without Swal
+                    startWebAuthnRegister(
+                        '<?= base_url('webauthn/getRegisterArgs') ?>',
+                        '<?= base_url('webauthn/processRegister') ?>',
+                        function() {
+                            // Optional: Silently success or small toast
+                            console.log('Perangkat berhasil didaftarkan untuk Quick Login.');
                         }
-                    });
+                    );
                 }
             }
         });
