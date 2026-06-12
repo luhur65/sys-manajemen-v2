@@ -125,6 +125,25 @@ class Webauthn extends BaseController
     }
 
 
+    /**
+     * Check if user has any registered webauthn credentials
+     */
+    public function checkRegistered()
+    {
+        if (!session()->has(SESSION_NAME . 'logged_in')) {
+            return $this->response->setJSON(['registered' => false]);
+        }
+
+        $userPk = session()->get(SESSION_NAME . 'userpk');
+        $model = new MWebauthnModel();
+        
+        $count = $model->where('userpk', $userPk)->countAllResults();
+        
+        return $this->response->setJSON([
+            'registered' => ($count > 0)
+        ]);
+    }
+
     // --- LOGIN ---
 
     /**

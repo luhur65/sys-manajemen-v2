@@ -23,6 +23,7 @@ $routes->get('webauthn/getRegisterArgs', 'Webauthn::getRegisterArgs');
 $routes->post('webauthn/processRegister', 'Webauthn::processRegister');
 $routes->get('webauthn/getLoginArgs', 'Webauthn::getLoginArgs');
 $routes->post('webauthn/processLogin', 'Webauthn::processLogin');
+$routes->get('webauthn/checkRegistered', 'Webauthn::checkRegistered');
 
 // Routes for App\Controllers\Cabang (Cabang)
 $routes->match(['GET', 'POST'], 'Cabang', 'Cabang::index');

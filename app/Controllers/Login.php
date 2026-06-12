@@ -79,6 +79,9 @@ class Login extends BaseController
             ];
             session()->set($sessionData);
 
+            // Flag for prompting WebAuthn registration on the dashboard
+            session()->setFlashdata('prompt_webauthn', true);
+
             $this->mlogModel->saveLog($this);
             return redirect()->to(base_url("home"));
         }
