@@ -400,13 +400,15 @@
           <div class="verdant-form-group">
             <div class="verdant-label-row mt-3">
               <label class="verdant-label" for="password">Kata sandi</label>
-              <a href="javascript:void(0)" id="resetPassword" class="verdant-forgot">Lupa?</a>
             </div>
             <div class="verdant-input-wrapper">
               <input type="password" name="password" id="password" class="verdant-input verdant-input-password <?= (isset($validationErrors['password'])) ? 'is-invalid' : '' ?>" placeholder="••••••••••" autocomplete="off">
               <button type="button" class="verdant-toggle-pass toggle-password" toggle="#password">
                 <i class="fas fa-eye"></i>
               </button>
+            </div>
+            <div class="d-flex justify-content-end mt-1">
+              <a href="javascript:void(0)" id="resetPassword" class="verdant-forgot" style="text-decoration: none;">Reset password</a>
             </div>
             <?php if (isset($validationErrors['password'])): ?>
               <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= $validationErrors['password'] ?></div>
@@ -429,7 +431,7 @@
           </button>
 
           <button type="button" class="verdant-btn" style="background-color: transparent; color: var(--ink-light); border: 2px solid var(--line-light); margin-top: 0.5rem;" id="btnWebAuthnLogin">
-            <i class="fas fa-fingerprint" style="margin-right: 0.25rem; font-size: 1.2rem;"></i> Login Biometrik / Passkey
+            <i class="fas fa-fingerprint" style="margin-right: 0.25rem; font-size: 1.2rem;"></i> Quick Login
           </button>
 
           <div class="verdant-footer">
