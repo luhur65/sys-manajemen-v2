@@ -13,8 +13,12 @@ class Webauthn extends BaseController
     private $webauthn;
     private $appname = 'Sys Modern';
 
-    public function __construct()
+    private function initWebauthn()
     {
+        if ($this->webauthn !== null) {
+            return;
+        }
+        
         // Require the lbuchs webauthn
         $rpId = $_SERVER['HTTP_HOST'] ?? 'localhost';
         // Remove port if exists to prevent WebAuthn library from throwing an exception
@@ -33,30 +37,41 @@ class Webauthn extends BaseController
      */
     public function getRegisterArgs()
     {
-        // User must be logged in to register a device
-        if (!session()->has(SESSION_NAME . 'logged_in')) {
-            return $this->response->setJSON(['error' => 'Not logged in'])->setStatusCode(401);
+        try {
+            $this->initWebauthn();
+            
+            // User must be logged in to register a device
+            if (!session()->has(SESSION_NAME . 'logged_in')) {
+                return $this->response->setJSON(['error' => 'Not logged in'])->setStatusCode(401);
+            }
+
+            $userId = session()->get(SESSION_NAME . 'userid'); // the string ID
+            $userPk = session()->get(SESSION_NAME . 'userpk');
+            $username = session()->get(SESSION_NAME . 'username') ?? $userId;
+            
+            // Generate cross-platform credential
+            $createArgs = $this->webauthn->getCreateArgs(
+                $userPk, // userId (hex/binary or string). We use PK for unique internal id.
+                $userId, // username
+                $username, // displayName
+                60, // timeout
+                true, // require resident key (for passwordless login usually)
+                'required', // user verification requirement
+                null // cross-platform attachment (null = both)
+            );
+
+            // Save challenge to session
+            session()->set('webauthn_challenge', $this->webauthn->getChallenge());
+
+            return $this->response->setJSON($createArgs);
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
-
-        $userId = session()->get(SESSION_NAME . 'userid'); // the string ID
-        $userPk = session()->get(SESSION_NAME . 'userpk');
-        $username = session()->get(SESSION_NAME . 'username') ?? $userId;
-        
-        // Generate cross-platform credential
-        $createArgs = $this->webauthn->getCreateArgs(
-            $userPk, // userId (hex/binary or string). We use PK for unique internal id.
-            $userId, // username
-            $username, // displayName
-            60, // timeout
-            true, // require resident key (for passwordless login usually)
-            'required', // user verification requirement
-            null // cross-platform attachment (null = both)
-        );
-
-        // Save challenge to session
-        session()->set('webauthn_challenge', $this->webauthn->getChallenge());
-
-        return $this->response->setJSON($createArgs);
     }
 
     /**
@@ -74,6 +89,8 @@ class Webauthn extends BaseController
         $userPk = session()->get(SESSION_NAME . 'userpk');
 
         try {
+            $this->initWebauthn();
+            
             // Verify and process the registration
             $data = $this->webauthn->processCreate($clientDataJSON, $attestationObject, $challenge, 'required', true, false);
 
@@ -107,22 +124,33 @@ class Webauthn extends BaseController
      */
     public function getLoginArgs()
     {
-        // For passwordless, we do not require userid up front. 
-        // We just get the challenge, and the authenticator returns the credentialId, which we look up.
-        
-        $getArgs = $this->webauthn->getGetArgs(
-            [], // allowed credentials (empty = allow any registered passwordless credential)
-            60,
-            true, // require user verification
-            true, // user presence
-            true, // allow cross-platform
-            true  // allow platform
-        );
+        try {
+            $this->initWebauthn();
+            
+            // For passwordless, we do not require userid up front. 
+            // We just get the challenge, and the authenticator returns the credentialId, which we look up.
+            
+            $getArgs = $this->webauthn->getGetArgs(
+                [], // allowed credentials (empty = allow any registered passwordless credential)
+                60,
+                true, // require user verification
+                true, // user presence
+                true, // allow cross-platform
+                true  // allow platform
+            );
 
-        // Save challenge to session
-        session()->set('webauthn_challenge', $this->webauthn->getChallenge());
+            // Save challenge to session
+            session()->set('webauthn_challenge', $this->webauthn->getChallenge());
 
-        return $this->response->setJSON($getArgs);
+            return $this->response->setJSON($getArgs);
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+        }
     }
 
     /**
@@ -138,6 +166,8 @@ class Webauthn extends BaseController
         $challenge = session()->get('webauthn_challenge');
 
         try {
+            $this->initWebauthn();
+            
             // Look up the credential public key from our database
             $model = new MWebauthnModel();
             $cred = $model->where('credentialId', base64_encode($id))->first();
