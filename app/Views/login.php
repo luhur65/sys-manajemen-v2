@@ -304,7 +304,15 @@
       .verdant-heading { font-size: 2.25rem; }
     }
 
-    #btnWebAuthnLogin { display: none !important; }
+    #btnWebAuthnLogin { 
+      display: none !important; 
+      color: var(--ink-light);
+      border-color: var(--line-light);
+    }
+    body.dark-mode #btnWebAuthnLogin {
+      color: var(--ink-dark);
+      border-color: var(--line-dark);
+    }
     @media (max-width: 991.98px) {
       #btnWebAuthnLogin { display: flex !important; }
     }
@@ -430,7 +438,7 @@
             </svg>
           </button>
 
-          <button type="button" class="verdant-btn" style="background-color: transparent; color: var(--ink-light); border: 2px solid var(--line-light); margin-top: 0.5rem;" id="btnWebAuthnLogin">
+          <button type="button" class="verdant-btn" style="background-color: transparent; border: 2px solid; margin-top: 0.5rem;" id="btnWebAuthnLogin">
             <i class="fas fa-fingerprint" style="margin-right: 0.25rem; font-size: 1.2rem;"></i> Quick Login
           </button>
 
