@@ -71,7 +71,7 @@
 
 	});
 </script>
-<script src="<?= asset('libraries/tas-lib/js/webauthn.js?version=' . time()) ?>"></script>
+<script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 
 <div class="row">
     <div class="col-md">
