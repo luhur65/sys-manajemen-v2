@@ -131,8 +131,79 @@
             </div>
             <div class="card-body">
                 <p>Anda dapat mendaftarkan perangkat ini (Sidik Jari, Face ID, atau Windows Hello) agar bisa digunakan untuk login ke depannya tanpa memasukkan password.</p>
-                <button type="button" class="btn btn-success" id="btnRegisterBiometric"><i class="fas fa-fingerprint"></i> Daftarkan Perangkat Ini</button>
+                <button type="button" class="btn btn-primary" id="btnRegisterBiometric">
+                    <i class="fas fa-fingerprint"></i> Daftarkan Perangkat Ini
+                </button>
+
+                <hr>
+                <h5 class="mt-4">Perangkat Terdaftar</h5>
+                <?php if (!empty($webauthn_devices)): ?>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>ID Kredensial</th>
+                                    <th>Tanggal Didaftarkan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $no = 1; foreach ($webauthn_devices as $device): ?>
+                                    <tr>
+                                        <td><?= $no++ ?></td>
+                                        <td>
+                                            <code><?= substr($device['credentialId'], 0, 15) ?>...</code>
+                                        </td>
+                                        <td><?= date('d M Y H:i:s', strtotime($device['created_at'])) ?></td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-danger btn-delete-device" data-id="<?= $device['id'] ?>">
+                                                <i class="fas fa-trash"></i> Hapus
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> Belum ada perangkat yang terdaftar untuk Login Biometrik.
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('.btn-delete-device').on('click', function() {
+        if (confirm('Yakin ingin menghapus perangkat ini? Anda tidak akan bisa menggunakannya untuk login lagi sebelum didaftarkan ulang.')) {
+            let id = $(this).data('id');
+            $.ajax({
+                url: '<?= base_url('profil/deleteWebauthnDevice') ?>',
+                type: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        // Clear localStorage so if they login again on that device, it prompts again
+                        let userId = '<?= session()->get(SESSION_NAME . "userid") ?>';
+                        localStorage.removeItem('webauthn_registered_' + userId);
+                        localStorage.removeItem('webauthn_dismissed_' + userId);
+                        
+                        alert('Perangkat berhasil dihapus.');
+                        location.reload();
+                    } else {
+                        alert('Gagal menghapus perangkat: ' + res.message);
+                    }
+                },
+                error: function() {
+                    alert('Terjadi kesalahan jaringan.');
+                }
+            });
+        }
+    });
+});
+</script>

@@ -412,6 +412,7 @@ $routes->match(['GET', 'POST'], 'piutangemkl/getlastupdate/(:any)', 'Piutangemkl
 
 // Routes for App\Controllers\Profil (Profil)
 $routes->match(['GET', 'POST'], 'Profil', 'Profil::index');
+$routes->post('profil/deleteWebauthnDevice', 'Profil::deleteWebauthnDevice');
 $routes->match(['GET', 'POST'], 'profil', 'Profil::index');
 $routes->match(['GET', 'POST'], 'Profil/index', 'Profil::index');
 $routes->match(['GET', 'POST'], 'profil/index', 'Profil::index');
