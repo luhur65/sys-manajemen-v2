@@ -60,11 +60,12 @@ class Webauthn extends BaseController
                 null // cross-platform attachment (null = both)
             );
 
-            // Save challenge to session
-            session()->set('webauthn_challenge', $this->webauthn->getChallenge());
+            // Save challenge to session as a hex string to avoid serialization issues
+            $challengeData = bin2hex($this->webauthn->getChallenge()->getBinaryString());
+            session()->set('webauthn_challenge', $challengeData);
 
             return $this->response->setJSON($createArgs);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->response->setStatusCode(500)->setJSON([
                 'error' => true,
                 'message' => $e->getMessage(),
@@ -85,7 +86,14 @@ class Webauthn extends BaseController
 
         $clientDataJSON = base64_decode($this->request->getPost('clientDataJSON'));
         $attestationObject = base64_decode($this->request->getPost('attestationObject'));
-        $challenge = session()->get('webauthn_challenge');
+        
+        $challengeHex = session()->get('webauthn_challenge');
+        if (!$challengeHex) {
+            return $this->response->setJSON(['error' => 'No challenge found in session'])->setStatusCode(400);
+        }
+        // Reconstruct the ByteBuffer
+        $challenge = new \lbuchs\WebAuthn\Binary\ByteBuffer(hex2bin($challengeHex));
+        
         $userPk = session()->get(SESSION_NAME . 'userpk');
 
         try {
@@ -139,11 +147,12 @@ class Webauthn extends BaseController
                 true  // allow platform
             );
 
-            // Save challenge to session
-            session()->set('webauthn_challenge', $this->webauthn->getChallenge());
+            // Save challenge to session as hex string
+            $challengeData = bin2hex($this->webauthn->getChallenge()->getBinaryString());
+            session()->set('webauthn_challenge', $challengeData);
 
             return $this->response->setJSON($getArgs);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->response->setStatusCode(500)->setJSON([
                 'error' => true,
                 'message' => $e->getMessage(),
@@ -163,7 +172,12 @@ class Webauthn extends BaseController
         $signature = base64_decode($this->request->getPost('signature'));
         $userHandle = base64_decode($this->request->getPost('userHandle'));
         $id = base64_decode($this->request->getPost('id')); // This is the credential ID
-        $challenge = session()->get('webauthn_challenge');
+        
+        $challengeHex = session()->get('webauthn_challenge');
+        if (!$challengeHex) {
+            return $this->response->setJSON(['error' => 'No challenge found in session'])->setStatusCode(400);
+        }
+        $challenge = new \lbuchs\WebAuthn\Binary\ByteBuffer(hex2bin($challengeHex));
 
         try {
             $this->initWebauthn();
