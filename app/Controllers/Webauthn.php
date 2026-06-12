@@ -160,11 +160,13 @@ class Webauthn extends BaseController
             
             $getArgs = $this->webauthn->getGetArgs(
                 [], // allowed credentials (empty = allow any registered passwordless credential)
-                60,
-                true, // require user verification
-                true, // user presence
-                true, // allow cross-platform
-                true  // allow platform
+                60, // timeout
+                true, // allowUsb
+                true, // allowNfc
+                true, // allowBle
+                true, // allowHybrid
+                true, // allowInternal
+                'required' // require user verification
             );
 
             // Save challenge to session as hex string
@@ -217,7 +219,7 @@ class Webauthn extends BaseController
                 $cred['credentialPublicKey'], 
                 $challenge, 
                 null, 
-                'required'
+                false // Allow login even if device skipped user verification
             );
 
             // Authentication successful!
