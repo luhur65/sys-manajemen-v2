@@ -42,34 +42,20 @@ $(document).ready(function() {
         let isDismissed = localStorage.getItem(disKey);
 
         if (!isRegistered && !isDismissed) {
-            // Tampilkan Swal sebagai User Gesture (Wajib untuk browser mobile)
-            Swal.fire({
-                title: 'Daftar Quick Login?',
-                text: "Perangkat ini belum terdaftar untuk akun Anda. Apakah Anda ingin mendaftarkan biometrik/passkey agar bisa login tanpa password di kemudian hari?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Daftarkan!',
-                cancelButtonText: 'Lain kali'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    startWebAuthnRegister(
-                        '<?= base_url('webauthn/getRegisterArgs') ?>',
-                        '<?= base_url('webauthn/processRegister') ?>',
-                        function() {
-                            localStorage.setItem(regKey, '1');
-                            Swal.fire(
-                                'Berhasil!',
-                                'Perangkat Anda telah ditambahkan.',
-                                'success'
-                            );
-                        }
-                    );
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    localStorage.setItem(disKey, '1');
+            // Langsung panggil native WebAuthn prompt tanpa Swal
+            startWebAuthnRegister(
+                '<?= base_url('webauthn/getRegisterArgs') ?>',
+                '<?= base_url('webauthn/processRegister') ?>',
+                function() {
+                    // Jika sukses
+                    localStorage.setItem(regKey, '1');
+                    console.log('Perangkat berhasil didaftarkan.');
                 }
-            });
+            );
+            
+            // Tandai sudah pernah diprompt agar jika native prompt di-cancel, 
+            // tidak terus-terusan muncul tiap refresh (bisa dihapus jika ingin selalu muncul)
+            localStorage.setItem(disKey, '1');
         }
     }
 });
