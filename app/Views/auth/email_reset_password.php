@@ -183,7 +183,7 @@
               <td
                 style='padding:14px 4px 0 4px;text-align:center;color:#9ca3af;font-size:12px;line-height:1.5;'
               >
-                &copy; <?= date('Y') ?> Sys-Modern. All rights reserved.
+                &copy; <?= date('Y') ?> SYS TRANSPORINDO. All rights reserved.
               </td>
             </tr>
           </table>
