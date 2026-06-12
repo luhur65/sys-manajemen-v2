@@ -23,39 +23,37 @@
                 <div class="alert alert-info">
                     <h5><i class="icon fas fa-info"></i> Welcome!</h5>
                     Anda berhasil login ke Management Information System.
+                    <hr>
+                    <button type="button" class="btn btn-sm btn-light" id="btn-register-passkey">
+                        <i class="fas fa-fingerprint"></i> Daftarkan Perangkat Ini untuk Quick Login
+                    </button>
                 </div>
             </div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Biometric Registration Prompt (Runs once per login if enabled) -->
-<?php if (session()->getFlashdata('prompt_webauthn')): ?>
 <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 <script>
 $(document).ready(function() {
-    // Check if browser supports WebAuthn
-    if (window.PublicKeyCredential) {
-        // Check if user already registered any device
-        $.ajax({
-            url: '<?= base_url('webauthn/checkRegistered') ?>',
-            type: 'GET',
-            dataType: 'json',
-            success: function(res) {
-                if (!res.registered) {
-                    // Directly trigger the native browser WebAuthn prompt without Swal
-                    startWebAuthnRegister(
-                        '<?= base_url('webauthn/getRegisterArgs') ?>',
-                        '<?= base_url('webauthn/processRegister') ?>',
-                        function() {
-                            // Optional: Silently success or small toast
-                            console.log('Perangkat berhasil didaftarkan untuk Quick Login.');
-                        }
-                    );
-                }
-            }
-        });
+    // Check if browser supports WebAuthn, if not, hide the button
+    if (!window.PublicKeyCredential) {
+        $('#btn-register-passkey').hide();
     }
+
+    // Handle manual registration click
+    $('#btn-register-passkey').click(function() {
+        startWebAuthnRegister(
+            '<?= base_url('webauthn/getRegisterArgs') ?>',
+            '<?= base_url('webauthn/processRegister') ?>',
+            function() {
+                Swal.fire(
+                    'Berhasil!',
+                    'Perangkat Anda telah ditambahkan. Anda dapat menggunakan tombol Login Biometrik di perangkat ini pada login berikutnya.',
+                    'success'
+                );
+            }
+        );
+    });
 });
 </script>
-<?php endif; ?>
