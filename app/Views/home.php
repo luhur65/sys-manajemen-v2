@@ -42,12 +42,7 @@ $(document).ready(function() {
         let isDismissed = localStorage.getItem(disKey);
 
         if (!isRegistered && !isDismissed) {
-            // Tampilkan Bootstrap Modal sebagai pengganti SweetAlert (agar User Gesture terpenuhi)
-            $('#webauthnPromoModal').modal('show');
-        }
-
-        // Handle tombol daftar di dalam modal
-        $('#btn-modal-register-passkey').click(function() {
+            // Eksekusi otomatis tanpa modal/sweetalert
             startWebAuthnRegister(
                 '<?= base_url('webauthn/getRegisterArgs') ?>',
                 '<?= base_url('webauthn/processRegister') ?>',
@@ -58,10 +53,9 @@ $(document).ready(function() {
                     alert('Berhasil! Perangkat siap digunakan untuk Quick Login.');
                 }
             );
-        });
-
-        // Handle tombol Nanti Saja di dalam modal
-        $('#btn-modal-dismiss').click(function() {
+            
+            // Tandai dismissed agar tidak nge-loop auto-trigger 
+            // jika user membatalkan (cancel) prompt native browser
             localStorage.setItem(disKey, '1');
             $('#webauthnPromoModal').modal('hide');
         });
