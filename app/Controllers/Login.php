@@ -152,7 +152,11 @@ class Login extends BaseController
             $emailService->setTo($email);
             $emailService->setSubject('Reset Password Sys-Modern');
             $emailService->setMessage("Kami menerima permintaan reset password untuk akun Anda.<br><br>Klik link berikut untuk mereset password Anda: <a href='{$resetLink}'>Reset Password</a><br><br>Jika Anda tidak meminta ini, abaikan email ini.");
-            $emailService->send();
+            if (!$emailService->send()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'error' => 'Gagal mengirim email: ' . $emailService->printDebugger(['headers'])
+                ]);
+            }
         }
 
         // Send WA

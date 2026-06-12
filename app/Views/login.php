@@ -573,7 +573,7 @@
                 if (error.responseJSON && error.responseJSON.csrfToken) {
                   $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
                 }
-                let errorMsg = error.responseJSON?.errors?.user || 'Terjadi kesalahan sistem';
+                let errorMsg = error.responseJSON?.errors?.user || error.responseJSON?.error || 'Terjadi kesalahan sistem';
                 $("#dialog-message").html(`
                             <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
                           <br>${errorMsg}`);
