@@ -59,7 +59,7 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
             // Convert base64 fields to ArrayBuffers
             recursiveBase64ToArrayBuffer(options);
 
-            navigator.credentials.get({ publicKey: options })
+            navigator.credentials.get(options)
                 .then(function(assertion) {
                     let authData = {
                         id: arrayBufferToBase64(assertion.rawId),
@@ -124,7 +124,7 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
                 }
             }
 
-            navigator.credentials.create({ publicKey: options })
+            navigator.credentials.create(options)
                 .then(function(credential) {
                     let attestationData = {
                         clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
