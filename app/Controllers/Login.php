@@ -149,10 +149,20 @@ class Login extends BaseController
         // Send Email
         if (!empty($email)) {
             $emailService = \Config\Services::email();
+            $emailService->setMailType('html');
             $emailService->setTo($email);
-            $emailService->setSubject('Reset Password Sys-Modern');
-            $emailService->setMessage("Kami menerima permintaan reset password untuk akun Anda.<br><br>Klik link berikut untuk mereset password Anda: <a href='{$resetLink}'>Reset Password</a><br><br>Jika Anda tidak meminta ini, abaikan email ini.");
-            $emailService->send();
+            $emailService->setSubject('Reset Password SYS TRANSPORINDO');
+            
+            $htmlMessage = view('auth/email_reset_password', [
+                'userName' => $username,
+                'resetLink' => $resetLink
+            ]);
+            $emailService->setMessage($htmlMessage);
+            if (!$emailService->send()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'error' => 'Gagal mengirim email: ' . $emailService->printDebugger(['headers'])
+                ]);
+            }
         }
 
         // Send WA
