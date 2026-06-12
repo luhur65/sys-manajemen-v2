@@ -23,10 +23,6 @@
                 <div class="alert alert-info">
                     <h5><i class="icon fas fa-info"></i> Welcome!</h5>
                     Anda berhasil login ke Management Information System.
-                    <hr>
-                    <button type="button" class="btn btn-sm btn-light" id="btn-register-passkey">
-                        <i class="fas fa-fingerprint"></i> Daftarkan Perangkat Ini untuk Quick Login
-                    </button>
                 </div>
             </div>
         <?php endif; ?>
@@ -36,24 +32,45 @@
 <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 <script>
 $(document).ready(function() {
-    // Check if browser supports WebAuthn, if not, hide the button
-    if (!window.PublicKeyCredential) {
-        $('#btn-register-passkey').hide();
-    }
+    // Check if browser supports WebAuthn
+    if (window.PublicKeyCredential) {
+        let userId = '<?= session()->get(SESSION_NAME . "userid") ?>';
+        let regKey = 'webauthn_registered_' + userId;
+        let disKey = 'webauthn_dismissed_' + userId;
 
-    // Handle manual registration click
-    $('#btn-register-passkey').click(function() {
-        startWebAuthnRegister(
-            '<?= base_url('webauthn/getRegisterArgs') ?>',
-            '<?= base_url('webauthn/processRegister') ?>',
-            function() {
-                Swal.fire(
-                    'Berhasil!',
-                    'Perangkat Anda telah ditambahkan. Anda dapat menggunakan tombol Login Biometrik di perangkat ini pada login berikutnya.',
-                    'success'
-                );
-            }
-        );
-    });
+        let isRegistered = localStorage.getItem(regKey);
+        let isDismissed = localStorage.getItem(disKey);
+
+        if (!isRegistered && !isDismissed) {
+            // Tampilkan Swal sebagai User Gesture (Wajib untuk browser mobile)
+            Swal.fire({
+                title: 'Daftar Quick Login?',
+                text: "Perangkat ini belum terdaftar untuk akun Anda. Apakah Anda ingin mendaftarkan biometrik/passkey agar bisa login tanpa password di kemudian hari?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Daftarkan!',
+                cancelButtonText: 'Lain kali'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    startWebAuthnRegister(
+                        '<?= base_url('webauthn/getRegisterArgs') ?>',
+                        '<?= base_url('webauthn/processRegister') ?>',
+                        function() {
+                            localStorage.setItem(regKey, '1');
+                            Swal.fire(
+                                'Berhasil!',
+                                'Perangkat Anda telah ditambahkan.',
+                                'success'
+                            );
+                        }
+                    );
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    localStorage.setItem(disKey, '1');
+                }
+            });
+        }
+    }
 });
 </script>
