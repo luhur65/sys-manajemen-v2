@@ -445,6 +445,8 @@
     </p>
   </div>
 
+  <div id="dialog-message" title="Pesan" style="display:none;"></div>
+  
   <!-- jQuery -->
   <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
   <!-- jQuery UI -->
@@ -454,6 +456,8 @@
   <!-- AdminLTE App -->
   <script src="<?= asset('libraries/adminlte/dist/js/adminlte.min.js') ?>"></script>
   <script src="<?= asset('libraries/tas-lib/js/connectionToast.js') ?>"></script>
+  <!-- Main TAS JS (for showDialog) -->
+  <script src="<?= asset('libraries/tas-lib/js/mains.js?version=' . time()) ?>"></script>
   <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 
   <script>
@@ -633,6 +637,10 @@
 
       // WebAuthn Login Button
       $('#btnWebAuthnLogin').on('click', function() {
+          if (!window.PublicKeyCredential) {
+              showDialog("Perangkat atau browser Anda tidak mendukung fitur Login Biometrik (WebAuthn).");
+              return;
+          }
           startWebAuthnLogin(
               '<?= base_url() ?>webauthn/getLoginArgs',
               '<?= base_url() ?>webauthn/processLogin',

@@ -52,7 +52,7 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
         dataType: 'json',
         success: function(options) {
             if (options.error) {
-                alert(options.error);
+                showDialog(options.error);
                 return;
             }
 
@@ -78,21 +78,22 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
                             if (res.success) {
                                 window.location.href = redirectUrl;
                             } else {
-                                alert("Login Gagal: " + res.error);
+                                showDialog("Login Gagal: " + res.error);
                             }
                         },
                         error: function(err) {
-                            alert("Login Error: " + (err.responseJSON ? err.responseJSON.error : "Unknown error"));
+                            showDialog("Login Error: " + (err.responseJSON ? err.responseJSON.error : "Unknown error"));
                         }
                     });
                 })
                 .catch(function(err) {
                     console.error(err);
-                    alert("Proses dibatalkan atau gagal: " + err.message);
+                    showDialog("Proses dibatalkan atau gagal: " + err.message);
                 });
         },
         error: function(err) {
-            alert("Gagal mengambil data WebAuthn: " + err.statusText);
+            console.error(err);
+            showDialog("Gagal mengambil data WebAuthn: " + err.statusText);
         }
     });
 }
@@ -110,7 +111,7 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
         dataType: 'json',
         success: function(options) {
             if (options.error) {
-                alert(options.error);
+                showDialog(options.error);
                 return;
             }
 
@@ -139,23 +140,23 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
                         success: function(res) {
                             if (res.success) {
                                 if (successCallback) successCallback();
-                                else alert("Pendaftaran biometrik berhasil!");
+                                else showDialog("Pendaftaran biometrik berhasil!");
                             } else {
-                                alert("Pendaftaran Gagal: " + res.error);
+                                showDialog("Pendaftaran Gagal: " + res.error);
                             }
                         },
                         error: function(err) {
-                            alert("Pendaftaran Error: " + (err.responseJSON ? err.responseJSON.error : "Unknown error"));
+                            showDialog("Pendaftaran Error: " + (err.responseJSON ? err.responseJSON.error : "Unknown error"));
                         }
                     });
                 })
                 .catch(function(err) {
                     console.error(err);
-                    alert("Proses dibatalkan atau gagal: " + err.message);
+                    showDialog("Proses dibatalkan atau gagal: " + err.message);
                 });
         },
         error: function(err) {
-            alert("Gagal mengambil data WebAuthn: " + err.statusText);
+            showDialog("Gagal mengambil data WebAuthn: " + err.statusText);
         }
     });
 }
