@@ -29,6 +29,9 @@ use App\Controllers\BaseController;
 		$data['title'] = 'Profil';
 		$data['sqlprofil'] = $this->mprofilModel->get(session()->get(SESSION_NAME.'userid'));
 
+        $mwebauthnModel = new \App\Models\MWebauthnModel();
+        $data['webauthn_devices'] = $mwebauthnModel->where('userpk', session()->get(SESSION_NAME.'userpk'))->findAll();
+
 		return $this->render('profil/view',$data);
 
 	}
@@ -72,6 +75,27 @@ use App\Controllers\BaseController;
 			echo"3";
 		}
 	}
+
+    public function deleteWebauthnDevice()
+    {
+        $id = $this->request->getPost('id');
+        $userpk = session()->get(SESSION_NAME . 'userpk');
+
+        if (!$id || !$userpk) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $mwebauthnModel = new \App\Models\MWebauthnModel();
+        // Pastikan device tersebut milik user yang sedang login
+        $device = $mwebauthnModel->where('id', $id)->where('userpk', $userpk)->first();
+        
+        if ($device) {
+            $mwebauthnModel->delete($id);
+            return $this->response->setJSON(['success' => true]);
+        }
+
+        return $this->response->setJSON(['success' => false, 'message' => 'Device not found or not authorized']);
+    }
 }
 
 
