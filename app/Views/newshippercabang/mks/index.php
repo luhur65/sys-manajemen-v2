@@ -202,12 +202,10 @@
             // Clear footer and UI info handlers immediately when grid is cleared
             $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             var $gridElement = '$grid';
-            if ($gridElement.startsWith('$(')) {
-                try {
-                    var sDiv = eval($gridElement)[0].grid.sDiv;
-                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
-                } catch(e) {}
-            }
+            try {
+                var sDiv = eval($gridElement)[0].grid.sDiv;
+                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+            } catch(e) {}
 
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
@@ -243,12 +241,10 @@
             // Clear footer and UI info handlers immediately when grid is cleared
             $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             var $gridElement = '$grid';
-            if ($gridElement.startsWith('$(')) {
-                try {
-                    var sDiv = eval($gridElement)[0].grid.sDiv;
-                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
-                } catch(e) {}
-            }
+            try {
+                var sDiv = eval($gridElement)[0].grid.sDiv;
+                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+            } catch(e) {}
 
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.datefrom = $('#datefromMKS').val();
@@ -270,12 +266,10 @@
             // Clear footer and UI info handlers immediately when grid is cleared
             $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             var $gridElement = '$grid';
-            if ($gridElement.startsWith('$(')) {
-                try {
-                    var sDiv = eval($gridElement)[0].grid.sDiv;
-                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
-                } catch(e) {}
-            }
+            try {
+                var sDiv = eval($gridElement)[0].grid.sDiv;
+                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+            } catch(e) {}
 
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.datefrom = '';

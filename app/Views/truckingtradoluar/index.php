@@ -322,12 +322,10 @@
             // Clear footer and UI info handlers immediately when grid is cleared
             $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             var $gridElement = '$("#jqGrid")';
-            if ($gridElement.startsWith('$(')) {
-                try {
-                    var sDiv = eval($gridElement)[0].grid.sDiv;
-                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
-                } catch(e) {}
-            }
+            try {
+                var sDiv = eval($gridElement)[0].grid.sDiv;
+                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+            } catch(e) {}
 
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
