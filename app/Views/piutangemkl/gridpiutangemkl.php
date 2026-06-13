@@ -278,19 +278,14 @@
                 return 'stop';
             },
             loadComplete: function(res) {
-                // Force clear footer if no records found
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
                 if (res && (res.records === 0 || res.records === "0")) {
-                    setTimeout(function() {
-                        try {
-                            var _sDiv = $(this)[0].grid.sDiv;
-                            if (_sDiv) {
-                                $(_sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
-                            }
-                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
-                            $(this).jqGrid('setGridParam', { userData: null });
-                        } catch(e) {}
-                    }.bind(this), 50);
+                    res.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
                 }
+                
                 // Support both standard load and lazy load response
                 var $gridObj = $(this);
                 var userData = res.userdata || $(this).jqGrid('getGridParam', 'userData');
@@ -386,13 +381,7 @@
             beforeSearch: function() {
                 if (typeof lazyStates !== 'undefined' && lazyStates["jqGrid"]) lazyStates["jqGrid"].cachedData = {};
                 $grid.jqGrid('clearGridData');
-            // Clear footer and UI info handlers immediately when grid is cleared
-            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
-            var $gridElement = '$grid';
-            try {
-                var sDiv = eval($gridElement)[0].grid.sDiv;
-                $(sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
-            } catch(e) {}
+            
 
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 return false;

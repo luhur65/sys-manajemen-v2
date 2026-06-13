@@ -202,6 +202,13 @@
                 return 'stop';
             },
             loadComplete: function(data) {
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
+                if (data && (data.records === 0 || data.records === "0")) {
+                    data.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
+                }
                 // Force clear footer if no records found
                 if (data && (data.records === 0 || data.records === "0")) {
                     setTimeout(function() {
@@ -332,13 +339,7 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $("#jqGrid").jqGrid('clearGridData');
-            // Clear footer and UI info handlers immediately when grid is cleared
-            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
-            var $gridElement = '$("#jqGrid")';
-            try {
-                var sDiv = eval($gridElement)[0].grid.sDiv;
-                $(sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
-            } catch(e) {}
+            
 
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
@@ -449,6 +450,13 @@
                 userDataOnFooter: true,
                 toolbar: [true, 'top'],
                 loadComplete: function(data) {
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
+                if (data && (data.records === 0 || data.records === "0")) {
+                    data.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
+                }
                 // Force clear footer if no records found
                 if (data && (data.records === 0 || data.records === "0")) {
                     setTimeout(function() {
