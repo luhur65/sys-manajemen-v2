@@ -24,7 +24,7 @@
                             <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
                                 <i class="fas fa-filter"></i> Filter
                             </button>
-                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href=window.location.href.split(\'?\')[0]+\'?_r=\'+new Date().getTime();">
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href=window.location.href.split('?')[0]+'?_r='+new Date().getTime();">
                                 <i class="fas fa-undo"></i> Reset
                             </button>
                         </div>
