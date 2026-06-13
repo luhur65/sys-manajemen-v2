@@ -21,12 +21,14 @@
                 
                 <div class="col-md-3">
                     <div class="form-group filter-input-group mb-0">
-                        <button type="button" id="btnFilter" class="btn btn-primary btn-md mr-2">
-                            <i class="fas fa-search"></i> Tampilkan
-                        </button>
-                        <button type="button" id="btnReset" class="btn btn-danger btn-md">
-                            <i class="fas fa-undo"></i> Reset
-                        </button>
+                        <div class="d-flex w-100">
+                            <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                <i class="fas fa-search"></i> Tampilkan
+                            </button>
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,6 +205,16 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
                 $grid.jqGrid("footerData", "set", {
                     FJenisTrado: "Total", FNominalMuatan: 0, FJumlahMuatan: 0, FNominalBongkaran: 0, 
                     FJumlahBongkaran: 0, FNominalImport: 0, FJumlahImport: 0, FNominalEksport: 0, FJumlahEksport: 0, Total: 0
@@ -227,6 +239,16 @@
                 }
             });
             $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
             $grid.jqGrid("footerData", "set", {
                 FJenisTrado: "Total", FNominalMuatan: 0, FJumlahMuatan: 0, FNominalBongkaran: 0, 
                 FJumlahBongkaran: 0, FNominalImport: 0, FJumlahImport: 0, FNominalEksport: 0, FJumlahEksport: 0, Total: 0

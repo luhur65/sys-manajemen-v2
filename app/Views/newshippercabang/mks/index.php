@@ -199,6 +199,16 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -230,6 +240,16 @@
             isInitialLoad = false;
             var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.datefrom = $('#datefromMKS').val();
             postData.dateto = $('#datetoMKS').val();
@@ -247,6 +267,16 @@
             $("#datetoMKS").val(last_day);
             var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.datefrom = '';
             postData.dateto = '';

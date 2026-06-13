@@ -47,12 +47,14 @@
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <div class="form-group filter-input-group w-100 d-flex justify-content-between">
-                        <button id="btnFilter" class="btn btn-primary" style="width: 48%;">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                        <button id="btnReset" class="btn btn-secondary" style="width: 48%;">
-                            <i class="fas fa-sync"></i> Reset
-                        </button>
+                        <div class="d-flex w-100">
+                            <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -189,6 +191,16 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -220,6 +232,16 @@
             isInitialLoad = false;
             var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.cabang = $('#cabangSelect').val();
             postData.datefrom = $('#datefrom').val();
@@ -234,11 +256,21 @@
 
         $('#btnReset').click(function() {
             isInitialLoad = true;
-            $("#cabangSelect").val('ALL').trigger('change');
             $("#datefrom").val(first_day);
             $("#dateto").val(last_day);
-            var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
+            $("#cabangSelect").val('ALL').trigger('change');
+            var targetGridId = 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('clearGridData');
+            // Clear footer and UI info handlers immediately when grid is cleared
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            var $gridElement = '$grid';
+            if ($gridElement.startsWith('$(')) {
+                try {
+                    var sDiv = eval($gridElement)[0].grid.sDiv;
+                    $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                } catch(e) {}
+            }
+
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.cabang = 'ALL';
             postData.datefrom = '';
