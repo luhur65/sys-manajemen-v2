@@ -409,7 +409,7 @@ function monthFormat(value) {
 
 function setNumberSeparators() {
     $.ajax({
-        url: `${apiUrl}parameter`,
+        url: `${appUrl}parameter`,
         method: "GET",
         async: false,
         data: {
@@ -2311,29 +2311,28 @@ function getOffDays() {
     let offDays = [];
 
     $.ajax({
-        url: `${apiUrl}harilibur`,
+        url: `${appUrl}harilibur`,
         method: "GET",
         dataType: "JSON",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-        data: {
-            limit: 0,
-        },
         async: false,
         cache: true,
         success: (response) => {
             let convertedResponse = [];
 
-            response.data.forEach((row) => {
-                convertedResponse.push({
-                    date: row.tgl,
-                    description: row.keterangan,
+            if (response && response.data) {
+                response.data.forEach((row) => {
+                    convertedResponse.push({
+                        date: row.date,
+                        description: row.description,
+                    });
                 });
-            });
+            }
 
             offDays = convertedResponse;
         },
+        error: () => {
+            offDays = [];
+        }
     });
 
     return offDays;

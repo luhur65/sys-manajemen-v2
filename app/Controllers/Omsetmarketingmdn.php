@@ -39,8 +39,8 @@ class Omsetmarketingmdn extends BaseController
         $sidx = $this->request->getPost('sidx') ?: 'FTgl';
         $sord = $this->request->getPost('sord') ?: 'desc';
         
-        $tgl_dari = $this->request->getPost('tgl_dari');
-        $tgl_sampai = $this->request->getPost('tgl_sampai');
+        $tgl_dari = $this->request->getPost('tgl_dari'); if(!empty($tgl_dari)) $tgl_dari = date('Y-m-d', strtotime($tgl_dari));
+        $tgl_sampai = $this->request->getPost('tgl_sampai'); if(!empty($tgl_sampai)) $tgl_sampai = date('Y-m-d', strtotime($tgl_sampai));
 
         $filters = $this->request->getPost('filters');
         $search = $this->request->getPost('_search');

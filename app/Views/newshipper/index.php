@@ -36,13 +36,13 @@
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Dari</label>
-                        <input type="text" class="form-control" id="datefrom" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="datefrom" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Sampai</label>
-                        <input type="text" class="form-control" id="dateto" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="dateto" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
@@ -96,10 +96,10 @@
         var last_day_date = new Date(curdate.getFullYear(), curdate.getMonth() + 1, 0);
         var last_day = last_day_date.getFullYear() + "-" + pad(last_day_date.getMonth() + 1) + "-" + pad(last_day_date.getDate());
 
-        $("#datefrom").datepicker({ dateFormat: 'yy-mm-dd' });
+        initDatepicker();
         $("#datefrom").val(first_day);
         
-        $("#dateto").datepicker({ dateFormat: 'yy-mm-dd' });
+        
         $("#dateto").val(last_day);
 
         if($('.select2').length > 0) {

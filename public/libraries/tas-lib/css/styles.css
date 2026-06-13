@@ -2385,3 +2385,36 @@ th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; }
 
 /* Hide disabled sort icons so only the active arrow is shown */
 th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; }
+
+/* Responsive Datepicker for Mobile */
+@media screen and (max-width: 767px) {
+    .ui-datepicker {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        left: 2vw !important;
+        box-sizing: border-box !important;
+        font-size: 0.85em !important;
+    }
+    .ui-datepicker .ui-datepicker-title select {
+        font-size: 0.9em !important;
+        padding: 2px !important;
+    }
+    .ui-datepicker table {
+        font-size: 0.9em !important;
+    }
+}
+
+/* Fix Datepicker Holiday colors in Dark Mode */
+html.dark-mode .ui-datepicker td.datepicker-offday a.ui-state-default,
+body.dark-mode .ui-datepicker td.datepicker-offday a.ui-state-default,
+html.dark-mode .ui-datepicker td.datepicker-offday span.ui-state-default,
+body.dark-mode .ui-datepicker td.datepicker-offday span.ui-state-default {
+    color: #ff4d4d !important;
+}
+
+html.dark-mode .ui-datepicker td.datepicker-saturday a.ui-state-default,
+body.dark-mode .ui-datepicker td.datepicker-saturday a.ui-state-default,
+html.dark-mode .ui-datepicker td.datepicker-saturday span.ui-state-default,
+body.dark-mode .ui-datepicker td.datepicker-saturday span.ui-state-default {
+    color: #4CAF50 !important;
+}

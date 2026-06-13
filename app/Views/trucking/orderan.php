@@ -22,13 +22,13 @@
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Dari</label>
-                        <input type="text" class="form-control" id="tgl_dari" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="tgl_dari" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Sampai</label>
-                        <input type="text" class="form-control" id="tgl_sampai" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="tgl_sampai" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
@@ -80,10 +80,10 @@
         var first_day = new Date(curdate.getFullYear(), curdate.getMonth(), 1);
         var last_day = new Date(curdate.getFullYear(), curdate.getMonth() + 1, 0);
 
-        $("#tgl_dari").datepicker({ dateFormat: 'yy-mm-dd' });
+        initDatepicker();
         $("#tgl_dari").datepicker('setDate', first_day);
         
-        $("#tgl_sampai").datepicker({ dateFormat: 'yy-mm-dd' });
+        
         $("#tgl_sampai").datepicker('setDate', last_day);
 
         // Initialize Select2
@@ -116,7 +116,7 @@
                     //     sopt: ['eq'],
                     //     dataInit: function(elem) {
                     //         $(elem).datepicker({
-                    //             dateFormat: 'yy-mm-dd',
+                    //             dateFormat: 'dd-mm-yy',
                     //             changeYear: true,
                     //             changeMonth: true,
                     //             showWeek: true,

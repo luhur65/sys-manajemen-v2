@@ -25,6 +25,8 @@ $routes->get('webauthn/getLoginArgs', 'Webauthn::getLoginArgs');
 $routes->post('webauthn/processLogin', 'Webauthn::processLogin');
 $routes->get('webauthn/checkRegistered', 'Webauthn::checkRegistered');
 
+// Harilibur proxy route
+$routes->match(['GET', 'POST'], 'harilibur', 'Harilibur::index');
 // Routes for App\Controllers\Cabang (Cabang)
 $routes->match(['GET', 'POST'], 'Cabang', 'Cabang::index');
 $routes->match(['GET', 'POST'], 'cabang', 'Cabang::index');

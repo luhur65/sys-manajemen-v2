@@ -5,7 +5,7 @@ Dokumen ini mencatat kemajuan pengembangan fitur otentikasi biometrik (sidik jar
 ## Status Saat Ini
 - **Backend & Logic:** Selesai (100%).
 - **Frontend & UI:** Selesai (100%).
-- **Status Testing:** Menunggu pengujian (*Pending Testing*) dari sisi pengguna di environment yang menggunakan HTTPs atau localhost secara langsung.
+- **Status Testing:** Terjadi kendala saat testing di perangkat lawas (Android 8 Oreo) dan kegagalan insert di server production. **(Telah dibuatkan perbaikan)**.
 
 ---
 
@@ -42,18 +42,43 @@ Dokumen ini mencatat kemajuan pengembangan fitur otentikasi biometrik (sidik jar
 
 ---
 
+## Log Isu & Troubleshooting
+
+### Isu 1: Error "NotSupportedError" / "NotAllowedError" di Android Jadul (Android Oreo)
+**Deskripsi:** Saat user mengklik Quick Login, browser menolak dengan alasan *The operation either timed out or was not allowed* atau *NotSupportedError*. Hal ini disebabkan karena Android 8 tidak memiliki fitur **Discoverable Credentials / Passkey / Resident Keys** secara default, sehingga menolak proses login jika disodorkan form login kosong (1-click magic). Selain itu, *authenticator* jadul tidak support pemaksaan `requireUserVerification`.
+**Solusi yang Diterapkan:**
+1. Mengubah opsi `requireUserVerification` menjadi `false` pada pendaftaran dan login.
+2. Memodifikasi frontend agar **membaca isian username**. Pengguna Android jadul **harus mengisi username dulu**, barulah klik Quick Login. Server akan memberikan *credentialId* spesifik sehingga perangkat lama bisa merespons.
+
+### Isu 2: Pendaftaran Sukses di Layar, Tapi "Masih Belum Bisa Terdaftar" / Tidak Tersimpan
+**Deskripsi:** Muncul notifikasi "Pendaftaran berhasil" di UI Android, namun saat digunakan untuk login ternyata gagal.
+**Penyebab Utama:** Tabel penampung sidik jari (`tbluser_webauthn`) **TIDAK ADA** di dalam Database Server Production SQL Server. Hal ini membuat perintah `insert` di backend gagal, dan karena CI4 di Production *DBDebug=false*, pesan gagal ini tertelan (berjalan *silent*) lalu membalas seakan-akan sukses.
+**Solusi:** User / Admin harus segera mengeksekusi SQL Schema pembuatan tabel `tbluser_webauthn` di SQL Server Production.
+
+---
+
 ## Langkah Selanjutnya (Untuk Dikerjakan / Dites Nanti)
 
-1. **Uji Coba Pendaftaran (Registration Flow)**
-   - Login dengan username dan password normal dari HP/Tablet.
-   - Pergi ke menu Profil, lalu klik **Daftarkan Perangkat Ini**.
-   - Pastikan *popup* biometrik (Fingerprint/FaceID) muncul dan berhasil mendaftarkan perangkat.
+1. **Buat Tabel `tbluser_webauthn` di Database Production**
+   Jalankan query ini terlebih dahulu di production:
+   ```sql
+   CREATE TABLE tbluser_webauthn (
+       id INT IDENTITY(1,1) PRIMARY KEY,
+       userpk INT NOT NULL,
+       credentialId VARCHAR(MAX) NOT NULL,
+       credentialPublicKey VARCHAR(MAX) NOT NULL,
+       created_at DATETIME NOT NULL
+   );
+   ```
 
-2. **Uji Coba Login (Login Flow)**
-   - Logout dari aplikasi.
-   - Buka halaman login di perangkat yang sudah didaftarkan.
-   - Klik tombol **Login Biometrik / Passkey**.
-   - Pastikan *popup* biometrik muncul dan otomatis mengarahkan masuk ke Ruang Kerja tanpa mengisi password.
+2. **Uji Coba Ulang Pendaftaran**
+   - Pastikan update terbaru dari Controller `Webauthn.php` dan `login.php` sudah di-pull (pastikan fix Android Oreo tidak hilang atau ter-*revert* saat proses *merge pull request* sebelumnya).
+   - Lakukan registrasi sidik jari melalui menu Profil.
+   - Cek database production apakah row baru berhasil masuk di tabel `tbluser_webauthn`.
+
+3. **Uji Coba Login**
+   - Di perangkat yang sudah mendukung Passkey/Discoverable (misalnya iOS terbaru atau Windows Hello): Kosongkan input form, klik Quick Login.
+   - Di perangkat lawas (Android 8 / Oppo lama): Ketik *Username* pada form, lalu klik Quick Login.
 
 ## Catatan Penting
 - **HTTPS Wajib:** API `navigator.credentials` bawaan browser tidak akan berfungsi (akan *undefined*) jika web diakses tanpa enkripsi HTTPS (SSL), **kecuali** diakses murni dari `localhost` atau `127.0.0.1`.
