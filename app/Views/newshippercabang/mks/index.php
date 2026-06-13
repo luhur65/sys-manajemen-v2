@@ -149,7 +149,7 @@
                         try {
                             var _sDiv = $(this)[0].grid.sDiv;
                             if (_sDiv) {
-                                $(_sDiv).find('.footrow td, .myfootrow td, .myfootrow1 td').html('&nbsp;');
+                                $(_sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
                             }
                             $('#lastUpdateHandler, #jqGridInfoHandler').html('');
                             $(this).jqGrid('setGridParam', { userData: null });
@@ -217,7 +217,7 @@
             var $gridElement = '$grid';
             try {
                 var sDiv = eval($gridElement)[0].grid.sDiv;
-                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                $(sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
             } catch(e) {}
 
                 if(typeof loadGridData === 'function') {
@@ -256,7 +256,7 @@
             var $gridElement = '$grid';
             try {
                 var sDiv = eval($gridElement)[0].grid.sDiv;
-                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                $(sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
             } catch(e) {}
 
             var postData = $grid.jqGrid('getGridParam', 'postData');
@@ -281,7 +281,7 @@
             var $gridElement = '$grid';
             try {
                 var sDiv = eval($gridElement)[0].grid.sDiv;
-                $(sDiv).find('.footrow td, .myfootrow td').html('&nbsp;');
+                $(sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
             } catch(e) {}
 
             var postData = $grid.jqGrid('getGridParam', 'postData');
