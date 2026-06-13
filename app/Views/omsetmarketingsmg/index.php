@@ -238,6 +238,19 @@
                 return 'stop';
             },
             loadComplete: function(res) {
+                // Force clear footer if no records found
+                if (res && (res.records === 0 || res.records === "0")) {
+                    setTimeout(function() {
+                        try {
+                            var _sDiv = $(this)[0].grid.sDiv;
+                            if (_sDiv) {
+                                $(_sDiv).find('.footrow td, .myfootrow td, .myfootrow1 td').html('&nbsp;');
+                            }
+                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+                            $(this).jqGrid('setGridParam', { userData: null });
+                        } catch(e) {}
+                    }.bind(this), 50);
+                }
                 var $gridObj = $(this);
                 var userData = res.userdata || $(this).jqGrid('getGridParam', 'userData');
 

@@ -77,6 +77,19 @@
                 return 'stop';
             },
             loadComplete: function(data) {
+                // Force clear footer if no records found
+                if (data && (data.records === 0 || data.records === "0")) {
+                    setTimeout(function() {
+                        try {
+                            var _sDiv = $(this)[0].grid.sDiv;
+                            if (_sDiv) {
+                                $(_sDiv).find('.footrow td, .myfootrow td, .myfootrow1 td').html('&nbsp;');
+                            }
+                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+                            $(this).jqGrid('setGridParam', { userData: null });
+                        } catch(e) {}
+                    }.bind(this), 50);
+                }
                 $('#gsh_' + $.jgrid.jqID($gridAcl[0].id) + '_rn').html($("<div id='resetFilterOptionsAcl' class='clearsearchclass text-center' style='cursor: pointer;' title='Clear Filter'><span id='resetFilterOptionsAclSpan'><i class='fas fa-times text-danger'></i></span></div>"));
                 $("#resetFilterOptionsAcl").click(function(){
                     $('input[id*="gs_"]').val("");

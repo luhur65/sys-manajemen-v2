@@ -202,6 +202,19 @@
                 return 'stop';
             },
             loadComplete: function(data) {
+                // Force clear footer if no records found
+                if (data && (data.records === 0 || data.records === "0")) {
+                    setTimeout(function() {
+                        try {
+                            var _sDiv = $(this)[0].grid.sDiv;
+                            if (_sDiv) {
+                                $(_sDiv).find('.footrow td, .myfootrow td, .myfootrow1 td').html('&nbsp;');
+                            }
+                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+                            $(this).jqGrid('setGridParam', { userData: null });
+                        } catch(e) {}
+                    }.bind(this), 50);
+                }
                 var $gridObj = $(this);
 
                 if (data && data.userdata) {
@@ -436,6 +449,19 @@
                 userDataOnFooter: true,
                 toolbar: [true, 'top'],
                 loadComplete: function(data) {
+                // Force clear footer if no records found
+                if (data && (data.records === 0 || data.records === "0")) {
+                    setTimeout(function() {
+                        try {
+                            var _sDiv = $(this)[0].grid.sDiv;
+                            if (_sDiv) {
+                                $(_sDiv).find('.footrow td, .myfootrow td, .myfootrow1 td').html('&nbsp;');
+                            }
+                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+                            $(this).jqGrid('setGridParam', { userData: null });
+                        } catch(e) {}
+                    }.bind(this), 50);
+                }
                     var $gridObj = $(this);
                     if (data && data.userdata) {
                         var footerData = {
