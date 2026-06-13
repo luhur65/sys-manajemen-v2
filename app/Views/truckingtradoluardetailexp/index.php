@@ -163,15 +163,6 @@
                 return 'stop';
             },
             loadComplete: function(res) {
-                // Gracefully clear footer by feeding an empty userdata object
-                // This preserves custom footer text labels but zeroes out the totals
-                if (res && (res.records === 0 || res.records === "0")) {
-                    res.userdata = {};
-                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
-                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
-                }
-                
-
                 // Initialize custom bind keys
                 $(document).off('keydown.grid');
                 setCustomBindKeys($grid);
@@ -345,8 +336,41 @@
         $('#btnReset').click(function() {
             $("#tgl_dari").datepicker('setDate', first_day);
             $("#tgl_sampai").datepicker('setDate', last_day);
-            $('#cabangSelect').val('MDN');
+            $('#cabangSelect').val('MDN').trigger('change.select2'); // refresh tampilan select2
             try { $grid[0].clearToolbar(false); } catch(e) {}
+
+            // Reset main footer
+            $grid.jqGrid("footerData", "set", {
+                FNTrans: "Total",
+                FNominalHargaTrucking: 0,
+                FNominalHargaTruckingPusat: 0,
+                FSelisih: 0
+            });
+
+            // ✅ Cara yang benar untuk akses sDiv di luar loadComplete
+            var gridObj = $grid[0].grid; // ambil object grid internal
+            var $sDiv = $(gridObj.sDiv);  // sDiv adalah property dari grid object
+
+            // Reset custom footer rows
+            var resetMap = {
+                'myfootrow':  { label: 'Jumlah Bongkaran' },
+                'myfootrow1': { label: 'Jumlah Muatan' },
+                'myfootrow2': { label: 'Jumlah Import' },
+                'myfootrow3': { label: 'Jumlah Eksport' }
+            };
+
+            $.each(resetMap, function(cls, cfg) {
+                var $row = $sDiv.find("tr." + cls);
+                if ($row.length > 0) {
+                    $row.find(">td[aria-describedby=jqGrid_FNTrans]").text(cfg.label + ' ');
+                    $row.find(">td[aria-describedby=jqGrid_FNominalHargaTrucking]").text('');
+                    $row.find(">td[aria-describedby=jqGrid_FNominalHargaTruckingPusat]").text('');
+                    $row.find(">td[aria-describedby=jqGrid_FSelisih]").text('');
+                    $row.find(">td[aria-describedby=jqGrid_FOrderan]").text(0).css('text-align', 'right');
+                }
+            });
+
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             $('#btnFilter').trigger('click');
         });
 
