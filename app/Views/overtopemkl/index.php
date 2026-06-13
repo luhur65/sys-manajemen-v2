@@ -374,7 +374,7 @@
 
     });
 
-        $('#btnReset').off('click').click(function() {
+        $(document).off('click', '#btnReset').on('click', '#btnReset', function() {
             if (typeof first_day !== 'undefined' && $('#tgl_dari').length) { $('#tgl_dari').datepicker('setDate', first_day); }
             if (typeof last_day !== 'undefined' && $('#tgl_sampai').length) { $('#tgl_sampai').datepicker('setDate', last_day); }
             if (typeof first_day !== 'undefined' && $('#datefrom').length) { $('#datefrom').val(first_day); }
@@ -387,7 +387,7 @@
             
             $('input[type="text"]:not(.hasDatepicker)').val('');
             
-            try { $grid[0].clearToolbar(false); } catch(e) {}
+            try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
             $('#btnFilter').trigger('click');
         });
 </script>

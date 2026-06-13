@@ -337,7 +337,7 @@
             $("#tgl_dari").datepicker('setDate', first_day);
             $("#tgl_sampai").datepicker('setDate', last_day);
             $('#cabangSelect').val('MDN').trigger('change.select2'); // refresh tampilan select2
-            try { $grid[0].clearToolbar(false); } catch(e) {}
+            try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
 
             // Reset main footer
             $grid.jqGrid("footerData", "set", {
