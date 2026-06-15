@@ -375,10 +375,18 @@
     });
 
         $(document).off('click', '#btnReset').on('click', '#btnReset', function() {
-            if (typeof first_day !== 'undefined' && $('#tgl_dari').length) { $('#tgl_dari').datepicker('setDate', first_day); }
-            if (typeof last_day !== 'undefined' && $('#tgl_sampai').length) { $('#tgl_sampai').datepicker('setDate', last_day); }
-            if (typeof first_day !== 'undefined' && $('#datefrom').length) { $('#datefrom').val(first_day); }
-            if (typeof last_day !== 'undefined' && $('#dateto').length) { $('#dateto').val(last_day); }
+            var curdate = new Date();
+            var d_first = new Date(curdate.getFullYear(), curdate.getMonth(), 1);
+            var d_last = new Date(curdate.getFullYear(), curdate.getMonth() + 1, 0);
+
+            if ($('#tgl_dari').length) { 
+                try { $('#tgl_dari').datepicker('setDate', d_first); } catch(e) { $('#tgl_dari').val(d_first); } 
+            }
+            if ($('#tgl_sampai').length) { 
+                try { $('#tgl_sampai').datepicker('setDate', d_last); } catch(e) { $('#tgl_sampai').val(d_last); }
+            }
+            if ($('#datefrom').length) { $('#datefrom').val(d_first); }
+            if ($('#dateto').length) { $('#dateto').val(d_last); }
             
             $('select.select2').each(function() {
                 var firstVal = $(this).find('option:first').val();
