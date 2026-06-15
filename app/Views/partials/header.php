@@ -57,6 +57,7 @@
     <script>
         const appUrl = '<?= base_url() ?>';
         const baseUrl = '<?= base_url() ?>';
+        window.apiUrl = appUrl;
 
         (function() {
             const savedTheme = localStorage.getItem('theme');

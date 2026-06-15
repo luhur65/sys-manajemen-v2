@@ -36,23 +36,25 @@
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Dari</label>
-                        <input type="text" class="form-control" id="datefrom" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="datefrom" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Sampai</label>
-                        <input type="text" class="form-control" id="dateto" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="dateto" autocomplete="off">
                     </div>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <div class="form-group filter-input-group w-100 d-flex justify-content-between">
-                        <button id="btnFilter" class="btn btn-primary" style="width: 48%;">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                        <button id="btnReset" class="btn btn-secondary" style="width: 48%;">
-                            <i class="fas fa-sync"></i> Reset
-                        </button>
+                        <div class="d-flex w-100">
+                            <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -96,10 +98,10 @@
         var last_day_date = new Date(curdate.getFullYear(), curdate.getMonth() + 1, 0);
         var last_day = last_day_date.getFullYear() + "-" + pad(last_day_date.getMonth() + 1) + "-" + pad(last_day_date.getDate());
 
-        $("#datefrom").datepicker({ dateFormat: 'yy-mm-dd' });
+        initDatepicker();
         $("#datefrom").val(first_day);
         
-        $("#dateto").datepicker({ dateFormat: 'yy-mm-dd' });
+        
         $("#dateto").val(last_day);
 
         if($('.select2').length > 0) {
@@ -156,6 +158,14 @@
                 return 'stop';
             },
             loadComplete: function(res) {
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
+                if (res && (res.records === 0 || res.records === "0")) {
+                    res.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
+                }
+                
                 if (typeof setupLazyLoadScrollHandler === 'function') {
                     setupLazyLoadScrollHandler("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'));
                 }
@@ -189,6 +199,8 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            
+
                 if(typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -220,6 +232,8 @@
             isInitialLoad = false;
             var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('clearGridData');
+            
+
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.cabang = $('#cabangSelect').val();
             postData.datefrom = $('#datefrom').val();
@@ -234,11 +248,13 @@
 
         $('#btnReset').click(function() {
             isInitialLoad = true;
-            $("#cabangSelect").val('ALL').trigger('change');
             $("#datefrom").val(first_day);
             $("#dateto").val(last_day);
-            var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
+            $("#cabangSelect").val('ALL').trigger('change');
+            var targetGridId = 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('clearGridData');
+            
+
             var postData = $grid.jqGrid('getGridParam', 'postData');
             postData.cabang = 'ALL';
             postData.datefrom = '';

@@ -28,25 +28,27 @@
                 <div class="col-md-3">
                     <div class="form-group filter-input-group mb-0">
                         <label class="filter-label">Tanggal Dari</label>
-                        <input type="text" class="form-control" id="tgl_dari" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="tgl_dari" autocomplete="off">
                     </div>
                 </div>
                 
                 <div class="col-md-3">
                     <div class="form-group filter-input-group mb-0">
                         <label class="filter-label">Tanggal Sampai</label>
-                        <input type="text" class="form-control" id="tgl_sampai" autocomplete="off">
+                        <input type="text" class="form-control datepicker" id="tgl_sampai" autocomplete="off">
                     </div>
                 </div>
                 
                 <div class="col-md-3">
                     <div class="form-group filter-input-group mb-0">
-                        <button type="button" id="btnFilter" class="btn btn-primary btn-md mr-2">
-                            <i class="fas fa-search"></i> Tampilkan
-                        </button>
-                        <button type="button" id="btnReset" class="btn btn-danger btn-md">
-                            <i class="fas fa-undo"></i> Reset
-                        </button>
+                        <div class="d-flex w-100">
+                            <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                <i class="fas fa-search"></i> Tampilkan
+                            </button>
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -90,10 +92,10 @@
         let first_day = new Date(curdate.getFullYear(), curdate.getMonth(), 1);
         let last_day = new Date(curdate.getFullYear(), curdate.getMonth() + 1, 0);
 
-        $("#tgl_dari").datepicker({ dateFormat: 'yy-mm-dd' });
+        initDatepicker();
         $("#tgl_dari").datepicker('setDate', first_day);
         
-        $("#tgl_sampai").datepicker({ dateFormat: 'yy-mm-dd' });
+        
         $("#tgl_sampai").datepicker('setDate', last_day);
 
         var nullstringFormatter = function(cellvalue, options, rowObject) {
@@ -161,7 +163,6 @@
                 return 'stop';
             },
             loadComplete: function(res) {
-
                 // Initialize custom bind keys
                 $(document).off('keydown.grid');
                 setCustomBindKeys($grid);
@@ -287,6 +288,8 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            
+
                 if (typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -331,10 +334,79 @@
 
 
         $('#btnReset').click(function() {
-            $('#cabangSelect').val('MDN').trigger('change');
             $("#tgl_dari").datepicker('setDate', first_day);
             $("#tgl_sampai").datepicker('setDate', last_day);
-            $grid[0].clearToolbar();
+            $('#cabangSelect').val('MDN').trigger('change.select2'); // refresh tampilan select2
+            try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+
+            // Reset main footer
+            $grid.jqGrid("footerData", "set", {
+                FNTrans: "Total",
+                FNominalHargaTrucking: 0,
+                FNominalHargaTruckingPusat: 0,
+                FSelisih: 0
+            });
+
+            // ✅ Cara yang benar untuk akses sDiv di luar loadComplete
+            var gridObj = $grid[0].grid; // ambil object grid internal
+            var $sDiv = $(gridObj.sDiv);  // sDiv adalah property dari grid object
+
+            // Reset custom footer rows
+            var resetMap = {
+                'myfootrow':  { label: 'Jumlah Bongkaran' },
+                'myfootrow1': { label: 'Jumlah Muatan' },
+                'myfootrow2': { label: 'Jumlah Import' },
+                'myfootrow3': { label: 'Jumlah Eksport' }
+            };
+
+            $.each(resetMap, function(cls, cfg) {
+                var $row = $sDiv.find("tr." + cls);
+                if ($row.length > 0) {
+                    $row.find(">td[aria-describedby=jqGrid_FNTrans]").text(cfg.label + ' ');
+                    $row.find(">td[aria-describedby=jqGrid_FNominalHargaTrucking]").text('');
+                    $row.find(">td[aria-describedby=jqGrid_FNominalHargaTruckingPusat]").text('');
+                    $row.find(">td[aria-describedby=jqGrid_FSelisih]").text('');
+                    $row.find(">td[aria-describedby=jqGrid_FOrderan]").text(0).css('text-align', 'right');
+                }
+            });
+
+            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            
+            // Generic explicit reset for footerData and custom footers
+            try {
+                var colModel = $('#jqGrid').jqGrid('getGridParam', 'colModel');
+                var footerObj = {};
+                if (colModel) {
+                    colModel.forEach(function(col) {
+                        if (col.name !== 'rn' && col.name !== 'cb') {
+                            if (col.formatter === 'number' || col.formatter === 'integer' || col.align === 'right') {
+                                footerObj[col.name] = 0;
+                            } else if (col.name.toLowerCase().includes('trans') || col.name.toLowerCase().includes('jenis') || col.name.toLowerCase().includes('shipper')) {
+                                footerObj[col.name] = "Total";
+                            } else {
+                                footerObj[col.name] = "";
+                            }
+                        }
+                    });
+                    $('#jqGrid').jqGrid("footerData", "set", footerObj);
+                }
+                var gridObj = $('#jqGrid')[0].grid;
+                if (gridObj && gridObj.sDiv) {
+                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
+                        $(this).find('td').each(function() {
+                            var align = $(this).css('text-align');
+                            var text = $(this).text().trim();
+                            if (align === 'right') {
+                                $(this).text(text === '' ? '' : 0);
+                            } else if (/^[\d.,-]+$/.test(text)) {
+                                $(this).text(0);
+                            }
+                        });
+                    });
+                }
+                $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            } catch(e) {}
+            $('#btnFilter').trigger('click');
         });
 
         $('#cabangSelect').on('change', function() {

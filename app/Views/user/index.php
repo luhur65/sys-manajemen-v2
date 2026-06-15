@@ -267,6 +267,14 @@
                 return 'stop';
             },
             loadComplete: function(res) {
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
+                if (res && (res.records === 0 || res.records === "0")) {
+                    res.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
+                }
+                
                 sortname = $(this).jqGrid("getGridParam", "sortname");
                 sortorder = $(this).jqGrid("getGridParam", "sortorder");
                 limit = $(this).jqGrid('getGridParam', 'postData').limit;
@@ -323,6 +331,8 @@
             beforeSearch: function() {
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            
+
                 loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
                 return false;
             }

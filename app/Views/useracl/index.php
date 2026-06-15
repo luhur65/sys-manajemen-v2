@@ -77,6 +77,26 @@
                 return 'stop';
             },
             loadComplete: function(data) {
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
+                if (data && (data.records === 0 || data.records === "0")) {
+                    data.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
+                }
+                // Force clear footer if no records found
+                if (data && (data.records === 0 || data.records === "0")) {
+                    setTimeout(function() {
+                        try {
+                            var _sDiv = $(this)[0].grid.sDiv;
+                            if (_sDiv) {
+                                $(_sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
+                            }
+                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+                            $(this).jqGrid('setGridParam', { userData: null });
+                        } catch(e) {}
+                    }.bind(this), 50);
+                }
                 $('#gsh_' + $.jgrid.jqID($gridAcl[0].id) + '_rn').html($("<div id='resetFilterOptionsAcl' class='clearsearchclass text-center' style='cursor: pointer;' title='Clear Filter'><span id='resetFilterOptionsAclSpan'><i class='fas fa-times text-danger'></i></span></div>"));
                 $("#resetFilterOptionsAcl").click(function(){
                     $('input[id*="gs_"]').val("");

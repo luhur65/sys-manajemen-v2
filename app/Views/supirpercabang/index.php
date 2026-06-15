@@ -19,12 +19,14 @@
                 
                 <div class="col-md-3">
                     <div class="form-group filter-input-group mb-0">
-                        <button type="button" id="btnFilter" class="btn btn-primary btn-md mr-2">
-                            <i class="fas fa-search"></i> Tampilkan
-                        </button>
-                        <button type="button" id="btnReset" class="btn btn-danger btn-md">
-                            <i class="fas fa-undo"></i> Reset
-                        </button>
+                        <div class="d-flex w-100">
+                            <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                <i class="fas fa-search"></i> Tampilkan
+                            </button>
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -182,6 +184,14 @@
                 return 'stop';
             },
             loadComplete: function(res) {
+                // Gracefully clear footer by feeding an empty userdata object
+                // This preserves custom footer text labels but zeroes out the totals
+                if (res && (res.records === 0 || res.records === "0")) {
+                    res.userdata = {};
+                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
+                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
+                }
+                
                 if (typeof setupLazyLoadScrollHandler === 'function') {
                     setupLazyLoadScrollHandler("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'));
                 }
@@ -227,6 +237,8 @@
                 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $grid.jqGrid('clearGridData');
+            
+
                 if (typeof loadGridData === 'function') {
                     loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
                 }
@@ -262,6 +274,41 @@
             }
             $grid.jqGrid('setGridParam', { search: false, postData: { filters: "" } });
             
+            
+            // Generic explicit reset for footerData and custom footers
+            try {
+                var colModel = $('#jqGrid').jqGrid('getGridParam', 'colModel');
+                var footerObj = {};
+                if (colModel) {
+                    colModel.forEach(function(col) {
+                        if (col.name !== 'rn' && col.name !== 'cb') {
+                            if (col.formatter === 'number' || col.formatter === 'integer' || col.align === 'right') {
+                                footerObj[col.name] = 0;
+                            } else if (col.name.toLowerCase().includes('trans') || col.name.toLowerCase().includes('jenis') || col.name.toLowerCase().includes('shipper')) {
+                                footerObj[col.name] = "Total";
+                            } else {
+                                footerObj[col.name] = "";
+                            }
+                        }
+                    });
+                    try { $('#jqGrid').jqGrid("footerData", "set", footerObj); } catch(e) {}
+                }
+                var gridObj = $('#jqGrid')[0].grid;
+                if (gridObj && gridObj.sDiv) {
+                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
+                        $(this).find('td').each(function() {
+                            var align = $(this).css('text-align');
+                            var text = $(this).text().trim();
+                            if (align === 'right') {
+                                $(this).text(text === '' ? '' : 0);
+                            } else if (/^[\d.,-]+$/.test(text)) {
+                                $(this).text(0);
+                            }
+                        });
+                    });
+                }
+                $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            } catch(e) {}
             $('#btnFilter').click();
         });
 

@@ -34,8 +34,8 @@ class Truckingtradoluardetailexp extends BaseController
             'sord'    => $this->request->getPost('sord'),
             '_search' => $this->request->getPost('_search'),
             'filters' => $this->request->getPost('filters'),
-            'tgl_dari' => $this->request->getPost('tgl_dari'),
-            'tgl_sampai' => $this->request->getPost('tgl_sampai'),
+            'tgl_dari' => !empty($this->request->getPost('tgl_dari')) ? date('Y-m-d', strtotime($this->request->getPost('tgl_dari'))) : '',
+            'tgl_sampai' => !empty($this->request->getPost('tgl_sampai')) ? date('Y-m-d', strtotime($this->request->getPost('tgl_sampai'))) : '',
         ];
 
         $data = $this->tradoluarModel->getGridData($cabang, $params);
