@@ -146,7 +146,8 @@
 
         // Helper widths based on device
         const isDesktop = (detectDeviceType() == "desktop");
-        const colW = isDesktop ? sm_dekstop_2 : sm_mobile_2;
+        const colW = isDesktop ? sm_dekstop_1 : sm_mobile_2;
+        const colWsm = isDesktop ? sm_dekstop_5de : sm_mobile_2;
 
         $("#jqGrid").jqGrid({
             url: apiUrl,
