@@ -487,4 +487,92 @@
             } catch(e) {}
             $('#btnFilter').trigger('click');
         });
+        // --- Excel-like Active Cell Navigation ---
+        $('<style>.excel-active-cell { outline: 2px solid #217346 !important; outline-offset: -2px; background-color: rgba(33, 115, 70, 0.1) !important; z-index: 1000; position: relative; }</style>').appendTo('head');
+        let $activeCell = null;
+
+        $('#jqGrid').on('click', 'tr.jqgrow td', function(e) {
+            if ($activeCell) $activeCell.removeClass('excel-active-cell');
+            $activeCell = $(this);
+            $activeCell.addClass('excel-active-cell');
+        });
+
+        $(document).on('keydown', function(e) {
+            if (!$activeCell) return;
+            // Prevent interference with input fields
+            if ($(e.target).is('input, textarea, select')) return;
+
+            let $tr = $activeCell.closest('tr.jqgrow');
+            let cellIndex = $activeCell.index();
+            let $nextCell = null;
+
+            if (e.which >= 37 && e.which <= 40) {
+                e.preventDefault(); // Prevent page scrolling
+            }
+
+            switch(e.which) {
+                case 37: // Left
+                    $nextCell = $activeCell.prevAll('td:visible').first();
+                    break;
+                case 38: // Up
+                    let $prevTr = $tr.prevAll('tr.jqgrow:visible').first();
+                    if ($prevTr.length) {
+                        $nextCell = $prevTr.find('td').eq(cellIndex);
+                        while ($nextCell.length && $nextCell.css('display') === 'none') {
+                            $nextCell = $nextCell.prev('td');
+                        }
+                    }
+                    break;
+                case 39: // Right
+                    $nextCell = $activeCell.nextAll('td:visible').first();
+                    break;
+                case 40: // Down
+                    let $nextTr = $tr.nextAll('tr.jqgrow:visible').first();
+                    if ($nextTr.length) {
+                        $nextCell = $nextTr.find('td').eq(cellIndex);
+                        while ($nextCell.length && $nextCell.css('display') === 'none') {
+                            $nextCell = $nextCell.prev('td');
+                        }
+                    }
+                    break;
+                case 27: // Esc
+                    $activeCell.removeClass('excel-active-cell');
+                    $activeCell = null;
+                    return;
+                case 13: // Enter
+                    let $enterTr = $tr.nextAll('tr.jqgrow:visible').first();
+                    if ($enterTr.length) {
+                        $nextCell = $enterTr.find('td').eq(cellIndex);
+                    }
+                    break;
+                default:
+                    return;
+            }
+
+            if ($nextCell && $nextCell.length) {
+                $activeCell.removeClass('excel-active-cell');
+                $activeCell = $nextCell;
+                $activeCell.addClass('excel-active-cell');
+
+                // Auto-scroll logic
+                let bdiv = $activeCell.closest('.ui-jqgrid-bdiv');
+                if (bdiv.length) {
+                    let offsetTop = $activeCell[0].offsetTop;
+                    let offsetLeft = $activeCell[0].offsetLeft;
+                    
+                    if (offsetTop + $activeCell.outerHeight() > bdiv.scrollTop() + bdiv.height()) {
+                        bdiv.scrollTop(offsetTop + $activeCell.outerHeight() - bdiv.height());
+                    } else if (offsetTop < bdiv.scrollTop()) {
+                        bdiv.scrollTop(offsetTop);
+                    }
+
+                    if (offsetLeft + $activeCell.outerWidth() > bdiv.scrollLeft() + bdiv.width()) {
+                        bdiv.scrollLeft(offsetLeft + $activeCell.outerWidth() - bdiv.width());
+                    } else if (offsetLeft < bdiv.scrollLeft()) {
+                        bdiv.scrollLeft(offsetLeft);
+                    }
+                }
+            }
+        });
+        // --- End Excel-like Active Cell Navigation ---
 </script>
