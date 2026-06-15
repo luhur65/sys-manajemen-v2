@@ -436,13 +436,18 @@
             }
             if ($('#datefrom').length) { $('#datefrom').val(d_first); }
             if ($('#dateto').length) { $('#dateto').val(d_last); }
+            var curMonth = ("0" + (d_first.getMonth() + 1)).slice(-2) + '-' + d_first.getFullYear();
+            var curYear = d_first.getFullYear();
+            if ($('#blnInput').length) { $('#blnInput').val(curMonth); }
+            if ($('#thnInput').length) { $('#thnInput').val(curYear); }
+            if ($('#bulan').length) { $('#bulan').val(curMonth); }
             
             $('select.select2').each(function() {
                 var firstVal = $(this).find('option:first').val();
                 $(this).val(firstVal).trigger('change.select2');
             });
             
-            $('input[type="text"]:not(.hasDatepicker)').val('');
+            $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
             
@@ -466,7 +471,7 @@
                 }
                 var gridObj = $('#jqGrid')[0].grid;
                 if (gridObj && gridObj.sDiv) {
-                    $(gridObj.sDiv).find('tr[class*="myfootrow"]').each(function() {
+                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
                         $(this).find('td').each(function() {
                             var align = $(this).css('text-align');
                             var text = $(this).text().trim();

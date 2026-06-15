@@ -392,7 +392,7 @@
                 }
                 var gridObj = $('#jqGrid')[0].grid;
                 if (gridObj && gridObj.sDiv) {
-                    $(gridObj.sDiv).find('tr[class*="myfootrow"]').each(function() {
+                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
                         $(this).find('td').each(function() {
                             var align = $(this).css('text-align');
                             var text = $(this).text().trim();

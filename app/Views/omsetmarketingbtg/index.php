@@ -401,15 +401,55 @@
             }
             if ($('#datefrom').length) { $('#datefrom').val(d_first); }
             if ($('#dateto').length) { $('#dateto').val(d_last); }
+            var curMonth = ("0" + (d_first.getMonth() + 1)).slice(-2) + '-' + d_first.getFullYear();
+            var curYear = d_first.getFullYear();
+            if ($('#blnInput').length) { $('#blnInput').val(curMonth); }
+            if ($('#thnInput').length) { $('#thnInput').val(curYear); }
+            if ($('#bulan').length) { $('#bulan').val(curMonth); }
             
             $('select.select2').each(function() {
                 var firstVal = $(this).find('option:first').val();
                 $(this).val(firstVal).trigger('change.select2');
             });
             
-            $('input[type="text"]:not(.hasDatepicker)').val('');
+            $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            
+            // Generic explicit reset for footerData and custom footers
+            try {
+                var colModel = $('#jqGrid').jqGrid('getGridParam', 'colModel');
+                var footerObj = {};
+                if (colModel) {
+                    colModel.forEach(function(col) {
+                        if (col.name !== 'rn' && col.name !== 'cb') {
+                            if (col.formatter === 'number' || col.formatter === 'integer' || col.align === 'right') {
+                                footerObj[col.name] = 0;
+                            } else if (col.name.toLowerCase().includes('trans') || col.name.toLowerCase().includes('jenis') || col.name.toLowerCase().includes('shipper')) {
+                                footerObj[col.name] = "Total";
+                            } else {
+                                footerObj[col.name] = "";
+                            }
+                        }
+                    });
+                    try { $('#jqGrid').jqGrid("footerData", "set", footerObj); } catch(e) {}
+                }
+                var gridObj = $('#jqGrid')[0].grid;
+                if (gridObj && gridObj.sDiv) {
+                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
+                        $(this).find('td').each(function() {
+                            var align = $(this).css('text-align');
+                            var text = $(this).text().trim();
+                            if (align === 'right') {
+                                $(this).text(text === '' ? '' : 0);
+                            } else if (/^[\d.,-]+$/.test(text)) {
+                                $(this).text(0);
+                            }
+                        });
+                    });
+                }
+                $('#lastUpdateHandler, #jqGridInfoHandler').html('');
+            } catch(e) {}
             $('#btnFilter').trigger('click');
         });
 </script>
