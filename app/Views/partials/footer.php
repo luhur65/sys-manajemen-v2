@@ -1,6 +1,42 @@
     </div>
     <!-- ./wrapper -->
 
+    <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
+    <!-- Lockscreen Overlay -->
+    <div id="lockscreen-overlay" style="display:none; position:fixed; inset:0; z-index:10050; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); align-items:center; justify-content:center;">
+        <div class="card shadow-lg" style="width: 95%; max-width: 400px;">
+            <div class="card-header bg-primary">
+                <h3 class="card-title"><i class="fas fa-lock"></i> SESI TERKUNCI</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-sm">Sesi Anda terkunci karena tidak ada aktivitas selama 15 menit. Masukkan password untuk melanjutkan.</p>
+                <form id="lockscreen-form">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="<?= session()->get(SESSION_NAME . 'userid') ?>" readonly>
+                            <div class="input-group-append">
+                                <div class="input-group-text"><span class="fas fa-user"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-group">
+                            <input type="password" id="lockscreen-password" class="form-control" autocomplete="current-password" required>
+                            <div class="input-group-append" style="cursor: pointer;" onclick="toggleLockscreenPassword()">
+                                <div class="input-group-text"><span id="lockscreen-eye" class="fas fa-eye"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="lockscreen-error" class="text-danger text-sm font-weight-bold" style="display:none;"></p>
+                    <button type="submit" id="lockscreen-btn" class="btn btn-primary btn-block mt-2">Buka Kunci</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Bootstrap 4 -->
     <script src="<?= asset('libraries/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
 
@@ -41,6 +77,10 @@
     <script src="<?= asset('libraries/tas-lib/js/pager.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/MonthPicker.min.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/YearPicker.js') ?>"></script>
+    
+    <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
+    <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>
+    <?php endif; ?>
 
     <script>
         $(document).ready(function() {

@@ -94,6 +94,24 @@ class Login extends BaseController
         return redirect()->to(base_url("login"));
     }
 
+    public function unlock()
+    {
+        if (!session()->has(SESSION_NAME . 'logged_in')) {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Sesi telah berakhir.']);
+        }
+        
+        $userid = session()->get(SESSION_NAME . 'userid');
+        $password = md5($this->request->getPost('password'));
+        
+        $cek = $this->mloginModel->login($userid, $password);
+        
+        if ($cek != "" && $cek->getNumRows() > 0) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        
+        return $this->response->setJSON(['success' => false, 'message' => 'Password salah']);
+    }
+
     public function forgotPassword()
     {
         $username = $this->request->getPost('user');
