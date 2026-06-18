@@ -28,8 +28,8 @@
                                 <div class="input-group-text"><span id="lockscreen-eye" class="fas fa-eye"></span></div>
                             </div>
                         </div>
+                        <p id="lockscreen-error" class="text-danger text-sm font-weight-bold mt-2" style="display:none;"></p>
                     </div>
-                    <p id="lockscreen-error" class="text-danger text-sm font-weight-bold" style="display:none;"></p>
                     <button type="submit" id="lockscreen-btn" class="btn btn-primary btn-block mt-2">Buka Kunci</button>
                     <button type="button" id="lockscreen-biometric-btn" class="btn btn-outline-dark btn-block mt-2" style="display:none;" onclick="triggerLockscreenBiometric()">
                         <i class="fas fa-fingerprint"></i> Quick Login
@@ -82,8 +82,8 @@
     <script src="<?= asset('libraries/tas-lib/js/YearPicker.js') ?>"></script>
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
-    <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
-    <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>?v=<?= time() ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>?v=<?= time() ?>"></script>
     <?php endif; ?>
 
     <script>
