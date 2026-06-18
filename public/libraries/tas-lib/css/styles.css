@@ -2427,4 +2427,48 @@ body.dark-mode .ui-datepicker td.datepicker-saturday span.ui-state-default {
     .filter-input-group .d-flex.w-100 button {
         margin-top: 0.5rem;
     }
+    
+    /* Fix for datepicker/monthpicker button height mismatch on mobile */
+    .filter-input-group .input-group .form-control,
+    .filter-input-group .input-group .input-group-append .btn,
+    .filter-input-group .input-group .input-group-append .ui-datepicker-trigger {
+        height: auto !important;
+        min-height: 38px; /* Force standard touch target height */
+    }
+    
+    .filter-input-group .input-group {
+        display: flex;
+        align-items: stretch;
+    }
+    
+    .filter-input-group .input-group-append {
+        display: flex;
+    }
+    
+    .filter-input-group .input-group-append > .btn,
+    .filter-input-group .input-group-append > .ui-datepicker-trigger {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 100% !important;
+    }
+    
+    /* Fix jQuery UI Datepicker overflowing off screen on mobile */
+    .ui-datepicker {
+        width: 95vw !important;
+        max-width: 350px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        font-size: 0.9rem !important;
+        box-sizing: border-box;
+    }
+    
+    .ui-datepicker table {
+        font-size: 0.9rem !important;
+        width: 100% !important;
+    }
+    
+    .ui-datepicker td {
+        padding: 2px !important;
+    }
 }

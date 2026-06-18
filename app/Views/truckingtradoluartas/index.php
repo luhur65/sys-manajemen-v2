@@ -321,5 +321,3 @@
         }
     });
 </script>
-<script src="<?= base_url('libraries/tas-lib/js/MonthPicker.min.js') ?>"></script>
-<script src="<?= base_url('libraries/tas-lib/js/YearPicker.js') ?>"></script>
