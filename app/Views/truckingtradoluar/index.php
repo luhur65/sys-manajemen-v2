@@ -290,13 +290,13 @@
                 postData = $(this).jqGrid('getGridParam', 'postData')
                 triggerClick = true
                 setTimeout(function() {
-                    var currentGridIds = $grid.getDataIDs();
-                    var currentSelection = $grid.jqGrid('getGridParam', 'selrow');
-                    var state = (typeof getGridState === 'function') ? getGridState($grid) : {};
+                    var currentGridIds = $gridObj.getDataIDs();
+                    var currentSelection = $gridObj.jqGrid('getGridParam', 'selrow');
+                    var state = (typeof getGridState === 'function') ? getGridState($gridObj) : {};
                     var minPageLoaded = state.minPageLoaded !== undefined ? state.minPageLoaded : 1;
                     
                     if (!currentSelection && currentGridIds.length > 0 && minPageLoaded === 1) {
-                        $grid.find('tr[id="' + currentGridIds[0] + '"]').click();
+                        $gridObj.find('tr[id="' + currentGridIds[0] + '"]').click();
                     }
                 }, 50);
 
