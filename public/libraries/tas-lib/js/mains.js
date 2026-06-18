@@ -2074,7 +2074,7 @@ function initMonthpicker(classDatepicker = "monthpicker") {
                 "aria-label": "Open Month Chooser",
             })
             .css({
-                height: "31px",
+                height: "100%",
                 width: "35px",
                 display: "inline-flex",
                 "align-items": "center",
