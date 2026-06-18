@@ -40,7 +40,7 @@ function recursiveBase64ToArrayBuffer(obj) {
 }
 
 // Function to handle login via WebAuthn
-function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
+function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback) {
     if (!window.PublicKeyCredential) {
         showDialog("Browser Anda tidak mendukung WebAuthn / Login Biometrik.");
         return;
@@ -76,7 +76,11 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
                         dataType: 'json',
                         success: function(res) {
                             if (res.success) {
-                                window.location.href = redirectUrl;
+                                if (typeof redirectUrlOrCallback === 'function') {
+                                    redirectUrlOrCallback();
+                                } else if (redirectUrlOrCallback) {
+                                    window.location.href = redirectUrlOrCallback;
+                                }
                             } else {
                                 showDialog("Login Gagal: " + (res.message || res.error));
                             }

@@ -1,69 +1,66 @@
-# CodeIgniter 4 Application Starter
+# SYS-MODERN (Sistem Manajemen V2)
 
-## What is CodeIgniter?
+**SYS-MODERN** adalah aplikasi *Enterprise Resource Planning* (ERP) dan Sistem Manajemen terintegrasi generasi kedua yang dikembangkan dengan *framework* **CodeIgniter 4 (CI4)**. Aplikasi ini dirancang untuk menangani beban data yang masif dengan performa tinggi, memberikan antarmuka bergaya Excel yang familier bagi pengguna operasional, serta menerapkan standar keamanan tingkat lanjut.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## 🚀 Fitur Unggulan
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+### 1. Grid Data Super Cepat & Cerdas (jqGrid + IndexedDB)
+*   **Lazy Loading Monolith**: Menggunakan arsitektur *lazy loading* khusus (`lazyLoadingGridMonolith.js`) yang mampu merender puluhan ribu baris data secara instan tanpa membebani memori browser.
+*   **Silent Background Prefetching**: Aplikasi secara otomatis mengunduh halaman data berikutnya (halaman 2, 3, dst.) ke dalam **IndexedDB** saat pengguna sedang melihat halaman 1. Hasilnya, navigasi antar-halaman terasa seketika (0 detik waktu tunggu).
+*   **Excel-Like Navigation**: Pengguna dapat melakukan navigasi antar sel dan baris (Atas, Bawah, Kiri, Kanan, *Page Down*) menggunakan *keyboard* persis seperti Microsoft Excel. Sel aktif (`activeColumnIndex`) akan terus disinkronisasi bahkan saat berpindah halaman.
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+### 2. Keamanan & Autentikasi Canggih
+*   **Lockscreen Anti-Idle Berbasis Lintas-Tab**: Jika pengguna tidak ada aktivitas selama 15 menit, layar akan otomatis terkunci. Menggunakan `BroadcastChannel` dan `localStorage`, sehingga saat pengguna meng-*unlock* satu tab, semua tab lainnya yang terbuka akan ikut terbuka secara magis. Memiliki batas maksimal 3 kali salah *password* sebelum *auto-logout*.
+*   **Dukungan WebAuthn**: Memungkinkan login menggunakan otentikasi biometrik modern (Sidik Jari / *FaceID*) tanpa *password*.
+*   **ACL & Role Management Dinamis**: Sistem hak akses (ACL) terperinci untuk mengontrol siapa saja yang berhak menambah, mengubah, atau menghapus data di menu tertentu, dengan fitur *bypass* khusus untuk level *Admin*.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+### 3. Antarmuka Pengguna (UI/UX)
+*   **AdminLTE 3.x**: *Template* responsif berbasis Bootstrap 4.
+*   **Theme Switcher (Dark/Light Mode)**: Tersedia mode gelap dan terang berbasis *jQuery UI* (Darkhive & Cupertino) yang dapat diubah secara dinamis dan tersimpan di memori browser.
+*   **Komponen Input Lanjutan**:
+    *   *AutoNumeric*: Format mata uang yang presisi.
+    *   *Inputmask*: Validasi input tanggal, nomor telepon, dsb.
+    *   *Select2*: Dropdown pencarian dengan integrasi AJAX.
+    *   *MonthPicker / YearPicker*: Pilihan periode laporan yang intuitif.
 
-## Installation & updates
+---
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## 🏗️ Arsitektur Teknologi
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+### Backend (Server-Side)
+*   **Framework**: CodeIgniter 4 (PHP 8.x)
+*   **Database**: MySQL / MariaDB / SQL Server (via abstraksi model)
+*   **Struktur MVC**: Pemisahan yang ketat antara Model, View, dan Controller untuk kemudahan pemeliharaan (*maintenance*).
 
-## Setup
+### Frontend (Client-Side)
+*   **Javascript Library**: jQuery 3.x
+*   **Data Grid**: jqGrid 5.7.0 (Bootstrap 4 Edition)
+*   **State & Storage**: 
+    *   *IndexedDB*: Untuk *caching* & *prefetching* data API.
+    *   *LocalStorage*: Untuk menyimpan preferensi *user* (tema warna) dan sinkronisasi status *idle*.
+    *   *BroadcastChannel API*: Komunikasi *real-time* antar tab.
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+---
 
-## Important Change with index.php
+## 📂 Struktur Direktori Penting
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+*   `app/Controllers/` - Memuat logika bisnis dan *endpoints* AJAX (contoh: `Login.php`, `Piutangemkl.php`).
+*   `app/Views/` - Memuat berkas antarmuka (*views*).
+    *   `partials/` - Komponen *reusable* seperti `header.php`, `footer.php`, `sidebar.php`.
+*   `public/libraries/tas-lib/js/` - Berisi *engine* utama Javascript aplikasi:
+    *   `mains.js` - Mengatur inisialisasi menu, *bindkeys*, dan fungsionalitas global.
+    *   `lazyLoadingGridMonolith.js` - Otak pemrosesan *grid* jutaan baris & manajemen IndexedDB.
+    *   `lockscreen.js` - Pengatur sesi *idle* dan keamanan *cross-tab*.
+*   `app/Config/Routes.php` - Pengaturan *routing* aplikasi (Pencocokan RESTful / Explicit Routing).
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+---
 
-**Please** read the user guide for a better explanation of how CI4 works!
+## 💡 Referensi Dokumentasi
+Untuk memahami secara teknis bagaimana fitur-fitur kompleks di dalam sistem ini dibangun, Anda dapat membaca dokumentasi yang terlampir di direktori akar (*root*):
+1.  **`LOCKSCREEN.md`** - Detail arsitektur keamanan *idle-timeout* dan *cross-tab sync*.
+2.  **`catatan_acl_bypass.md`** - Referensi logika otorisasi *Role-Based Access Control* (RBAC).
+3.  **`dokumentasi_excel_active_cell.md`** - Aturan navigasi bergaya Excel di dalam jqGrid.
 
-## Repository Management
+---
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
-
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
-
-## Server Requirements
-
-PHP version 8.2 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+*Dikembangkan untuk memberikan skalabilitas, kecepatan, dan pengalaman pengguna tingkat tinggi di ekosistem ERP modern.*
