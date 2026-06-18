@@ -40,7 +40,7 @@ function recursiveBase64ToArrayBuffer(obj) {
 }
 
 // Function to handle login via WebAuthn
-function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
+function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCallback) {
     if (!window.PublicKeyCredential) {
         showDialog("Browser Anda tidak mendukung WebAuthn / Login Biometrik.");
         return;
@@ -52,7 +52,8 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
         dataType: 'json',
         success: function(options) {
             if (options.error) {
-                showDialog(options.message || options.error);
+                if (errorCallback) errorCallback(options.message || options.error);
+                else showDialog(options.message || options.error);
                 return;
             }
 
@@ -76,9 +77,14 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
                         dataType: 'json',
                         success: function(res) {
                             if (res.success) {
-                                window.location.href = redirectUrl;
+                                if (typeof redirectUrlOrCallback === 'function') {
+                                    redirectUrlOrCallback();
+                                } else if (redirectUrlOrCallback) {
+                                    window.location.href = redirectUrlOrCallback;
+                                }
                             } else {
-                                showDialog("Login Gagal: " + (res.message || res.error));
+                                if (errorCallback) errorCallback(res.message || res.error);
+                                else showDialog("Login Gagal: " + (res.message || res.error));
                             }
                         },
                         error: function(err) {
@@ -86,18 +92,21 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrl) {
                             if (err.responseJSON) {
                                 errMsg = err.responseJSON.error || err.responseJSON.message || errMsg;
                             }
-                            showDialog("Login Error: " + errMsg);
+                            if (errorCallback) errorCallback(errMsg);
+                            else showDialog("Login Error: " + errMsg);
                         }
                     });
                 })
                 .catch(function(err) {
                     console.error(err);
-                    showDialog("Proses dibatalkan atau gagal: " + err.message);
+                    if (errorCallback) errorCallback(err.message);
+                    else showDialog("Proses dibatalkan atau gagal: " + err.message);
                 });
         },
         error: function(err) {
             console.error(err);
-            showDialog("Gagal mengambil data WebAuthn: " + err.statusText);
+            if (errorCallback) errorCallback(err.statusText);
+            else showDialog("Gagal mengambil data WebAuthn: " + err.statusText);
         }
     });
 }

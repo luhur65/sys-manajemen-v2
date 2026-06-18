@@ -10,6 +10,7 @@ let lockscreenInterval = null;
 let lastStorageWriteTime = 0;
 let broadcastChannel = null;
 let lastActivityLocal = Date.now();
+let elementToRefocus = null; // Menyimpan elemen terakhir yang fokus
 
 $(document).ready(function () {
     // Abaikan jika modal lockscreen belum di-render (misal di halaman login)
@@ -34,14 +35,36 @@ $(document).ready(function () {
         registerActivity(); // Inisialisasi aktivitas pertama
     }
 
+    // Tampilkan tombol Quick Login hanya jika perangkat adalah Mobile dan mendukung biometrik
+    let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (window.PublicKeyCredential && isMobile) {
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function(available) {
+            if (available) {
+                $('#lockscreen-biometric-btn').show();
+            }
+        }).catch(function() {});
+    }
+
     // Pasang listener aktivitas
     const events = ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart', 'scroll'];
     events.forEach(function (evt) {
         window.addEventListener(evt, registerActivity, { passive: true });
     });
 
-    // Pengecekan interval per detik
+    // Hapus interval jika ada
+    if (lockscreenInterval) {
+        clearInterval(lockscreenInterval);
+    }
     lockscreenInterval = setInterval(checkIdleStatus, 1000);
+
+    // UX: Tangkap tombol Enter pada kolom password (karena mungkin dibajak oleh jqGrid/mains.js)
+    $('#lockscreen-password').on('keydown', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation(); // Cegah event bocor ke grid di belakang layar
+            $('#lockscreen-btn').click(); // Gunakan klik tombol untuk trigger form
+        }
+    });
 
     // Form submit listener
     $('#lockscreen-form').on('submit', function (e) {
@@ -116,9 +139,19 @@ function lockGlobal() {
 }
 
 function showLockscreen() {
+    // Simpan elemen input/form terakhir yang sedang aktif sebelum lockscreen muncul
+    if (document.activeElement && document.activeElement !== document.body) {
+        elementToRefocus = document.activeElement;
+    }
+
     $('#lockscreen-overlay').css('display', 'flex').hide().fadeIn('fast');
     $('#lockscreen-password').val('');
     
+    // PEMBUNUH FOCUS TRAP ABSOLUT
+    // Matikan SEMUA event 'focusin' di level document (termasuk milik Bootstrap & jQuery UI)
+    // Ini menjamin 100% modal background tidak akan bisa menarik paksa fokus kursor
+    $(document).off('focusin');
+
     let currentAttempts = parseInt(localStorage.getItem(FAILED_ATTEMPTS_KEY) || '0', 10);
     if (currentAttempts > 0) {
         let remaining = MAX_ATTEMPTS - currentAttempts;
@@ -136,7 +169,15 @@ function showLockscreen() {
 }
 
 function unlockScreenLocal() {
-    $('#lockscreen-overlay').fadeOut('fast');
+    $('#lockscreen-overlay').fadeOut('fast', function() {
+        // Kembalikan kursor ke elemen semula setelah layar terbuka
+        if (elementToRefocus) {
+            try {
+                $(elementToRefocus).focus();
+            } catch(e) {}
+            elementToRefocus = null;
+        }
+    });
     const now = Date.now();
     lastActivityLocal = now;
 }
@@ -193,5 +234,26 @@ function toggleLockscreenPassword() {
         x.type = "password";
         eye.classList.remove("fa-eye-slash");
         eye.classList.add("fa-eye");
+    }
+}
+
+// Fungsi bantu untuk trigger Quick Login Biometrik
+function triggerLockscreenBiometric() {
+    if (typeof startWebAuthnLogin === 'function') {
+        let loginArgsUrl = appUrl + 'webauthn/getLoginArgs';
+        let processLoginUrl = appUrl + 'webauthn/processLogin';
+        
+        // Sembunyikan error lama
+        $('#lockscreen-error').hide();
+
+        // Parameter ketiga adalah callback sukses, parameter keempat adalah callback error
+        startWebAuthnLogin(loginArgsUrl, processLoginUrl, function() {
+            unlockScreenGlobal();
+        }, function(errMsg) {
+            // Tampilkan error menggunakan fungsi standar lockscreen agar seragam dengan error password
+            handleFailedUnlock(errMsg);
+        });
+    } else {
+        alert("Library WebAuthn belum dimuat.");
     }
 }
