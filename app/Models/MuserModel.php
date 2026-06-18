@@ -132,7 +132,7 @@ class MuserModel extends Model
 
     private function _preFormat($data)
     {
-        $fields = ['userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif'];
+        $fields = ['userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp'];
         $save = [];
         foreach ($fields as $val) {
             if (isset($data[$val])) {

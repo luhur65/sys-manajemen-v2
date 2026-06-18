@@ -181,8 +181,9 @@ $routes->match(['GET', 'POST'], 'Login/index', 'Login::index');
 $routes->match(['GET', 'POST'], 'login/index', 'Login::index');
 $routes->match(['GET', 'POST'], 'Login/proses', 'Login::proses');
 $routes->match(['GET', 'POST'], 'login/proses', 'Login::proses');
-$routes->match(['GET', 'POST'], 'Login/logout', 'Login::logout');
 $routes->match(['GET', 'POST'], 'login/logout', 'Login::logout');
+$routes->match(['GET', 'POST'], 'login/unlock', 'Login::unlock');
+$routes->match(['GET', 'POST'], 'Login/logout', 'Login::logout');
 
 // Routes for Logout
 $routes->get('logout', 'Login::logout');

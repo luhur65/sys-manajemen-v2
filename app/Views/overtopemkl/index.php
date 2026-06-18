@@ -256,25 +256,16 @@
                 limit = $(this).jqGrid('getGridParam', 'postData').limit
                 postData = $(this).jqGrid('getGridParam', 'postData')
                 triggerClick = true
-                if (indexRow > $(this).getDataIDs().length - 1) {
-                    indexRow = $(this).getDataIDs().length - 1;
-                }
-
-                if (triggerClick) {
-                    if (id != '') {
-                        indexRow = parseInt($('#jqGrid').jqGrid('getInd', id)) - 1;
-                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[indexRow]}"]`).click();
-                        id = '';
-                    } else if (indexRow != undefined) {
-                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[indexRow]}"]`).click();
+                setTimeout(function() {
+                    var currentGridIds = $grid.getDataIDs();
+                    var currentSelection = $grid.jqGrid('getGridParam', 'selrow');
+                    var state = (typeof getGridState === 'function') ? getGridState($grid) : {};
+                    var minPageLoaded = state.minPageLoaded !== undefined ? state.minPageLoaded : 1;
+                    
+                    if (!currentSelection && currentGridIds.length > 0 && minPageLoaded === 1) {
+                        $grid.find('tr[id="' + currentGridIds[0] + '"]').click();
                     }
-                    if ($('#jqGrid').getDataIDs()[indexRow] == undefined) {
-                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[0]}"]`).click();
-                    }
-                    triggerClick = false;
-                } else {
-                    $('#jqGrid').setSelection($('#jqGrid').getDataIDs()[indexRow]);
-                }
+                }, 50);
 
                 $grid.removeClass('table-striped');
 
