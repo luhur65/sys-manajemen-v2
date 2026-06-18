@@ -1,0 +1,415 @@
+# Instincts generated from https://github.com/luhur65/sys-manajemen-v2
+# Generated: 2026-06-12T02:15:46.588Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: sys-manajemen-v2-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Commit Length
+
+## Action
+
+Write detailed commit messages (~113 characters for first line)
+
+## Evidence
+
+- Average commit message length: 113 chars
+- Based on 10 commits
+
+---
+id: sys-manajemen-v2-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: sys-manajemen-v2-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: sys-manajemen-v2-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: sys-manajemen-v2-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: sys-manajemen-v2-workflow-feature-implementation-auth-or-webauthn
+trigger: "when doing feature implementation auth or webauthn"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Workflow Feature Implementation Auth Or Webauthn
+
+## Action
+
+Follow the feature-implementation-auth-or-webauthn workflow:
+1. Update or add controller logic (e.g., Login.php, Webauthn.php)
+2. Modify or add model(s) if new data is needed (e.g., MuserModel.php, PasswordResetModel.php)
+3. Update routes to expose new endpoints (Routes.php)
+4. Update or create relevant views for user interaction (e.g., reset_password.php, home.php)
+5. Integrate new fields into user management UI if needed
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: app/Controllers/Login.php, app/Controllers/Webauthn.php, app/Models/MuserModel.php
+
+---
+id: sys-manajemen-v2-workflow-bugfix-auth-flow-or-ui
+trigger: "when doing bugfix auth flow or ui"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Workflow Bugfix Auth Flow Or Ui
+
+## Action
+
+Follow the bugfix-auth-flow-or-ui workflow:
+1. Update controller logic to fix validation, error handling, or data processing (e.g., Login.php, Webauthn.php)
+2. Modify views to correct UI/UX or integrate CSRF tokens (e.g., login.php)
+3. Adjust filters to allow or restrict routes (Filters.php)
+4. Update JavaScript for UI behavior (mains.js)
+5. Test to ensure the fix resolves the issue
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: app/Controllers/Login.php, app/Controllers/Webauthn.php, app/Config/Filters.php
+
+---
+id: sys-manajemen-v2-workflow-ui-breadcrumb-or-layout-fix
+trigger: "when doing ui breadcrumb or layout fix"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Workflow Ui Breadcrumb Or Layout Fix
+
+## Action
+
+Follow the ui-breadcrumb-or-layout-fix workflow:
+1. Update partial layout view to fix breadcrumb logic (home.php)
+2. Modify related page views if necessary (e.g., truckingtradoluar/index.php)
+3. Adjust JavaScript to correct active URL or breadcrumb behavior (mains.js)
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: app/Views/partials/layouts/home.php, app/Views/truckingtradoluar/index.php, public/libraries/tas-lib/js/mains.js
+
+---
+id: sys-manajemen-v2-instinct-file-naming
+trigger: "When creating or renaming a file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct File Naming
+
+## Action
+
+Name the file using PascalCase (e.g., MyFile.js)
+
+## Evidence
+
+- Pattern in namingConventions.files: PascalCase
+
+---
+id: sys-manajemen-v2-instinct-function-naming
+trigger: "When defining a function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Function Naming
+
+## Action
+
+Name the function using camelCase (e.g., handleLogin)
+
+## Evidence
+
+- Pattern in namingConventions.functions: camelCase
+
+---
+id: sys-manajemen-v2-instinct-class-naming
+trigger: "When defining a class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase (e.g., UserModel)
+
+## Evidence
+
+- Pattern in namingConventions.classes: PascalCase
+
+---
+id: sys-manajemen-v2-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE (e.g., MAX_ATTEMPTS)
+
+## Evidence
+
+- Pattern in namingConventions.constants: SCREAMING_SNAKE_CASE
+
+---
+id: sys-manajemen-v2-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Import Style
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in importStyle: relative
+
+---
+id: sys-manajemen-v2-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle: named
+
+---
+id: sys-manajemen-v2-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Test Location
+
+## Action
+
+Place tests in a separate folder from source code
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation: separate
+
+---
+id: sys-manajemen-v2-instinct-commit-prefix
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Commit Prefix
+
+## Action
+
+Prefix the commit message with 'fix' or 'feat' as appropriate
+
+## Evidence
+
+- Seen in commit: 'Fix: cegah title breadcrumb stuck...'
+- Seen in commit: 'Feat: Tampilkan prompt WebAuthn...'
+
+---
+id: sys-manajemen-v2-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Commit Format
+
+## Action
+
+Capitalize the prefix and use a colon (e.g., 'Fix: ...' or 'Feat: ...')
+
+## Evidence
+
+- Seen in commit: 'Fix: cegah title breadcrumb stuck...'
+- Seen in commit: 'Feat: Tampilkan prompt WebAuthn...'
+
+---
+id: sys-manajemen-v2-instinct-feature-auth-workflow
+trigger: "When someone wants to add a new authentication feature or enhance existing auth flows"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Feature Auth Workflow
+
+## Action
+
+Update/add controller logic, modify/add models, update routes, update/create relevant views, and integrate new fields into user management UI as needed
+
+## Evidence
+
+- Workflow: feature-implementation-auth-or-webauthn
+- Commit sequence and files involved in workflow example
+
+---
+id: sys-manajemen-v2-instinct-bugfix-auth-workflow
+trigger: "When someone needs to resolve an issue in the authentication process or its UI components"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Bugfix Auth Workflow
+
+## Action
+
+Update controller logic, modify views, adjust filters, update JavaScript for UI behavior, and test the fix
+
+## Evidence
+
+- Workflow: bugfix-auth-flow-or-ui
+- Commit sequence and files involved in workflow example
+
+---
+id: sys-manajemen-v2-instinct-breadcrumb-layout-fix-workflow
+trigger: "When someone encounters problems with breadcrumb display or layout consistency"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: luhur65/sys-manajemen-v2
+---
+
+# Sys Manajemen V2 Instinct Breadcrumb Layout Fix Workflow
+
+## Action
+
+Update partial layout view, modify related page views if necessary, and adjust JavaScript to correct active URL or breadcrumb behavior
+
+## Evidence
+
+- Workflow: ui-breadcrumb-or-layout-fix
+- Commit sequence and files involved in workflow example
+
