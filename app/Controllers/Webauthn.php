@@ -211,6 +211,13 @@ class Webauthn extends BaseController
                 return $this->response->setJSON(['error' => 'Credential not found in database'])->setStatusCode(400);
             }
 
+            // [KEAMANAN LOCKSCREEN] Jika user sudah login, pastikan sidik jari milik user yang sedang aktif!
+            if (session()->has(SESSION_NAME . 'logged_in')) {
+                if ($cred['userpk'] != session()->get(SESSION_NAME . 'userpk')) {
+                    return $this->response->setJSON(['error' => 'Akses ditolak: Sidik jari bukan milik pengguna sesi ini!'])->setStatusCode(403);
+                }
+            }
+
             // Verify the login
             $this->webauthn->processGet(
                 $clientDataJSON, 
@@ -223,31 +230,35 @@ class Webauthn extends BaseController
             );
 
             // Authentication successful!
-            // Load user data using userpk
-            $loginModel = new MloginModel();
-            $db = \Config\Database::connect();
-            $user = $db->table('tbluser')->where('userpk', $cred['userpk'])->get()->getRowArray();
+            
+            // Jika belum login (login dari halaman utama), buat sesi baru
+            if (!session()->has(SESSION_NAME . 'logged_in')) {
+                // Load user data using userpk
+                $loginModel = new MloginModel();
+                $db = \Config\Database::connect();
+                $user = $db->table('tbluser')->where('userpk', $cred['userpk'])->get()->getRowArray();
 
-            if (!$user) {
-                throw new \Exception('User not found.');
+                if (!$user) {
+                    throw new \Exception('User not found.');
+                }
+
+                // Create session
+                $sessionData = [
+                    SESSION_NAME . 'userpk' => $user['userpk'],
+                    SESSION_NAME . 'userid' => $user['userid'],
+                    SESSION_NAME . 'username' => $user['username'],
+                    SESSION_NAME . 'userlevel' => $user['userlevel'],
+                    SESSION_NAME . 'password' => $user['password'],
+                    SESSION_NAME . 'logged_in' => 1,
+                    SESSION_NAME . 'cabangid' => $user['authorityid'],
+                    'username' => $user['username']
+                ];
+                session()->set($sessionData);
+
+                // Save login log
+                $logModel = new MlogModel();
+                $logModel->saveLog($this);
             }
-
-            // Create session
-            $sessionData = [
-                SESSION_NAME . 'userpk' => $user['userpk'],
-                SESSION_NAME . 'userid' => $user['userid'],
-                SESSION_NAME . 'username' => $user['username'],
-                SESSION_NAME . 'userlevel' => $user['userlevel'],
-                SESSION_NAME . 'password' => $user['password'],
-                SESSION_NAME . 'logged_in' => 1,
-                SESSION_NAME . 'cabangid' => $user['authorityid'],
-                'username' => $user['username']
-            ];
-            session()->set($sessionData);
-
-            // Save login log
-            $logModel = new MlogModel();
-            $logModel->saveLog($this);
 
             session()->remove('webauthn_challenge');
             return $this->response->setJSON(['success' => true]);

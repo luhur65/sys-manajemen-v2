@@ -57,6 +57,15 @@ $(document).ready(function () {
     }
     lockscreenInterval = setInterval(checkIdleStatus, 1000);
 
+    // UX: Tangkap tombol Enter pada kolom password (karena mungkin dibajak oleh jqGrid/mains.js)
+    $('#lockscreen-password').on('keydown', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation(); // Cegah event bocor ke grid di belakang layar
+            $('#lockscreen-btn').click(); // Gunakan klik tombol untuk trigger form
+        }
+    });
+
     // Form submit listener
     $('#lockscreen-form').on('submit', function (e) {
         e.preventDefault();
@@ -234,11 +243,15 @@ function triggerLockscreenBiometric() {
         let loginArgsUrl = appUrl + 'webauthn/getLoginArgs';
         let processLoginUrl = appUrl + 'webauthn/processLogin';
         
-        // Panggil fungsi WebAuthn dan teruskan callback unlockScreenGlobal
+        // Sembunyikan error lama
+        $('#lockscreen-error').hide();
+
+        // Parameter ketiga adalah callback sukses, parameter keempat adalah callback error
         startWebAuthnLogin(loginArgsUrl, processLoginUrl, function() {
             unlockScreenGlobal();
-            showDialog("Layar berhasil dibuka menggunakan Biometrik!");
-            setTimeout(() => { $('#dialog-message').dialog('close'); }, 1500);
+        }, function(errMsg) {
+            // Tampilkan error menggunakan fungsi standar lockscreen agar seragam dengan error password
+            handleFailedUnlock(errMsg);
         });
     } else {
         alert("Library WebAuthn belum dimuat.");
