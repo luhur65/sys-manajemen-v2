@@ -93,6 +93,8 @@
 </div>
 
 <script type="text/javascript">
+    let $activeCell = null;
+    let activeColumnIndex = 0;
     $(document).ready(function() {
         let indexRow = 0
         let triggerClick = true
@@ -263,14 +265,28 @@
             sortname: sortname,
             sortorder: sortorder,
             userDataOnFooter: true,
-            onSelectRow: onSelectRowFunction = function(id) {
-                activeGrid = $grid
-                selectedId = $grid.jqGrid('getCell', id, 'id')
-                indexRow = $grid.jqGrid('getCell', id, 'rn') - 1
+            onSelectRow: function(rowid, status, e) {
+                activeGrid = $grid;
+                let getInd = $grid.jqGrid('getInd', rowid) - 1;
+                indexRow = getInd;
                 page = $grid.jqGrid('getGridParam', 'page')
-                let limit = $grid.jqGrid('getGridParam', 'postData').limit
-                if (indexRow >= limit) indexRow = (indexRow - limit * (page - 1))
 
+                // Sinkronisasi Excel Active Cell jika di-trigger programmatically
+                if (!e || $(e.target).closest('td').length === 0) {
+                    let $selectedRow = $grid.find('tr[id="' + rowid + '"]');
+                    if ($activeCell) $activeCell.removeClass('excel-active-cell');
+                    
+                    $activeCell = $selectedRow.find('td').eq(activeColumnIndex);
+                    // Hindari hidden column
+                    while ($activeCell.length && $activeCell.css('display') === 'none') {
+                        $activeCell = $activeCell.next('td');
+                        if ($activeCell.length) activeColumnIndex = $activeCell.index();
+                    }
+                    
+                    if ($activeCell.length) {
+                        $activeCell.addClass('excel-active-cell');
+                    }
+                }
             },
             onSortCol: function(index, iCol, sortorder) {
                 if (typeof lazyStates !== 'undefined' && lazyStates["jqGrid"]) lazyStates["jqGrid"].cachedData = {};
@@ -303,25 +319,20 @@
                 sortorder = $(this).jqGrid("getGridParam", "sortorder")
                 limit = $(this).jqGrid('getGridParam', 'postData').limit
                 postData = $(this).jqGrid('getGridParam', 'postData')
-                triggerClick = true
-                if (indexRow > $(this).getDataIDs().length - 1) {
-                    indexRow = $(this).getDataIDs().length - 1;
-                }
+                setTimeout(function() {
+                    var currentGridIds = $grid.getDataIDs();
+                    var currentSelection = $grid.jqGrid('getGridParam', 'selrow');
+                    var state = (typeof getGridState === 'function') ? getGridState($grid) : {};
+                    var minPageLoaded = state.minPageLoaded !== undefined ? state.minPageLoaded : 1;
+                    
+                    // Trigger click pada row pertama HANYA jika tidak ada seleksi DAN kita di page 1
+                    if (!currentSelection && currentGridIds.length > 0 && minPageLoaded === 1) {
+                        $grid.find('tr[id="' + currentGridIds[0] + '"]').click();
+                    }
+                }, 50);
 
-                if (triggerClick) {
-                    if (id != '') {
-                        indexRow = parseInt($('#jqGrid').jqGrid('getInd', id)) - 1;
-                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[indexRow]}"]`).click();
-                        id = '';
-                    } else if (indexRow != undefined) {
-                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[indexRow]}"]`).click();
-                    }
-                    if ($('#jqGrid').getDataIDs()[indexRow] == undefined) {
-                        $(`#jqGrid [id="${$('#jqGrid').getDataIDs()[0]}"]`).click();
-                    }
-                    triggerClick = false;
-                } else {
-                    $('#jqGrid').setSelection($('#jqGrid').getDataIDs()[indexRow]);
+                if (typeof initJqGridInfo === 'function') {
+                    initJqGridInfo($(this));
                 }
 
                 $grid.removeClass('table-striped');
@@ -489,11 +500,11 @@
         });
         // --- Excel-like Active Cell Navigation ---
         $('<style>.excel-active-cell { outline: 2px solid #217346 !important; outline-offset: -2px; background-color: rgba(33, 115, 70, 0.1) !important; z-index: 1000; position: relative; }</style>').appendTo('head');
-        let $activeCell = null;
 
         $('#jqGrid').on('click', 'tr.jqgrow td', function(e) {
             if ($activeCell) $activeCell.removeClass('excel-active-cell');
             $activeCell = $(this);
+            activeColumnIndex = $activeCell.index();
             $activeCell.addClass('excel-active-cell');
         });
 
@@ -552,6 +563,7 @@
             if ($nextCell && $nextCell.length) {
                 $activeCell.removeClass('excel-active-cell');
                 $activeCell = $nextCell;
+                activeColumnIndex = $activeCell.index();
                 $activeCell.addClass('excel-active-cell');
 
                 // Auto-scroll logic
