@@ -82,7 +82,10 @@ $(document).ready(function () {
         $.ajax({
             url: appUrl + 'login/unlock',
             type: 'POST',
-            data: { password: password },
+            data: { 
+                password: password,
+                userid: localStorage.getItem('lockscreen_userid')
+            },
             success: function (res) {
                 $btn.prop('disabled', false).text('Buka Kunci');
                 if (res.success) {
