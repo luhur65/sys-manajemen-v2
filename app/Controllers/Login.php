@@ -96,16 +96,40 @@ class Login extends BaseController
 
     public function unlock()
     {
-        if (!session()->has(SESSION_NAME . 'logged_in')) {
-            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Sesi telah berakhir.']);
+        $userid = session()->get(SESSION_NAME . 'userid');
+        
+        // Auto-relogin: Gunakan userid dari localStorage browser jika sesi server expired
+        if (!$userid) {
+            $userid = $this->request->getPost('userid');
+        }
+
+        if (!$userid) {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Sesi telah berakhir permanen. Silakan muat ulang halaman.']);
         }
         
-        $userid = session()->get(SESSION_NAME . 'userid');
         $password = md5($this->request->getPost('password'));
-        
         $cek = $this->mloginModel->login($userid, $password);
         
         if ($cek != "" && $cek->getNumRows() > 0) {
+            // Rebuild session if it was expired
+            if (!session()->has(SESSION_NAME . 'logged_in')) {
+                $row = $cek->getRow();
+                $sessionData = [
+                    SESSION_NAME . 'userpk' => $row->userpk,
+                    SESSION_NAME . 'userid' => $row->userid,
+                    SESSION_NAME . 'username' => $row->username,
+                    SESSION_NAME . 'userlevel' => $row->userlevel,
+                    SESSION_NAME . 'password' => $row->password,
+                    SESSION_NAME . 'logged_in' => 1,
+                    SESSION_NAME . 'cabangid' => $row->authorityid,
+                    'username' => $row->username
+                ];
+                session()->set($sessionData);
+                
+                try {
+                    $this->mlogModel->saveLog($this);
+                } catch (\Exception $e) {}
+            }
             return $this->response->setJSON(['success' => true]);
         }
         
