@@ -123,4 +123,9 @@ class Email extends BaseConfig
      * Enable notify message from server
      */
     public bool $DSN = false;
+
+    /**
+     * Subject email reset password
+     */
+    public string $subjectResetPassword = 'Reset Password - Sys';
 }
