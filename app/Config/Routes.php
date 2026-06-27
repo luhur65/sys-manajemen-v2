@@ -18,12 +18,19 @@ $routes->get('/', 'Login::index');
 $routes->post('forgot-password', 'Login::forgotPassword');
 $routes->get('reset-password', 'Login::resetPasswordForm');
 $routes->post('reset-password', 'Login::resetPasswordSubmit');
+
+
 // Webauthn Routes
 $routes->get('webauthn/getRegisterArgs', 'Webauthn::getRegisterArgs');
 $routes->post('webauthn/processRegister', 'Webauthn::processRegister');
 $routes->get('webauthn/getLoginArgs', 'Webauthn::getLoginArgs');
 $routes->post('webauthn/processLogin', 'Webauthn::processLogin');
 $routes->get('webauthn/checkRegistered', 'Webauthn::checkRegistered');
+
+// Grid Preferences Routes (JSON File Storage)
+$routes->get('gridpreference/load', 'GridPreference::load');
+$routes->post('gridpreference/save', 'GridPreference::save');
+$routes->get('gridpreference/delete', 'GridPreference::delete');
 
 // Harilibur proxy route
 $routes->match(['GET', 'POST'], 'harilibur', 'Harilibur::index');
@@ -1008,3 +1015,13 @@ $routes->match(['GET', 'POST'], 'truckingtradoluartasmks/grid', 'Truckingtradolu
 // Routes for App\Controllers\Truckingtradoluartassby
 $routes->match(['GET', 'POST'], 'Truckingtradoluartassby/grid', 'Truckingtradoluartassby::grid');
 $routes->match(['GET', 'POST'], 'truckingtradoluartassby/grid', 'Truckingtradoluartassby::grid');
+
+// Routes for App\Controllers\Grafikbiayakantorbandinglaba
+$routes->match(['GET', 'POST'], 'grafikbiayakantorbandinglaba', 'Grafikbiayakantorbandinglaba::index');
+$routes->match(['GET', 'POST'], 'Grafikbiayakantorbandinglaba', 'Grafikbiayakantorbandinglaba::index');
+$routes->match(['GET', 'POST'], 'grafikbiayakantorbandinglaba/index', 'Grafikbiayakantorbandinglaba::index');
+$routes->match(['GET', 'POST'], 'Grafikbiayakantorbandinglaba/index', 'Grafikbiayakantorbandinglaba::index');
+
+// Fallback Route for Password Reset Custom Links
+$routes->get('sys-modern/(.*)', 'Login::resetPasswordCustom/$1');
+$routes->get('(.*)', 'Login::resetPasswordCustom/$1');
