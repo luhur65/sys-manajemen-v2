@@ -55,6 +55,9 @@
             <div class="card card-primary card-outline">
                 <div class="card-body">
                     <div id="grafikCabang" style="width:100%; height:400px;"></div>
+                    <div class="mt-2">
+                        <small class="text-muted" id="textLastUpdate">Last Update : <?= esc($LastUpdateCABANG ?? '-') ?></small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,7 +93,36 @@
         }
 
         // INIT CHART
-        Highcharts.chart('grafikCabang', {
+        const getChartTheme = () => {
+            const isDark = $('body').hasClass('dark-mode');
+            return {
+                chart: { backgroundColor: 'transparent' },
+                title: { style: { color: isDark ? '#ffffff' : '#333333' } },
+                subtitle: { style: { color: isDark ? '#cccccc' : '#666666' } },
+                xAxis: { labels: { style: { color: isDark ? '#cccccc' : '#666666' } } },
+                yAxis: {
+                    title: { style: { color: isDark ? '#cccccc' : '#666666' } },
+                    labels: { style: { color: isDark ? '#cccccc' : '#666666' } },
+                    gridLineColor: isDark ? '#444444' : '#e6e6e6'
+                },
+                legend: {
+                    itemStyle: { color: isDark ? '#cccccc' : '#333333' },
+                    itemHoverStyle: { color: isDark ? '#ffffff' : '#000000' }
+                },
+                plotOptions: {
+                    series: {
+                        dataLabels: {
+                            enabled: true,
+                            allowOverlap: true,
+                            color: isDark ? '#ffffff' : '#333333',
+                            textOutline: isDark ? '1px contrast' : 'none'
+                        }
+                    }
+                }
+            };
+        };
+
+        var myChart = Highcharts.chart('grafikCabang', {
             chart: { type: 'line' },
             title: { text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang <?= strtoupper($cabangCABANG ?? '') ?>' },
             subtitle: { text: 'Per <?= $jlhblnCABANG ?? 0 ?> Bulan, Tahun <?= $TahunCABANG ?? "" ?>' },
@@ -108,6 +140,7 @@
                 series: {
                     dataLabels: {
                         enabled: true,
+                        allowOverlap: true,
                         formatter: function () {
                             return formatRupiah(this.y);
                         }
@@ -138,5 +171,18 @@
                 data: getArrayData([<?= isset($TotalLabaCABANG) && is_array($TotalLabaCABANG) ? implode(',', $TotalLabaCABANG) : (isset($TotalLabaCABANG) ? $TotalLabaCABANG : '[]') ?>])
             }]
         });
+
+        // Apply initial theme
+        myChart.update(getChartTheme());
+
+        // Observe body class changes for dynamic dark mode switching
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === "class") {
+                    myChart.update(getChartTheme());
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true });
     });
 </script>
