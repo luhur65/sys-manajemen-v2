@@ -3678,3 +3678,82 @@ $(document).ready(function () {
     }
 });
 
+// Global extension for CSS-based Sticky Frozen Columns
+$.jgrid.extend({
+    setupStickyFrozenColumns: function() {
+        return this.each(function() {
+            var $t = this, $grid = $($t);
+            if (!$t.grid) return;
+            
+            var cm = $grid.jqGrid('getGridParam', 'colModel');
+            if (!cm) return;
+            var hasFrozen = cm.some(function(c) { return c.frozen; });
+            if (!hasFrozen) return;
+            
+            var gridId = $grid.attr('id');
+            var stickyCols = [];
+            for (var i = 0; i < cm.length; i++) {
+                if (cm[i].name === 'rn' || cm[i].name === 'cb' || cm[i].frozen) {
+                    stickyCols.push(cm[i].name);
+                } else {
+                    break;
+                }
+            }
+            
+            var applySticky = function() {
+                var cumulativeLeft = 0;
+                var $hdiv = $grid.closest('.ui-jqgrid-view').find('.ui-jqgrid-hdiv');
+
+                stickyCols.forEach(function(colName, idx) {
+                    var isLast = (idx === stickyCols.length - 1);
+                    
+                    // 1. Header label
+                    var $th = $hdiv.find('th#' + gridId + '_' + colName);
+                    $th.addClass('frozen-col-sticky').css('left', cumulativeLeft + 'px');
+                    if (isLast) $th.addClass('frozen-col-last');
+                    
+                    // 2. Filter toolbar cell
+                    var colIdx = $th.index();
+                    if (colIdx >= 0) {
+                        var $filterCell = $hdiv.find('tr.ui-search-toolbar th:eq(' + colIdx + '), tr.ui-search-toolbar td:eq(' + colIdx + ')');
+                        $filterCell.addClass('frozen-col-sticky').css('left', cumulativeLeft + 'px');
+                        if (isLast) $filterCell.addClass('frozen-col-last');
+                    }
+
+                    // 3. Body cells and Footer cells
+                    var selector = '[aria-describedby="' + gridId + '_' + colName + '"]';
+                    var $cells = $grid.closest('.ui-jqgrid-view').find(selector);
+                    $cells.addClass('frozen-col-sticky').css('left', cumulativeLeft + 'px');
+                    if (isLast) $cells.addClass('frozen-col-last');
+
+                    // Get width
+                    var colWidth = $th.outerWidth() || 0;
+                    if (colWidth === 0) {
+                        var cmEntry = cm.find(function(c) { return c.name === colName; });
+                        colWidth = (cmEntry && parseInt(cmEntry.width)) || 45;
+                    }
+                    cumulativeLeft += colWidth;
+                });
+            };
+            
+            $t.applyStickyFrozenColumns = applySticky;
+            applySticky();
+            
+            var tbody = $grid.find('tbody')[0];
+            if (tbody && !$grid.data('stickyObserver')) {
+                var observer = new MutationObserver(function() {
+                    applySticky();
+                });
+                observer.observe(tbody, { childList: true });
+                $grid.data('stickyObserver', observer);
+            }
+        });
+    },
+    updateStickyFrozenColumns: function() {
+        return this.each(function() {
+            if (this.applyStickyFrozenColumns) {
+                this.applyStickyFrozenColumns();
+            }
+        });
+    }
+});

@@ -1,5 +1,7 @@
 <style>
     #ui-datepicker-div { display: none; }
+
+
 </style>
 <div class="container-fluid">
     <!-- Filter Card -->
@@ -101,14 +103,16 @@
                     label: 'Marketing',
                     name: 'FNMarketing',
                     index: 'FNMarketing',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_1),
+                    frozen: true
                 },
                 {
                     label: 'Tgl',
                     name: 'FTgl',
                     index: 'FTgl',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_1),
                     sorttype: 'date',
+                    // frozen: true,
                     // searchoptions: {
                     //     sopt: ['eq'],
                     //     dataInit: function(elem) {
@@ -133,7 +137,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_1)
                 },
                 {
                     label: 'Bongkaran',
@@ -142,7 +146,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_1)
                 },
                 {
                     label: 'Exim',
@@ -151,7 +155,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_1)
                 },
                 {
                     label: 'Omset',
@@ -246,6 +250,8 @@
                     $('#lastUpdateHandler, #jqGridInfoHandler').text('');
                 }
                 
+
+                
                 var $gridObj = $(this);
                 var userData = res.userdata || $(this).jqGrid('getGridParam', 'userData');
 
@@ -305,6 +311,10 @@
                     $secondFooter.hide();
                 }
 
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
+                }
+
                 if(typeof setupLazyLoadScrollHandler === 'function') {
                     setupLazyLoadScrollHandler("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'));
                 }
@@ -337,6 +347,9 @@
             }
         });
 
+        // CSS Frozen Columns - initialize the global jqGrid extension
+        $grid.jqGrid('setupStickyFrozenColumns');
+
         // Trigger load
         if(typeof loadGridData === 'function') {
             loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
@@ -362,7 +375,8 @@
 
         // Filter Action
         $('#btnFilter').click(function() {
-            var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
+            var targetGridId = 'jqGrid';
+            if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('setGridParam', {
                 postData: {
                     tgl_dari: $('#tgl_dari').val(),
@@ -371,7 +385,7 @@
             });
             
             if(typeof loadGridData === 'function') {
-                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
+                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
             } else {
                 $grid.trigger('reloadGrid', [{page:1}]);
             }

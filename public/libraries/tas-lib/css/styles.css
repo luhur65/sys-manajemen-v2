@@ -2472,3 +2472,77 @@ body.dark-mode .ui-datepicker td.datepicker-saturday span.ui-state-default {
         padding: 2px !important;
     }
 }
+
+#ui-datepicker-div { display: none; }
+
+/* Fix horizontal scrollbar misalignment by overriding jqGrid defaults */
+.ui-jqgrid .ui-jqgrid-htable,
+.ui-jqgrid .ui-jqgrid-btable,
+.ui-jqgrid .ui-jqgrid-ftable {
+	border-collapse: separate !important;
+	border-spacing: 0 !important;
+	table-layout: fixed !important;
+}
+.ui-jqgrid .frozen-col-sticky {
+	position: sticky !important;
+	z-index: 2 !important;
+}
+/* Default backgrounds for body cells */
+.ui-jqgrid .ui-jqgrid-bdiv .frozen-col-sticky {
+	background-color: #fff !important;
+}
+.ui-jqgrid .ui-jqgrid-bdiv tr.myAltRowClass .frozen-col-sticky {
+	background-color: #f9f9f9 !important;
+}
+
+/* Selected Row Highlights (Light Mode) */
+.ui-jqgrid .ui-jqgrid-bdiv tr.ui-state-highlight .frozen-col-sticky,
+.ui-jqgrid .ui-jqgrid-bdiv tr.jqgrow[aria-selected="true"] .frozen-col-sticky,
+.ui-jqgrid .ui-jqgrid-bdiv tr.table-success .frozen-col-sticky {
+	background-image: none !important;
+	background-color: var(--jqgrid-selected-row-background, #ffe48d) !important;
+}
+
+/* Hovered Row Highlights (Light Mode) */
+.ui-jqgrid .ui-jqgrid-bdiv tr.ui-widget-content:hover .frozen-col-sticky,
+.ui-jqgrid .ui-jqgrid-bdiv tr.ui-state-hover .frozen-col-sticky,
+.ui-jqgrid .ui-jqgrid-bdiv tr.table-active .frozen-col-sticky {
+	background-image: none !important;
+	background-color: var(--jqgrid-hovered-row-background, #eaf2ff) !important;
+}
+
+/* Header and Footer backgrounds (Light Mode) */
+.ui-jqgrid .ui-jqgrid-hdiv .frozen-col-sticky,
+.ui-jqgrid .ui-jqgrid-sdiv .frozen-col-sticky {
+	background-color: #fff !important;
+	z-index: 3 !important;
+}
+
+/* ==============================
+	DARK MODE SUPPORT 
+	============================== */
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.myAltRowClass .frozen-col-sticky {
+	background-color: var(--easyui-dark-mode, #262c32) !important;
+}
+
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.ui-state-highlight .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.jqgrow[aria-selected="true"] .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.table-success .frozen-col-sticky {
+	background-image: none !important;
+	background-color: var(--jqgrid-selected-row-background-dark, #365a7c) !important;
+}
+
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.ui-widget-content:hover .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.ui-state-hover .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.jqgrow:hover .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-bdiv tr.table-active .frozen-col-sticky {
+	background-image: none !important;
+	background-color: var(--jqgrid-hovered-row-background-dark, #3c4c58) !important;
+	color: #ffffff !important;
+}
+
+body.dark-mode .ui-jqgrid .ui-jqgrid-hdiv .frozen-col-sticky,
+body.dark-mode .ui-jqgrid .ui-jqgrid-sdiv .frozen-col-sticky {
+	background-color: var(--easyui-dark-mode, #262c32) !important;
+}
