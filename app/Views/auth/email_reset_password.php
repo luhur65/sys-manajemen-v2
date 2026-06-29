@@ -74,15 +74,15 @@
                               />
                             </div></td>
                           <td style='vertical-align:middle;'>
-                            <div
+                            <!-- <div
                               style='font-size:12px;letter-spacing:0.5px;font-weight:800;color:#dbeafe;'
-                            >PT. TRANSPORINDO AGUNG SEJAHTERA</div>
+                            >PT. TRANSPORINDO AGUNG SEJAHTERA</div> -->
                             <div
                               style='margin-top:6px;font-size:18px;line-height:1.2;font-weight:900;color:#ffffff;'
-                            >RESET PASSWORD</div>
-                            <div
+                            >SYS - RESET PASSWORD</div>
+                            <!-- <div
                               style='margin-top:6px;font-size:12.5px;line-height:1.4;color:#dbeafe;'
-                            >Notifikasi ini dibuat otomatis oleh sistem.</div>
+                            >Notifikasi ini dibuat otomatis oleh sistem.</div> -->
                           </td>
                           <td
                             align='right'
@@ -141,7 +141,7 @@
                         <div style='margin-top:12px;color:#374151;'>Halo
                             <span
                               style='font-weight:900;color:#111827;'
-                            ><?= esc($userName) ?></span></div>
+                            ><?= esc(strtoupper($userName)) ?></span></div>
                         <div style='margin-top:6px;color:#374151;'>Silahkan klik
                           tombol di bawah untuk reset password:</div>
                       </div>
@@ -170,7 +170,7 @@
                         ><?= $resetLink ?></a>
                       </div>
                       <div style='margin-top:12px;color:#374151;'>Link
-                        kedaluwarsa dalam 60 menit, atau sesaat setelah password
+                        kedaluwarsa dalam 30 menit, atau sesaat setelah password
                         diganti. Harap ganti password anda segera.</div>
                     </td>
                   </tr>
@@ -183,7 +183,7 @@
               <td
                 style='padding:14px 4px 0 4px;text-align:center;color:#9ca3af;font-size:12px;line-height:1.5;'
               >
-                &copy; <?= date('Y') ?> SYS TRANSPORINDO. All rights reserved.
+                &copy; <?= date('Y') ?> SYS . All rights reserved.
               </td>
             </tr>
           </table>
