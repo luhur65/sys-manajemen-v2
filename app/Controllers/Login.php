@@ -176,7 +176,7 @@ class Login extends BaseController
         $resetModel = new \App\Models\PasswordResetModel();
         $resetModel->where('username', $username)->delete();
 
-        $rawToken = bin2hex(random_bytes(32));
+        $rawToken = substr(bin2hex(random_bytes(32)), 0, 11);
         $hashedToken = hash('sha256', $rawToken);
 
         $resetModel->insert([
@@ -186,7 +186,8 @@ class Login extends BaseController
             'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour'))
         ]);
 
-        $resetLink = base_url("reset-password?token={$rawToken}&user=" . urlencode($username));
+        $datetime = date('d-m-Y-H:i:s');
+        $resetLink = base_url(urlencode($username) . "-{$datetime}-{$rawToken}");
 
         // Send Email
         if (!empty($email)) {
@@ -282,5 +283,41 @@ class Login extends BaseController
         $resetModel->where('username', $user)->delete();
 
         return redirect()->to('login')->with(SESSION_NAME . 'message', 'Password berhasil direset. Silakan login dengan password baru.');
+    }
+
+    public function resetPasswordCustom($param)
+    {
+        $param = urldecode($param);
+
+        if (preg_match('/^(.*)-(\d{2}-\d{2}-\d{4}-\d{2}:\d{2}:\d{2})-([a-f0-9]+)$/i', $param, $matches)) {
+            $user = $matches[1];
+            $token = $matches[3];
+
+            $resetModel = new \App\Models\PasswordResetModel();
+            $row = $resetModel->where('username', $user)->first();
+
+            if (!$row) {
+                return redirect()->to('login')->with(SESSION_NAME . 'message', 'Link reset tidak valid atau sudah tidak berlaku.');
+            }
+
+            $hashedInputToken = hash('sha256', $token);
+            if (!hash_equals($row->token, $hashedInputToken)) {
+                return redirect()->to('login')->with(SESSION_NAME . 'message', 'Link reset tidak valid atau sudah tidak berlaku.');
+            }
+
+            if (strtotime($row->expires_at) < time()) {
+                $resetModel->where('username', $user)->delete();
+                return redirect()->to('login')->with(SESSION_NAME . 'message', 'Link reset sudah kedaluwarsa.');
+            }
+
+            $siteConfig = config('Site');
+            return view('auth/reset_password', [
+                'token' => $token,
+                'user' => $user,
+                'siteConfig' => $siteConfig
+            ]);
+        }
+
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
     }
 }
