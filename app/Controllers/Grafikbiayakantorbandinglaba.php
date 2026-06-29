@@ -93,8 +93,13 @@ class Grafikbiayakantorbandinglaba extends BaseController
             $bulan = [];
             $tahun = [];
             $blnsebelumnya = '';
+            $lastUpdate = '';
 
             foreach ($result as $row) {
+                if (isset($row['ftglinput']) && $row['ftglinput'] > $lastUpdate) {
+                    $lastUpdate = $row['ftglinput'];
+                }
+
                 $blndicari = substr($row['bulan'], 0, 2);
                 $thndicari = substr($row['bulan'], 3, 4);
 
@@ -135,13 +140,16 @@ class Grafikbiayakantorbandinglaba extends BaseController
                 }
             }
 
+            $formattedLastUpdate = !empty($lastUpdate) ? date('d-m-Y H:i:s', strtotime($lastUpdate)) : '-';
+
             return [
                 "cabang{$prefix}" => $cabangName,
                 "FTgl{$prefix}" => $bulan,
                 "Tahun{$prefix}" => $tahunRange,
                 "jlhbln{$prefix}" => count($bulan),
                 "TotalBiaya{$prefix}" => $TotalBiayaPerBulan,
-                "TotalLaba{$prefix}" => $TotalLabaPerBulan
+                "TotalLaba{$prefix}" => $TotalLabaPerBulan,
+                "LastUpdate{$prefix}" => $formattedLastUpdate
             ];
         } else {
             return [
@@ -150,7 +158,8 @@ class Grafikbiayakantorbandinglaba extends BaseController
                 "Tahun{$prefix}" => '[]',
                 "jlhbln{$prefix}" => 0,
                 "TotalBiaya{$prefix}" => '[]',
-                "TotalLaba{$prefix}" => '[]'
+                "TotalLaba{$prefix}" => '[]',
+                "LastUpdate{$prefix}" => '-'
             ];
         }
     }

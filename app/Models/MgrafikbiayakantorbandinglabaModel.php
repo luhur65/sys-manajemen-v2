@@ -20,8 +20,8 @@ class MgrafikbiayakantorbandinglabaModel extends Model
         // Membaca langsung dari database lain di server yang sama
         $builder = $db->table($dbName . '.dbo.laporanlabarugi');
         
-        // Asumsi field: bulan (format MM-YYYY), biayakantorcabang, lababersih
-        $builder->select('bulan, SUM(biayakantorcabang) as FBiaya, SUM(lababersih) as FLaba');
+        // Asumsi field: bulan (format MM-YYYY), biayakantorcabang, lababersih, ftglinput
+        $builder->select('bulan, SUM(biayakantorcabang) as FBiaya, SUM(lababersih) as FLaba, MAX(ftglinput) as ftglinput');
         
         if ($where != '') {
             $builder->where($where);
