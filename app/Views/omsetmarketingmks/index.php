@@ -83,9 +83,6 @@
             $('.select2').select2({ theme: 'bootstrap4' });
         }
 
-        // Detect Device Widths (Inspired by Trucking)
-        const isDesktop = (detectDeviceType() == "desktop");
-
         $grid.jqGrid({
             url: apiUrl,
             mtype: "POST", // we use post
@@ -101,13 +98,14 @@
                     label: 'Marketing',
                     name: 'FNMarketing',
                     index: 'FNMarketing',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: colWidth('md', 150, 200),
+                    frozen: true,
                 },
                 {
                     label: 'Tgl',
                     name: 'FTgl',
                     index: 'FTgl',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: colWidth('sm', 100, 150),
                     sorttype: 'date',
                     // searchoptions: {
                     //     sopt: ['eq'],
@@ -133,7 +131,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('xs', 60, 110)
                 },
                 {
                     label: 'Bongkaran',
@@ -142,7 +140,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('xs', 60, 110)
                 },
                 {
                     label: 'Exim',
@@ -151,7 +149,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('xs', 60, 110)
                 },
                 {
                     label: 'Omset',
@@ -161,7 +159,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: colWidth('lg', 150, 150)
                 },
                 {
                     label: 'B. Lapangan',
@@ -171,7 +169,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3)
+                    width: colWidth('md', 150, 150)
                 },
                 {
                     label: 'PPh 23',
@@ -181,7 +179,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3)
+                    width: colWidth('md', 150, 150)
                 },
                 {
                     label: 'Profit',
@@ -191,7 +189,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: colWidth('lg', 200, 150)
                 },
                 {
                     label: 'Margin',
@@ -201,7 +199,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2, suffix: "%" },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('sm', 100, 110)
                 }
             ],
             autowidth: true,
@@ -275,14 +273,7 @@
                 $grid.removeClass('table-striped');
 
                 // Grand Total Footer
-                var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
-                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow");
-
-                if ($secondFooter.length === 0) {
-                    $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow");
-                    $secondFooter.insertAfter($footerRow);
-                }
-                    $footerRow.hide();
+                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
 
                 var totalRecords = $gridObj.jqGrid("getGridParam", "records");
                 if (userData && parseInt(totalRecords, 10) > 0) {
@@ -303,6 +294,10 @@
                     $secondFooter.find("td[aria-describedby$='_FMargin']").text(formatMoney(GrandTotalMargin) + '%').css('text-align', 'right').css('font-weight', 'bold');
                 } else {
                     $secondFooter.hide();
+                }
+
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
                 }
 
                 if(typeof setupLazyLoadScrollHandler === 'function') {
@@ -336,6 +331,9 @@
                 return false;
             }
         });
+
+        // CSS Frozen Columns - initialize the global jqGrid extension
+        $grid.jqGrid('setupStickyFrozenColumns');
 
         // Trigger load
         if(typeof loadGridData === 'function') {

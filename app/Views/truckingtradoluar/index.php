@@ -247,14 +247,7 @@
                     $gridObj.jqGrid("footerData", "set", pageTotal);
 
                     // 2. Create Second Footer for Grand Total
-                    var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
-                    var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow");
-                    
-                    if ($secondFooter.length === 0) {
-                        $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow");
-                        $secondFooter.insertAfter($footerRow);
-                    }
-                    $footerRow.hide();
+                    var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
 
                     if (parseInt($gridObj.jqGrid("getGridParam", "records"), 10) > 0) {
                         $secondFooter.show();
