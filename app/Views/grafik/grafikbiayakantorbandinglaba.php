@@ -38,9 +38,9 @@
                                 <button type="submit" id="btnFilter" class="btn btn-primary w-50 mr-1">
                                     <i class="fas fa-filter"></i> Filter
                                 </button>
-                                <a href="<?= site_url('grafikbiayakantorbandinglaba') ?>" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href='<?= site_url('grafikbiayakantorbandinglaba') ?>'">
                                     <i class="fas fa-undo"></i> Reset
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
