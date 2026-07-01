@@ -2,6 +2,7 @@ let sidebarIsOpen = false;
 let formats = { "THOUSANDSEPARATOR": ",", "DECIMALSEPARATOR": "." };
 let offDays;
 let addedRules;
+
 let sm_dekstop_5de = "50px";
 let sm_dekstop_1 = "60px";
 let sm_dekstop_2 = "100px";
@@ -19,6 +20,7 @@ let lg_dekstop_3 = "550px";
 let lg_dekstop_4 = "600px";
 let lg_dekstop_5 = "650px";
 
+let sm_mobile_5de = "110px";
 let sm_mobile_1 = "150px";
 let sm_mobile_2 = "200px";
 let sm_mobile_3 = "250px";
@@ -48,6 +50,34 @@ let lg_extendSize_2 = 500;
 let lg_extendSize_3 = 550;
 let lg_extendSize_4 = 600;
 
+/**
+ * colWidth(size) — helper untuk lebar kolom jqGrid responsif.
+ * Deteksi desktop/mobile secara internal, tidak perlu deklarasi isDesktop di view.
+ *
+ * Ukuran:  'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
+ *
+ * Contoh penggunaan di colModel:
+ *   width: colWidth('lg')          → 200 (desktop) / 300 (mobile)
+ *   width: colWidth('md')          → 150 (desktop) / 250 (mobile)
+ *   width: colWidth('sm', 120, 220) → override custom: 120 desktop / 220 mobile
+ */
+function colWidth(size, desktopOverride, mobileOverride) {
+    const isDesktop = detectDeviceType() === 'desktop';
+    if (desktopOverride !== undefined && mobileOverride !== undefined) {
+        return isDesktop ? desktopOverride : mobileOverride;
+    }
+    const map = {
+        'xxs': [50,  110],
+        'xs':  [60,  150],
+        'sm':  [100, 200],
+        'md':  [150, 250],
+        'lg':  [200, 300],
+        'xl':  [250, 350],
+        'xxl': [300, 400],
+    };
+    const pair = map[size] || map['md'];
+    return isDesktop ? pair[0] : pair[1];
+}
 
 // Disable jqGrid row hover globally
 if (typeof $.jgrid !== 'undefined' && $.jgrid.defaults) {
@@ -3492,6 +3522,9 @@ function resetColumns(baseColModel, grid, menu) {
                 baseCol.width !== undefined ? parseInt(baseCol.width, 10) : 150;
             grid.jqGrid("setColWidth", baseCol.name, colWidth, false);
         });
+        // setColWidth calls grid.dragEnd() without the "events" flag, so
+        // jqGridResizeStop never fires and sticky columns are left stale.
+        grid.jqGrid("updateStickyFrozenColumns");
     });
 }
 
@@ -3521,6 +3554,7 @@ function newResetColumns(baseColModel, grid, menu) {
             baseCol.width !== undefined ? parseInt(baseCol.width, 10) : 150;
         grid.jqGrid("setColWidth", baseCol.name, colWidth, false);
     });
+    grid.jqGrid("updateStickyFrozenColumns");
     // });
 }
 
@@ -3678,3 +3712,144 @@ $(document).ready(function () {
     }
 });
 
+// Global extension for CSS-based Sticky Frozen Columns
+$.jgrid.extend({
+    setupStickyFrozenColumns: function() {
+        return this.each(function() {
+            var $t = this, $grid = $($t);
+            if (!$t.grid) return;
+            
+            var cm = $grid.jqGrid('getGridParam', 'colModel');
+            if (!cm) return;
+            var hasFrozen = cm.some(function(c) { return c.frozen; });
+            if (!hasFrozen) return;
+            
+            var gridId = $grid.attr('id');
+            var stickyCols = [];
+            // Frozen columns must be contiguous from the left (see docs). The left
+            // offset below is a running cumulative sum, so a non-frozen column in
+            // between would make every sticky column after the gap sit at a "left"
+            // that ignores that gap's width, overlapping it as soon as you scroll.
+            // Hidden columns don't occupy screen space, so they don't break the chain.
+            for (var i = 0; i < cm.length; i++) {
+                if (cm[i].hidden) continue;
+                if (cm[i].name === 'rn' || cm[i].name === 'cb' || cm[i].frozen) {
+                    stickyCols.push(cm[i].name);
+                } else {
+                    break;
+                }
+            }
+            
+            var applySticky = function() {
+                var cumulativeLeft = 0;
+                var $hdiv = $grid.closest('.ui-jqgrid-view').find('.ui-jqgrid-hdiv');
+
+                stickyCols.forEach(function(colName, idx) {
+                    var cmEntry = cm.find(function(c) { return c.name === colName; });
+                    if (cmEntry && cmEntry.hidden) return;
+
+                    var isLast = (idx === stickyCols.length - 1);
+                    var leftPos = cumulativeLeft + 'px';
+
+                    // 1. Header label
+                    var $th = $hdiv.find('th#' + gridId + '_' + colName);
+                    $th.addClass('frozen-col-sticky').css('left', leftPos);
+                    if (isLast) $th.addClass('frozen-col-last');
+
+                    // 2. Filter toolbar cell
+                    var colIdx = $th.index();
+                    if (colIdx >= 0) {
+                        var $filterCell = $hdiv.find('tr.ui-search-toolbar th:eq(' + colIdx + '), tr.ui-search-toolbar td:eq(' + colIdx + ')');
+                        $filterCell.addClass('frozen-col-sticky').css('left', leftPos);
+                        if (isLast) $filterCell.addClass('frozen-col-last');
+                    }
+
+                    // 3. Body cells and Footer cells
+                    var selector = '[aria-describedby="' + gridId + '_' + colName + '"]';
+                    var $cells = $grid.closest('.ui-jqgrid-view').find(selector);
+                    $cells.addClass('frozen-col-sticky').css('left', leftPos);
+                    if (isLast) $cells.addClass('frozen-col-last');
+
+                    var colWidth = $th.outerWidth() || 0;
+                    if (colWidth === 0) {
+                        colWidth = (cmEntry && parseInt(cmEntry.width)) || 45;
+                    }
+                    cumulativeLeft += colWidth;
+                });
+            };
+
+            $t.applyStickyFrozenColumns = applySticky;
+            applySticky();
+
+            var tbody = $grid.find('tbody')[0];
+            if (tbody && !$grid.data('stickyObserver')) {
+                var observer = new MutationObserver(function() {
+                    applySticky();
+                });
+                observer.observe(tbody, { childList: true });
+                $grid.data('stickyObserver', observer);
+            }
+
+            // Re-apply sticky positions once a resize finishes. applySticky() is
+            // idempotent (addClass + fresh left each call), so there is no need to
+            // strip the sticky classes on jqGridResizeStart first - doing that only
+            // opened a window where a column stayed "detached" (no position:sticky)
+            // if the reattach step raced with layout, which is what caused headers
+            // to get stuck after resizing an unrelated column.
+            if (!$grid.data('stickyResizeHooked')) {
+                $grid.on('jqGridResizeStop.sticky', function() {
+                    var $view = $grid.closest('.ui-jqgrid-view');
+                    var $hdiv = $view.find('.ui-jqgrid-hdiv');
+                    // Double rAF guarantees the browser has finished layout for the
+                    // new column width before we read $th.outerWidth() in applySticky().
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            void $hdiv[0].offsetHeight;
+                            applySticky();
+                            // Do NOT manually assign hDiv.scrollLeft here. jqGrid's own
+                            // dragEnd already synced it, and when the search/filter
+                            // toolbar is active, jqGrid also listens for "scroll" on
+                            // hDiv itself (grid.filter.js) to mirror back to bDiv, using
+                            // grid.bScroll/grid.hScroll as a re-entrancy guard. A manual
+                            // hDiv.scrollLeft assignment here fires that listener, which
+                            // sets grid.bScroll = true; that flag is only ever reset back
+                            // to false from inside scrollGrid's own `if (!grid.bScroll)`
+                            // block, so if a real body scroll happens while it's stuck
+                            // true, scrollGrid's whole body (including the reset) gets
+                            // skipped and the header desyncs from the body permanently -
+                            // exactly the "header stuck" symptom. Reset both flags
+                            // defensively instead of touching scrollLeft ourselves.
+                            if ($t.grid) {
+                                $t.grid.bScroll = false;
+                                $t.grid.hScroll = false;
+                            }
+                        });
+                    });
+                });
+                $grid.data('stickyResizeHooked', true);
+            }
+        });
+    },
+    updateStickyFrozenColumns: function() {
+        return this.each(function() {
+            if (this.applyStickyFrozenColumns) {
+                this.applyStickyFrozenColumns();
+            }
+        });
+    },
+    refreshStickyFrozenColumns: function() {
+        return this.each(function() {
+            var $grid = $(this);
+            $grid.closest('.ui-jqgrid-view').find('.frozen-col-sticky')
+                .removeClass('frozen-col-sticky frozen-col-last')
+                .css('left', '');
+            var observer = $grid.data('stickyObserver');
+            if (observer) {
+                observer.disconnect();
+                $grid.removeData('stickyObserver');
+            }
+            this.applyStickyFrozenColumns = null;
+            $grid.jqGrid('setupStickyFrozenColumns');
+        });
+    }
+});

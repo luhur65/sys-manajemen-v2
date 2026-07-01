@@ -182,10 +182,6 @@
         // Initial combo load
         loadMarketingCombo();
 
-        const isDesktop = (detectDeviceType() == "desktop");
-        const sm_dekstop_3 = 100, sm_dekstop_4 = 150, sm_dekstop_5 = 200, sm_dekstop_6 = 250;
-        const sm_mobile_3 = 80, sm_mobile_4 = 100, sm_mobile_5 = 120, sm_mobile_6 = 150;
-
         $grid.jqGrid({
             url: apiUrl,
             mtype: "POST", 
@@ -203,19 +199,21 @@
                     label: 'Bulan',
                     name: 'FBulan',
                     index: 'FBulan',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    frozen: true,
+                    width: colWidth('md', 100, 100)
                 },
                 {
                     label: 'Marketing',
                     name: 'FNMarketing',
                     index: 'FNMarketing',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    frozen: true,
+                    width: colWidth('md', 150, 100)
                 },
                 {
                     label: 'Jlh Muatan',
                     name: 'FJumlahMuatan',
                     index: 'FJumlahMuatan',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: colWidth('sm', 100, 80),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -224,7 +222,7 @@
                     label: 'Jlh Bongkaran',
                     name: 'FJumlahBongkaran',
                     index: 'FJumlahBongkaran',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: colWidth('sm', 100, 80),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -233,7 +231,7 @@
                     label: 'Jlh Exim',
                     name: 'FJumlahExim',
                     index: 'FJumlahExim',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: colWidth('sm', 100, 80),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -242,7 +240,7 @@
                     label: 'Omset',
                     name: 'FOmset',
                     index: 'FOmset',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4),
+                    width: colWidth('md', 150, 100),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -251,7 +249,7 @@
                     label: 'Biaya Lapangan',
                     name: 'FBiayaLapangan',
                     index: 'FBiayaLapangan',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4),
+                    width: colWidth('md', 150, 100),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -260,7 +258,7 @@
                     label: 'Nom Pph23',
                     name: 'FNomPph23',
                     index: 'FNomPph23',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4),
+                    width: colWidth('md', 150, 100),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -269,7 +267,7 @@
                     label: 'Profit',
                     name: 'FProfit',
                     index: 'FProfit',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4),
+                    width: colWidth('md', 150, 100),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -278,7 +276,7 @@
                     label: 'Margin %',
                     name: 'FMargin',
                     index: 'FMargin',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: colWidth('sm', 100, 80),
                     align: 'right',
                     formatter: function(cellvalue, options, rowObject) {
                         return formatMoney(cellvalue) + ' %';
@@ -354,12 +352,7 @@
                 }, 50);
 
                 if (userData) {
-                    var $footer = $gridObj.closest(".ui-jqgrid-bdiv").next(".ui-jqgrid-sdiv").find(".footrow");
-                    var $secondFooter = $footer.next(".myfootrow");
-                    if ($secondFooter.length === 0) {
-                        $secondFooter = $footer.clone().removeClass("footrow").addClass("myfootrow").insertAfter($footer);
-                    }
-                    $footer.hide();
+                    var $secondFooter = $gridObj.closest(".ui-jqgrid-bdiv").next(".ui-jqgrid-sdiv").find(".footrow");
                     
                     $secondFooter.find("td").empty();
                     
@@ -393,6 +386,7 @@
                     setHighlight($grid);
                 }
 
+                $grid.jqGrid('updateStickyFrozenColumns');
                 $grid.removeClass('table-striped');
             }
         });
@@ -420,6 +414,7 @@
                 return false;
             }
         });
+        $grid.jqGrid('setupStickyFrozenColumns');
 
         // Filter Action
         $('#btnFilter').click(function() {

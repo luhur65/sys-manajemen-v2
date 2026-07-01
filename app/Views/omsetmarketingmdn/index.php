@@ -1,5 +1,7 @@
 <style>
     #ui-datepicker-div { display: none; }
+
+
 </style>
 <div class="container-fluid">
     <!-- Filter Card -->
@@ -83,9 +85,6 @@
             $('.select2').select2({ theme: 'bootstrap4' });
         }
 
-        // Detect Device Widths (Inspired by Trucking)
-        const isDesktop = (detectDeviceType() == "desktop");
-
         $grid.jqGrid({
             url: apiUrl,
             mtype: "POST", // we use post
@@ -101,14 +100,16 @@
                     label: 'Marketing',
                     name: 'FNMarketing',
                     index: 'FNMarketing',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: colWidth('md', 150, 200),
+                    frozen: true
                 },
                 {
                     label: 'Tgl',
                     name: 'FTgl',
                     index: 'FTgl',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3),
+                    width: colWidth('sm', 100, 150),
                     sorttype: 'date',
+                    // frozen: true,
                     // searchoptions: {
                     //     sopt: ['eq'],
                     //     dataInit: function(elem) {
@@ -133,7 +134,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('xs', 60, 110)
                 },
                 {
                     label: 'Bongkaran',
@@ -142,7 +143,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('xs', 60, 110)
                 },
                 {
                     label: 'Exim',
@@ -151,7 +152,7 @@
                     formatter: 'integer',
                     sorttype: 'int',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('xs', 60, 110)
                 },
                 {
                     label: 'Omset',
@@ -161,7 +162,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: colWidth('lg', 150, 150)
                 },
                 {
                     label: 'B. Lapangan',
@@ -171,7 +172,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3)
+                    width: colWidth('md', 150, 150)
                 },
                 {
                     label: 'PPh 23',
@@ -181,7 +182,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_3)
+                    width: colWidth('md', 150, 150)
                 },
                 {
                     label: 'Profit',
@@ -191,7 +192,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2 },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_4 : sm_mobile_4)
+                    width: colWidth('lg', 200, 150)
                 },
                 {
                     label: 'Margin',
@@ -201,7 +202,7 @@
                     formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 2, suffix: "%" },
                     sorttype: 'float',
                     align: 'right',
-                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2)
+                    width: colWidth('sm', 100, 110)
                 }
             ],
             autowidth: true,
@@ -246,6 +247,8 @@
                     $('#lastUpdateHandler, #jqGridInfoHandler').text('');
                 }
                 
+
+                
                 var $gridObj = $(this);
                 var userData = res.userdata || $(this).jqGrid('getGridParam', 'userData');
 
@@ -275,34 +278,45 @@
                 $grid.removeClass('table-striped');
 
                 // Grand Total Footer
-                var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
-                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow");
-
-                if ($secondFooter.length === 0) {
-                    $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow");
-                    $secondFooter.insertAfter($footerRow);
-                }
-                    $footerRow.hide();
-
                 var totalRecords = $gridObj.jqGrid("getGridParam", "records");
                 if (userData && parseInt(totalRecords, 10) > 0) {
-                    $secondFooter.show();
                     var GrandTotalMargin = 0;
                     if(parseFloat(userData.GrandTotalOmset) != 0 && !isNaN(parseFloat(userData.GrandTotalOmset))) {
                         GrandTotalMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
                     }
-
-                    $secondFooter.find("td[aria-describedby$='_FTgl']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahMuatan']").text(userData.GrandTotalMuatan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahBongkaran']").text(userData.GrandTotalBongkaran || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahExim']").text(userData.GrandTotalExim || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FOmset']").text(formatMoney(userData.GrandTotalOmset || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FBiayaLapangan']").text(formatMoney(userData.GrandTotalBiayaLapangan || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FNomPph23']").text(formatMoney(userData.GrandTotalPph23 || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FProfit']").text(formatMoney(userData.GrandTotalProfit || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FMargin']").text(formatMoney(GrandTotalMargin) + '%').css('text-align', 'right').css('font-weight', 'bold');
+                    
+                    $(this).jqGrid('footerData', 'set', {
+                        FTgl: "GRAND TOTAL :",
+                        FJumlahMuatan: userData.GrandTotalMuatan || 0,
+                        FJumlahBongkaran: userData.GrandTotalBongkaran || 0,
+                        FJumlahExim: userData.GrandTotalExim || 0,
+                        FOmset: userData.GrandTotalOmset || 0,
+                        FBiayaLapangan: userData.GrandTotalBiayaLapangan || 0,
+                        FNomPph23: userData.GrandTotalPph23 || 0,
+                        FProfit: userData.GrandTotalProfit || 0,
+                        FMargin: GrandTotalMargin
+                    });
+                    
+                    // Style the footer row
+                    var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
+                    $footerRow.find("td").css('font-weight', 'bold');
+                    $footerRow.find("td[aria-describedby$='_FTgl']").css('text-align', 'right');
                 } else {
-                    $secondFooter.hide();
+                    $(this).jqGrid('footerData', 'set', {
+                        FTgl: "",
+                        FJumlahMuatan: "",
+                        FJumlahBongkaran: "",
+                        FJumlahExim: "",
+                        FOmset: "",
+                        FBiayaLapangan: "",
+                        FNomPph23: "",
+                        FProfit: "",
+                        FMargin: ""
+                    });
+                }
+
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
                 }
 
                 if(typeof setupLazyLoadScrollHandler === 'function') {
@@ -337,6 +351,9 @@
             }
         });
 
+        // CSS Frozen Columns - initialize the global jqGrid extension
+        $grid.jqGrid('setupStickyFrozenColumns');
+
         // Trigger load
         if(typeof loadGridData === 'function') {
             loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
@@ -362,7 +379,8 @@
 
         // Filter Action
         $('#btnFilter').click(function() {
-            var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
+            var targetGridId = 'jqGrid';
+            if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
             $grid.jqGrid('setGridParam', {
                 postData: {
                     tgl_dari: $('#tgl_dari').val(),
@@ -371,7 +389,7 @@
             });
             
             if(typeof loadGridData === 'function') {
-                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'down', 'reload');
+                loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
             } else {
                 $grid.trigger('reloadGrid', [{page:1}]);
             }

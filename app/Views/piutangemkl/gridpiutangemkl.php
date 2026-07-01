@@ -128,6 +128,9 @@
                     return $('#isTitipanSelect').val();
                 }
             },
+            gridPreference: true,
+            localReader: { repeatitems: false },
+            jsonReader: { repeatitems: false },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
@@ -364,13 +367,7 @@
                 $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow td[aria-describedby$='_FNShipper']").css('text-align', 'right');
 
                 // Second footer row for Grand Total
-                var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
-                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.myfootrow");
-
-                if ($secondFooter.length === 0) {
-                    $secondFooter = $footerRow.clone().removeClass("footrow").addClass("myfootrow");
-                    $secondFooter.insertAfter($footerRow);
-                }
+                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
 
                 if (userData) {
                     $secondFooter.find("td[aria-describedby$='_FNShipper']").text("GRAND TOTAL :").css('text-align', 'right');
