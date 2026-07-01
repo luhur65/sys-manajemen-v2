@@ -241,7 +241,7 @@
                     label: 'Omset',
                     name: 'FOmset',
                     index: 'FOmset',
-                    width: colWidth('md', 150, 100),
+                    width: colWidth('md', 150, 180),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -250,7 +250,7 @@
                     label: 'Biaya Lapangan',
                     name: 'FBiayaLapangan',
                     index: 'FBiayaLapangan',
-                    width: colWidth('md', 150, 100),
+                    width: colWidth('md', 150, 180),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -259,7 +259,7 @@
                     label: 'Nom Pph23',
                     name: 'FNomPph23',
                     index: 'FNomPph23',
-                    width: colWidth('md', 150, 100),
+                    width: colWidth('md', 150, 180),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -268,7 +268,7 @@
                     label: 'Profit',
                     name: 'FProfit',
                     index: 'FProfit',
-                    width: colWidth('md', 150, 100),
+                    width: colWidth('md', 150, 180),
                     align: 'right',
                     formatter: 'integer',
                     formatoptions: { thousandsSeparator: "," }
@@ -277,7 +277,7 @@
                     label: 'Margin %',
                     name: 'FMargin',
                     index: 'FMargin',
-                    width: colWidth('sm', 100, 80),
+                    width: colWidth('sm', 100, 90),
                     align: 'right',
                     formatter: function(cellvalue, options, rowObject) {
                         return formatMoney(cellvalue) + ' %';
