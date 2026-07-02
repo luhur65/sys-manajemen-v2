@@ -453,6 +453,23 @@ if(typeof setupLazyLoadScrollHandler === 'function') {
         }
     }
 
+        
+        // --- Logic for red circle clear button based on provided HTML ---
+        $(document).on('keyup input', '.ui-search-input input', function() {
+            const $input = $(this);
+            const $clearBtn = $input.closest('tr').find('.clearsearchclass');
+
+            if ($input.val().length > 0) {
+                $clearBtn.attr('style', 'display: flex !important');
+            } else {
+                $clearBtn.attr('style', 'display: none !important');
+            }
+        });
+
+        $(document).on('click', '.clearsearchclass', function() {
+            $(this).attr('style', 'display: none !important');
+        });
+
         $(document).off('click', '#btnReset').on('click', '#btnReset', function() {
             var curdate = new Date();
             var d_first = new Date(curdate.getFullYear(), curdate.getMonth(), 1);
@@ -480,6 +497,7 @@ if(typeof setupLazyLoadScrollHandler === 'function') {
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            $('.clearsearchclass').removeAttr('style');
             
             // Generic explicit reset for footerData and custom footers
             try {

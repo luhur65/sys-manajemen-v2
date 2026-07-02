@@ -283,7 +283,7 @@
                         GrandTotalMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
                     }
 
-                    $secondFooter.find("td[aria-describedby$='_FTgl']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
+                    $secondFooter.find("td[aria-describedby$='_FNMarketing']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
                     $secondFooter.find("td[aria-describedby$='_FJumlahMuatan']").text(userData.GrandTotalMuatan || 0).css('text-align', 'right').css('font-weight', 'bold');
                     $secondFooter.find("td[aria-describedby$='_FJumlahBongkaran']").text(userData.GrandTotalBongkaran || 0).css('text-align', 'right').css('font-weight', 'bold');
                     $secondFooter.find("td[aria-describedby$='_FJumlahExim']").text(userData.GrandTotalExim || 0).css('text-align', 'right').css('font-weight', 'bold');
@@ -403,6 +403,7 @@
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            $('.clearsearchclass').removeAttr('style');
             
             // Generic explicit reset for footerData and custom footers
             try {

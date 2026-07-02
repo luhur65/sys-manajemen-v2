@@ -300,7 +300,7 @@
                     // Style the footer row
                     var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
                     $footerRow.find("td").css('font-weight', 'bold');
-                    $footerRow.find("td[aria-describedby$='_FTgl']").css('text-align', 'right');
+                    $footerRow.find("td[aria-describedby$='_FNMarketing']").css('text-align', 'right');
                 } else {
                     $(this).jqGrid('footerData', 'set', {
                         FTgl: "",
@@ -424,6 +424,7 @@
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            $('.clearsearchclass').removeAttr('style');
             
             // Generic explicit reset for footerData and custom footers
             try {
