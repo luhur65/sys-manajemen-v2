@@ -286,7 +286,7 @@
                     }
                     
                     $(this).jqGrid('footerData', 'set', {
-                        FTgl: "GRAND TOTAL :",
+                        FNMarketing: "GRAND TOTAL :",
                         FJumlahMuatan: userData.GrandTotalMuatan || 0,
                         FJumlahBongkaran: userData.GrandTotalBongkaran || 0,
                         FJumlahExim: userData.GrandTotalExim || 0,
@@ -303,7 +303,7 @@
                     $footerRow.find("td[aria-describedby$='_FNMarketing']").css('text-align', 'right');
                 } else {
                     $(this).jqGrid('footerData', 'set', {
-                        FTgl: "",
+                        FNMarketing: "",
                         FJumlahMuatan: "",
                         FJumlahBongkaran: "",
                         FJumlahExim: "",
