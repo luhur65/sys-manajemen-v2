@@ -337,15 +337,15 @@
                     
                     $(this).jqGrid('footerData', 'set', {
                         FBulan: "GRAND TOTAL :",
-                        FJumlahMuatan: Math.round(userData.GrandTotalMuatan || 0),
-                        FJumlahBongkaran: Math.round(userData.GrandTotalBongkaran || 0),
-                        FJumlahExim: Math.round(userData.GrandTotalExim || 0),
-                        FOmset: Math.round(userData.GrandTotalOmset || 0),
-                        FBiayaLapangan: Math.round(userData.GrandTotalBiayaLapangan || 0),
-                        FNomPph23: Math.round(userData.GrandTotalPph23 || 0),
-                        FProfit: Math.round(userData.GrandTotalProfit || 0),
-                        FMargin: GrandTotalMargin
-                    });
+                        FJumlahMuatan: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalMuatan || 0)),
+                        FJumlahBongkaran: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalBongkaran || 0)),
+                        FJumlahExim: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalExim || 0)),
+                        FOmset: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalOmset || 0),
+                        FBiayaLapangan: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalBiayaLapangan || 0),
+                        FNomPph23: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalPph23 || 0),
+                        FProfit: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalProfit || 0),
+                        FMargin: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(GrandTotalMargin) + ' %'
+                    }, false);
                     
                     // Style the footer row
                     var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
@@ -362,7 +362,7 @@
                         FNomPph23: "",
                         FProfit: "",
                         FMargin: ""
-                    });
+                    }, false);
                 }
                 
                 if(typeof setupLazyLoadScrollHandler === 'function') {
