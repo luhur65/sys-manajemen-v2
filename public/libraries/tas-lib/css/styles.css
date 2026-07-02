@@ -2346,6 +2346,40 @@ body.dark-mode .ui-jqgrid tr.myfootrow td {
 .month-picker-header { text-align: center; margin-bottom: 5px; font-weight: bold; }
 .month-picker-year-table { width: 100%; }
 
+/* Perbaikan posisi tombol next/previous pada dialog MonthPicker & YearPicker.
+   Markup plugin memakai pola tombol-ikon jQuery UI 1.11 (ikon diposisikan
+   absolut oleh CSS lama), sedangkan yang dimuat adalah jQuery UI 1.13 yang
+   aturannya sudah berubah — akibatnya ikon panah tidak berada di tengah
+   tombol. Pusatkan ulang dengan flexbox. */
+.month-picker-year-table td.month-picker-previous,
+.month-picker-year-table td.month-picker-next {
+    text-align: center;
+    vertical-align: middle;
+}
+.month-picker-year-table td.month-picker-previous .ui-button,
+.month-picker-year-table td.month-picker-next .ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8em;
+    height: 1.8em;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    text-indent: 0;
+    box-sizing: border-box;
+}
+.month-picker-year-table td.month-picker-previous .ui-button .ui-icon,
+.month-picker-year-table td.month-picker-next .ui-button .ui-icon {
+    position: static;
+    margin: 0;
+    flex: 0 0 auto;
+}
+.month-picker-year-table td.month-picker-previous .ui-button .ui-button-text,
+.month-picker-year-table td.month-picker-next .ui-button .ui-button-text {
+    display: none;
+}
+
 /* Dark Mode styling */
 body.dark-mode .year-picker { background: #343a40; border-color: #6c757d; color: #fff; }
 body.dark-mode .month-picker-month-table a { color: #fff; }
