@@ -328,31 +328,40 @@
                     }
                 }, 50);
 
-                if (userData) {
-                    var $secondFooter = $gridObj.closest(".ui-jqgrid-bdiv").next(".ui-jqgrid-sdiv").find(".footrow");
-                    
-                    $secondFooter.find("td").empty();
-                    
-                    $secondFooter.find("td[aria-describedby$='_FBulan']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahMuatan']").text(userData.GrandTotalMuatan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahBongkaran']").text(userData.GrandTotalBongkaran || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahExim']").text(userData.GrandTotalExim || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FOmset']").text(userData.GrandTotalOmset || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FBiayaLapangan']").text(userData.GrandTotalBiayaLapangan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FNomPph23']").text(userData.GrandTotalPph23 || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FProfit']").text(userData.GrandTotalProfit || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    
-                    let grandMargin = 0;
+                                var totalRecords = $gridObj.jqGrid("getGridParam", "records");
+                if (userData && parseInt(totalRecords, 10) > 0) {
+                    var GrandTotalMargin = 0;
                     if(parseFloat(userData.GrandTotalOmset) > 0) {
-                        grandMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
+                        GrandTotalMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
                     }
-                    $secondFooter.find("td[aria-describedby$='_FMargin']").text(formatMoney(grandMargin) + ' %').css('text-align', 'right').css('font-weight', 'bold');
-
-                    $secondFooter.find("td").each(function() {
-                        var val = $(this).text();
-                        if (val && !isNaN(val.replace(/,/g, '')) && !val.includes('%') && val !== "0") {
-                            $(this).text(new Intl.NumberFormat('en-US').format(val.replace(/,/g, '')));
-                        }
+                    
+                    $(this).jqGrid('footerData', 'set', {
+                        FBulan: "GRAND TOTAL :",
+                        FJumlahMuatan: userData.GrandTotalMuatan || 0,
+                        FJumlahBongkaran: userData.GrandTotalBongkaran || 0,
+                        FJumlahExim: userData.GrandTotalExim || 0,
+                        FOmset: userData.GrandTotalOmset || 0,
+                        FBiayaLapangan: userData.GrandTotalBiayaLapangan || 0,
+                        FNomPph23: userData.GrandTotalPph23 || 0,
+                        FProfit: userData.GrandTotalProfit || 0,
+                        FMargin: GrandTotalMargin
+                    });
+                    
+                    // Style the footer row
+                    var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
+                    $footerRow.find("td").css('font-weight', 'bold');
+                    $footerRow.find("td[aria-describedby$='_FBulan']").css('text-align', 'right');
+                } else {
+                    $(this).jqGrid('footerData', 'set', {
+                        FBulan: "",
+                        FJumlahMuatan: "",
+                        FJumlahBongkaran: "",
+                        FJumlahExim: "",
+                        FOmset: "",
+                        FBiayaLapangan: "",
+                        FNomPph23: "",
+                        FProfit: "",
+                        FMargin: ""
                     });
                 }
                 

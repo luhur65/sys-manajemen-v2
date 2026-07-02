@@ -272,28 +272,41 @@
 
                 $grid.removeClass('table-striped');
 
-                // Grand Total Footer
-                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
-
-                var totalRecords = $gridObj.jqGrid("getGridParam", "records");
+                                var totalRecords = $gridObj.jqGrid("getGridParam", "records");
                 if (userData && parseInt(totalRecords, 10) > 0) {
-                    $secondFooter.show();
                     var GrandTotalMargin = 0;
                     if(parseFloat(userData.GrandTotalOmset) != 0 && !isNaN(parseFloat(userData.GrandTotalOmset))) {
                         GrandTotalMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
                     }
-
-                    $secondFooter.find("td[aria-describedby$='_FNMarketing']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahMuatan']").text(userData.GrandTotalMuatan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahBongkaran']").text(userData.GrandTotalBongkaran || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahExim']").text(userData.GrandTotalExim || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FOmset']").text(formatMoney(userData.GrandTotalOmset || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FBiayaLapangan']").text(formatMoney(userData.GrandTotalBiayaLapangan || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FNomPph23']").text(formatMoney(userData.GrandTotalPph23 || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FProfit']").text(formatMoney(userData.GrandTotalProfit || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FMargin']").text(formatMoney(GrandTotalMargin) + '%').css('text-align', 'right').css('font-weight', 'bold');
+                    
+                    $(this).jqGrid('footerData', 'set', {
+                        FNMarketing: "GRAND TOTAL :",
+                        FJumlahMuatan: userData.GrandTotalMuatan || 0,
+                        FJumlahBongkaran: userData.GrandTotalBongkaran || 0,
+                        FJumlahExim: userData.GrandTotalExim || 0,
+                        FOmset: userData.GrandTotalOmset || 0,
+                        FBiayaLapangan: userData.GrandTotalBiayaLapangan || 0,
+                        FNomPph23: userData.GrandTotalPph23 || 0,
+                        FProfit: userData.GrandTotalProfit || 0,
+                        FMargin: GrandTotalMargin
+                    });
+                    
+                    // Style the footer row
+                    var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
+                    $footerRow.find("td").css('font-weight', 'bold');
+                    $footerRow.find("td[aria-describedby$='_FNMarketing']").css('text-align', 'right');
                 } else {
-                    $secondFooter.hide();
+                    $(this).jqGrid('footerData', 'set', {
+                        FNMarketing: "",
+                        FJumlahMuatan: "",
+                        FJumlahBongkaran: "",
+                        FJumlahExim: "",
+                        FOmset: "",
+                        FBiayaLapangan: "",
+                        FNomPph23: "",
+                        FProfit: "",
+                        FMargin: ""
+                    });
                 }
 
                 if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
