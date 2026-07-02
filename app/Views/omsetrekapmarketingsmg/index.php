@@ -380,6 +380,10 @@
                     });
                 }
                 
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
+                }
+
                 if(typeof setupLazyLoadScrollHandler === 'function') {
                     setupLazyLoadScrollHandler("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'));
                 }
@@ -414,6 +418,8 @@
                 return false;
             }
         });
+        
+        $grid.jqGrid('setupStickyFrozenColumns');
 
         // Filter Action
         $('#btnFilter').click(function() {
