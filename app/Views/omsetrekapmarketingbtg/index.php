@@ -378,18 +378,17 @@
                         }
                     });
                 }
-                
-                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
-                    $grid.jqGrid('updateStickyFrozenColumns');
-                }
-
-                if(typeof setupLazyLoadScrollHandler === 'function') {
+if(typeof setupLazyLoadScrollHandler === 'function') {
                     setupLazyLoadScrollHandler("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'));
                 }
                 if(typeof setHighlight === 'function') {
                     setHighlight($grid);
                 }
 
+                
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
+                }
                 $grid.removeClass('table-striped');
             }
         });
@@ -417,8 +416,8 @@
                 return false;
             }
         });
-        
-        $grid.jqGrid('setupStickyFrozenColumns');
+
+                $grid.jqGrid('setupStickyFrozenColumns');
 
         // Filter Action
         $('#btnFilter').click(function() {

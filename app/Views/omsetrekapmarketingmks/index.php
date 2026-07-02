@@ -386,7 +386,9 @@
                     setHighlight($grid);
                 }
 
-                $grid.jqGrid('updateStickyFrozenColumns');
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
+                }
                 $grid.removeClass('table-striped');
             }
         });
@@ -414,7 +416,8 @@
                 return false;
             }
         });
-        $grid.jqGrid('setupStickyFrozenColumns');
+
+                $grid.jqGrid('setupStickyFrozenColumns');
 
         // Filter Action
         $('#btnFilter').click(function() {
