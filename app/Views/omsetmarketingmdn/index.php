@@ -287,13 +287,13 @@
                     
                     $(this).jqGrid('footerData', 'set', {
                         FNMarketing: "GRAND TOTAL :",
-                        FJumlahMuatan: userData.GrandTotalMuatan || 0,
-                        FJumlahBongkaran: userData.GrandTotalBongkaran || 0,
-                        FJumlahExim: userData.GrandTotalExim || 0,
-                        FOmset: userData.GrandTotalOmset || 0,
-                        FBiayaLapangan: userData.GrandTotalBiayaLapangan || 0,
-                        FNomPph23: userData.GrandTotalPph23 || 0,
-                        FProfit: userData.GrandTotalProfit || 0,
+                        FJumlahMuatan: Math.round(userData.GrandTotalMuatan || 0),
+                        FJumlahBongkaran: Math.round(userData.GrandTotalBongkaran || 0),
+                        FJumlahExim: Math.round(userData.GrandTotalExim || 0),
+                        FOmset: Math.round(userData.GrandTotalOmset || 0),
+                        FBiayaLapangan: Math.round(userData.GrandTotalBiayaLapangan || 0),
+                        FNomPph23: Math.round(userData.GrandTotalPph23 || 0),
+                        FProfit: Math.round(userData.GrandTotalProfit || 0),
                         FMargin: GrandTotalMargin
                     });
                     
