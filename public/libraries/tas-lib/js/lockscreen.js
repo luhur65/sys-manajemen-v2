@@ -252,9 +252,15 @@ function triggerLockscreenBiometric() {
         // Parameter ketiga adalah callback sukses, parameter keempat adalah callback error
         startWebAuthnLogin(loginArgsUrl, processLoginUrl, function() {
             unlockScreenGlobal();
-        }, function(errMsg) {
-            // Tampilkan error menggunakan fungsi standar lockscreen agar seragam dengan error password
-            handleFailedUnlock(errMsg);
+        }, function(errMsg, cancelled) {
+            if (cancelled) {
+                // User membatalkan prompt / waktu habis — bukan kegagalan autentikasi,
+                // jadi jangan mengurangi jatah percobaan unlock
+                $('#lockscreen-error').text(errMsg).show();
+            } else {
+                // Tampilkan error menggunakan fungsi standar lockscreen agar seragam dengan error password
+                handleFailedUnlock(errMsg);
+            }
         });
     } else {
         alert("Library WebAuthn belum dimuat.");

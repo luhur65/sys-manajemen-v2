@@ -661,7 +661,7 @@
       // WebAuthn Login Button
       $('#btnWebAuthnLogin').on('click', function() {
           if (!window.PublicKeyCredential) {
-              showDialog("Perangkat atau browser Anda tidak mendukung fitur Login Biometrik (WebAuthn).");
+              showDialog("Perangkat atau browser Anda tidak mendukung fitur Login Biometrik");
               return;
           }
           startWebAuthnLogin(
