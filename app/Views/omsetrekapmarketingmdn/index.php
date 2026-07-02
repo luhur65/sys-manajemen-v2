@@ -42,11 +42,11 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-2 d-flex align-items-end">
+                        <div class="col-md-3 d-flex align-items-end">
                             <div class="form-group filter-input-group w-100">
                                 <div class="d-flex w-100">
                             <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
-                                <i class="fas fa-search"></i> Tampilkan
+                                <i class="fas fa-filter"></i> Filter
                             </button>
                             <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" >
                                 <i class="fas fa-undo"></i> Reset
