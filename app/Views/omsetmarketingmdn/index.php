@@ -286,24 +286,24 @@
                     }
                     
                     $(this).jqGrid('footerData', 'set', {
-                        FTgl: "GRAND TOTAL :",
-                        FJumlahMuatan: userData.GrandTotalMuatan || 0,
-                        FJumlahBongkaran: userData.GrandTotalBongkaran || 0,
-                        FJumlahExim: userData.GrandTotalExim || 0,
-                        FOmset: userData.GrandTotalOmset || 0,
-                        FBiayaLapangan: userData.GrandTotalBiayaLapangan || 0,
-                        FNomPph23: userData.GrandTotalPph23 || 0,
-                        FProfit: userData.GrandTotalProfit || 0,
-                        FMargin: GrandTotalMargin
-                    });
+                        FNMarketing: "GRAND TOTAL :",
+                        FJumlahMuatan: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalMuatan || 0)),
+                        FJumlahBongkaran: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalBongkaran || 0)),
+                        FJumlahExim: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalExim || 0)),
+                        FOmset: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalOmset || 0),
+                        FBiayaLapangan: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalBiayaLapangan || 0),
+                        FNomPph23: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalPph23 || 0),
+                        FProfit: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalProfit || 0),
+                        FMargin: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(GrandTotalMargin) + ' %'
+                    }, false);
                     
                     // Style the footer row
                     var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
                     $footerRow.find("td").css('font-weight', 'bold');
-                    $footerRow.find("td[aria-describedby$='_FTgl']").css('text-align', 'right');
+                    $footerRow.find("td[aria-describedby$='_FNMarketing']").css('text-align', 'right');
                 } else {
                     $(this).jqGrid('footerData', 'set', {
-                        FTgl: "",
+                        FNMarketing: "",
                         FJumlahMuatan: "",
                         FJumlahBongkaran: "",
                         FJumlahExim: "",
@@ -312,7 +312,7 @@
                         FNomPph23: "",
                         FProfit: "",
                         FMargin: ""
-                    });
+                    }, false);
                 }
 
                 if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
@@ -424,6 +424,7 @@
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            $('.clearsearchclass').removeAttr('style');
             
             // Generic explicit reset for footerData and custom footers
             try {

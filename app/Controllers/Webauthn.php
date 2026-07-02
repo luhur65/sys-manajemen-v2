@@ -13,6 +13,26 @@ class Webauthn extends BaseController
     private $webauthn;
     private $appname = 'Sys Modern';
 
+    /**
+     * Log detail teknis exception ke file log, lalu kembalikan respons JSON
+     * dengan pesan yang ramah untuk pengguna. Detail (file/baris) hanya
+     * disertakan saat environment development.
+     */
+    private function errorResponse(\Throwable $e, string $context, string $userMessage, int $statusCode)
+    {
+        log_message('error', 'WebAuthn ' . $context . ': ' . $e->getMessage() . ' di ' . $e->getFile() . ':' . $e->getLine());
+
+        $body = [
+            'error' => true,
+            'message' => $userMessage,
+        ];
+        if (ENVIRONMENT === 'development') {
+            $body['debug'] = $e->getMessage() . ' di ' . $e->getFile() . ':' . $e->getLine();
+        }
+
+        return $this->response->setStatusCode($statusCode)->setJSON($body);
+    }
+
     private function initWebauthn()
     {
         if ($this->webauthn !== null) {
@@ -42,7 +62,7 @@ class Webauthn extends BaseController
             
             // User must be logged in to register a device
             if (!session()->has(SESSION_NAME . 'logged_in')) {
-                return $this->response->setJSON(['error' => 'Not logged in'])->setStatusCode(401);
+                return $this->response->setJSON(['error' => true, 'message' => 'Sesi Anda telah berakhir. Harus login terlebih dahulu.'])->setStatusCode(401);
             }
 
             $userId = session()->get(SESSION_NAME . 'userid'); // the string ID
@@ -66,12 +86,7 @@ class Webauthn extends BaseController
 
             return $this->response->setJSON($createArgs);
         } catch (\Throwable $e) {
-            return $this->response->setStatusCode(500)->setJSON([
-                'error' => true,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
+            return $this->errorResponse($e, 'getRegisterArgs', 'Gagal menyiapkan pendaftaran biometrik. Silakan coba lagi.', 500);
         }
     }
 
@@ -81,15 +96,15 @@ class Webauthn extends BaseController
     public function processRegister()
     {
         if (!session()->has(SESSION_NAME . 'logged_in')) {
-            return $this->response->setJSON(['error' => 'Not logged in'])->setStatusCode(401);
+            return $this->response->setJSON(['error' => true, 'message' => 'Sesi Anda telah berakhir. Harus login terlebih dahulu.'])->setStatusCode(401);
         }
 
         $clientDataJSON = base64_decode($this->request->getPost('clientDataJSON'));
         $attestationObject = base64_decode($this->request->getPost('attestationObject'));
-        
+
         $challengeHex = session()->get('webauthn_challenge');
         if (!$challengeHex) {
-            return $this->response->setJSON(['error' => 'No challenge found in session'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => true, 'message' => 'Sesi verifikasi telah kedaluwarsa. Silakan ulangi proses dari awal.'])->setStatusCode(400);
         }
         // Reconstruct the ByteBuffer
         $challenge = new \lbuchs\WebAuthn\Binary\ByteBuffer(hex2bin($challengeHex));
@@ -121,7 +136,7 @@ class Webauthn extends BaseController
             return $this->response->setJSON(['success' => true]);
 
         } catch (\Exception $e) {
-            return $this->response->setJSON(['error' => $e->getMessage()])->setStatusCode(400);
+            return $this->errorResponse($e, 'processRegister', 'Pendaftaran biometrik gagal diverifikasi. Silakan coba lagi.', 400);
         }
     }
 
@@ -175,12 +190,7 @@ class Webauthn extends BaseController
 
             return $this->response->setJSON($getArgs);
         } catch (\Throwable $e) {
-            return $this->response->setStatusCode(500)->setJSON([
-                'error' => true,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
+            return $this->errorResponse($e, 'getLoginArgs', 'Gagal menyiapkan login biometrik. Silakan coba lagi.', 500);
         }
     }
 
@@ -197,24 +207,24 @@ class Webauthn extends BaseController
         
         $challengeHex = session()->get('webauthn_challenge');
         if (!$challengeHex) {
-            return $this->response->setJSON(['error' => 'No challenge found in session'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => true, 'message' => 'Sesi verifikasi telah kedaluwarsa. Silakan ulangi proses dari awal.'])->setStatusCode(400);
         }
         $challenge = new \lbuchs\WebAuthn\Binary\ByteBuffer(hex2bin($challengeHex));
 
         try {
             $this->initWebauthn();
-            
+
             // Look up the credential public key from our database
             $model = new MWebauthnModel();
             $cred = $model->like('credentialId', base64_encode($id), 'none')->first();
             if (!$cred) {
-                return $this->response->setJSON(['error' => 'Credential not found in database'])->setStatusCode(400);
+                return $this->response->setJSON(['error' => true, 'message' => 'Perangkat ini belum terdaftar. Harus Login Terlebih Dahulu menggunakan password, lalu daftarkan biometrik di menu Profil.'])->setStatusCode(400);
             }
 
             // [KEAMANAN LOCKSCREEN] Jika user sudah login, pastikan sidik jari milik user yang sedang aktif!
             if (session()->has(SESSION_NAME . 'logged_in')) {
                 if ($cred['userpk'] != session()->get(SESSION_NAME . 'userpk')) {
-                    return $this->response->setJSON(['error' => 'Akses ditolak: Sidik jari bukan milik pengguna sesi ini!'])->setStatusCode(403);
+                    return $this->response->setJSON(['error' => true, 'message' => 'Akses ditolak: Sidik jari bukan milik pengguna sesi ini!'])->setStatusCode(403);
                 }
             }
 
@@ -239,7 +249,7 @@ class Webauthn extends BaseController
                 $user = $db->table('tbluser')->where('userpk', $cred['userpk'])->get()->getRowArray();
 
                 if (!$user) {
-                    throw new \Exception('User not found.');
+                    return $this->response->setJSON(['error' => true, 'message' => 'Data pengguna tidak ditemukan. Harus Login Terlebih Dahulu menggunakan password.'])->setStatusCode(400);
                 }
 
                 // Create session
@@ -264,7 +274,7 @@ class Webauthn extends BaseController
             return $this->response->setJSON(['success' => true]);
 
         } catch (\Exception $e) {
-            return $this->response->setJSON(['error' => $e->getMessage()])->setStatusCode(400);
+            return $this->errorResponse($e, 'processLogin', 'Verifikasi biometrik gagal. Silakan coba lagi atau login menggunakan password.', 400);
         }
     }
 }

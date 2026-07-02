@@ -65,11 +65,11 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-2 d-flex align-items-end">
+                        <div class="col-md-3 d-flex align-items-end">
                             <div class="form-group filter-input-group w-100">
                                 <div class="d-flex w-100">
                             <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
-                                <i class="fas fa-search"></i> Tampilkan
+                                <i class="fas fa-filter"></i> Filter
                             </button>
                             <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" >
                                 <i class="fas fa-undo"></i> Reset
@@ -351,45 +351,53 @@
                     }
                 }, 50);
 
-                if (userData) {
-                    var $secondFooter = $gridObj.closest(".ui-jqgrid-bdiv").next(".ui-jqgrid-sdiv").find(".footrow");
-                    
-                    $secondFooter.find("td").empty();
-                    
-                    $secondFooter.find("td[aria-describedby$='_FBulan']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahMuatan']").text(userData.GrandTotalMuatan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahBongkaran']").text(userData.GrandTotalBongkaran || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahExim']").text(userData.GrandTotalExim || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FOmset']").text(userData.GrandTotalOmset || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FBiayaLapangan']").text(userData.GrandTotalBiayaLapangan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FNomPph23']").text(userData.GrandTotalPph23 || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FProfit']").text(userData.GrandTotalProfit || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    
-                    let grandMargin = 0;
+                                var totalRecords = $gridObj.jqGrid("getGridParam", "records");
+                if (userData && parseInt(totalRecords, 10) > 0) {
+                    var GrandTotalMargin = 0;
                     if(parseFloat(userData.GrandTotalOmset) > 0) {
-                        grandMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
+                        GrandTotalMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
                     }
-                    $secondFooter.find("td[aria-describedby$='_FMargin']").text(formatMoney(grandMargin) + ' %').css('text-align', 'right').css('font-weight', 'bold');
-
-                    $secondFooter.find("td").each(function() {
-                        var val = $(this).text();
-                        if (val && !isNaN(val.replace(/,/g, '')) && !val.includes('%') && val !== "0") {
-                            $(this).text(new Intl.NumberFormat('en-US').format(val.replace(/,/g, '')));
-                        }
-                    });
+                    
+                    $(this).jqGrid('footerData', 'set', {
+                        FBulan: "GRAND TOTAL :",
+                        FJumlahMuatan: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalMuatan || 0)),
+                        FJumlahBongkaran: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalBongkaran || 0)),
+                        FJumlahExim: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalExim || 0)),
+                        FOmset: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalOmset || 0),
+                        FBiayaLapangan: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalBiayaLapangan || 0),
+                        FNomPph23: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalPph23 || 0),
+                        FProfit: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalProfit || 0),
+                        FMargin: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(GrandTotalMargin) + ' %'
+                    }, false);
+                    
+                    // Style the footer row
+                    var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
+                    $footerRow.find("td").css('font-weight', 'bold');
+                    $footerRow.find("td[aria-describedby$='_FBulan']").css('text-align', 'right');
+                } else {
+                    $(this).jqGrid('footerData', 'set', {
+                        FBulan: "",
+                        FJumlahMuatan: "",
+                        FJumlahBongkaran: "",
+                        FJumlahExim: "",
+                        FOmset: "",
+                        FBiayaLapangan: "",
+                        FNomPph23: "",
+                        FProfit: "",
+                        FMargin: ""
+                    }, false);
                 }
-                
-                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
-                    $grid.jqGrid('updateStickyFrozenColumns');
-                }
-
-                if(typeof setupLazyLoadScrollHandler === 'function') {
+if(typeof setupLazyLoadScrollHandler === 'function') {
                     setupLazyLoadScrollHandler("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'));
                 }
                 if(typeof setHighlight === 'function') {
                     setHighlight($grid);
                 }
 
+                
+                if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
+                    $grid.jqGrid('updateStickyFrozenColumns');
+                }
                 $grid.removeClass('table-striped');
             }
         });
@@ -417,8 +425,8 @@
                 return false;
             }
         });
-        
-        $grid.jqGrid('setupStickyFrozenColumns');
+
+                $grid.jqGrid('setupStickyFrozenColumns');
 
         // Filter Action
         $('#btnFilter').click(function() {
@@ -453,6 +461,23 @@
         }
     }
 
+        
+        // --- Logic for red circle clear button based on provided HTML ---
+        $(document).on('keyup input', '.ui-search-input input', function() {
+            const $input = $(this);
+            const $clearBtn = $input.closest('tr').find('.clearsearchclass');
+
+            if ($input.val().length > 0) {
+                $clearBtn.attr('style', 'display: flex !important');
+            } else {
+                $clearBtn.attr('style', 'display: none !important');
+            }
+        });
+
+        $(document).on('click', '.clearsearchclass', function() {
+            $(this).attr('style', 'display: none !important');
+        });
+
         $(document).off('click', '#btnReset').on('click', '#btnReset', function() {
             var curdate = new Date();
             var d_first = new Date(curdate.getFullYear(), curdate.getMonth(), 1);
@@ -480,6 +505,7 @@
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            $('.clearsearchclass').removeAttr('style');
             
             // Generic explicit reset for footerData and custom footers
             try {

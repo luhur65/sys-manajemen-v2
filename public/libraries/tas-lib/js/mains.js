@@ -1922,6 +1922,21 @@ function initDatepicker(classDatepicker = "datepicker") {
             }
         }
     });
+
+    // Di HP/tablet: tap pada input langsung membuka kalender tanpa memunculkan
+    // keyboard virtual. preventDefault pada mousedown mencegah fokus (pemicu
+    // keyboard), lalu kalender dibuka manual lewat event click karena showOn
+    // "button" tidak membuka kalender dari input. inputmode="none" sebagai
+    // lapisan kedua bila fokus masuk lewat jalur lain (mis. programatik).
+    if (detectDeviceType() !== "desktop") {
+        element.attr("inputmode", "none");
+        element.on("mousedown", function (e) {
+            e.preventDefault();
+        });
+        element.on("click", function () {
+            $(this).datepicker("show");
+        });
+    }
 }
 
 function initMonthpicker(classDatepicker = "monthpicker") {
@@ -2087,6 +2102,31 @@ function initMonthpicker(classDatepicker = "monthpicker") {
         alias: "datetime",
     });
 
+    // Di HP/tablet: tap pada input langsung membuka dialog tanpa keyboard.
+    // MonthPicker.Open() membatalkan diri jika event-nya sudah di-preventDefault,
+    // jadi jangan mengandalkan binding click internal plugin — batalkan seluruh
+    // rangkaian event sintetis di touchend (fokus, keyboard, click) lalu buka
+    // dialognya secara eksplisit. inputmode="none" tetap dipasang karena Open()
+    // memfokuskan input secara programatik.
+    if (detectDeviceType() !== "desktop") {
+        let touchMoved = false;
+        element.attr("inputmode", "none");
+        element.on("touchstart", function () {
+            touchMoved = false;
+        });
+        element.on("touchmove", function () {
+            touchMoved = true;
+        });
+        element.on("touchend", function (e) {
+            if (touchMoved) return; // gesture scroll, bukan tap
+            e.preventDefault();
+            $(this).MonthPicker("Open");
+        });
+        element.on("mousedown", function (e) {
+            e.preventDefault();
+        });
+    }
+
     // Style the span to look like a button
     let spanButton = element.siblings(".month-picker-open-button");
 
@@ -2188,6 +2228,29 @@ function initYearpicker(classYearpicker = "yearpicker") {
             showMaskOnHover: false,
             showMaskOnFocus: true
         });
+
+        // Di HP/tablet: tap pada input langsung membuka popup tanpa keyboard.
+        // Batalkan seluruh rangkaian event sintetis di touchend (fokus, keyboard,
+        // click) lalu jalankan handler click milik YearPicker secara eksplisit
+        // lewat trigger — pola yang sama dengan initDatepicker/initMonthpicker.
+        if (detectDeviceType() !== "desktop") {
+            let touchMoved = false;
+            $input.attr("inputmode", "none");
+            $input.on("touchstart", function () {
+                touchMoved = false;
+            });
+            $input.on("touchmove", function () {
+                touchMoved = true;
+            });
+            $input.on("touchend", function (e) {
+                if (touchMoved) return; // gesture scroll, bukan tap
+                e.preventDefault();
+                $input.trigger("click"); // buka popup via handler click YearPicker
+            });
+            $input.on("mousedown", function (e) {
+                e.preventDefault();
+            });
+        }
     });
 }
 

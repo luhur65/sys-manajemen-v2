@@ -272,28 +272,41 @@
 
                 $grid.removeClass('table-striped');
 
-                // Grand Total Footer
-                var $secondFooter = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
-
-                var totalRecords = $gridObj.jqGrid("getGridParam", "records");
+                                var totalRecords = $gridObj.jqGrid("getGridParam", "records");
                 if (userData && parseInt(totalRecords, 10) > 0) {
-                    $secondFooter.show();
                     var GrandTotalMargin = 0;
                     if(parseFloat(userData.GrandTotalOmset) != 0 && !isNaN(parseFloat(userData.GrandTotalOmset))) {
                         GrandTotalMargin = (parseFloat(userData.GrandTotalProfit) / parseFloat(userData.GrandTotalOmset)) * 100;
                     }
-
-                    $secondFooter.find("td[aria-describedby$='_FTgl']").text("GRAND TOTAL :").css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahMuatan']").text(userData.GrandTotalMuatan || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahBongkaran']").text(userData.GrandTotalBongkaran || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FJumlahExim']").text(userData.GrandTotalExim || 0).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FOmset']").text(formatMoney(userData.GrandTotalOmset || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FBiayaLapangan']").text(formatMoney(userData.GrandTotalBiayaLapangan || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FNomPph23']").text(formatMoney(userData.GrandTotalPph23 || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FProfit']").text(formatMoney(userData.GrandTotalProfit || 0)).css('text-align', 'right').css('font-weight', 'bold');
-                    $secondFooter.find("td[aria-describedby$='_FMargin']").text(formatMoney(GrandTotalMargin) + '%').css('text-align', 'right').css('font-weight', 'bold');
+                    
+                    $(this).jqGrid('footerData', 'set', {
+                        FNMarketing: "GRAND TOTAL :",
+                        FJumlahMuatan: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalMuatan || 0)),
+                        FJumlahBongkaran: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalBongkaran || 0)),
+                        FJumlahExim: new Intl.NumberFormat('en-US').format(Math.round(userData.GrandTotalExim || 0)),
+                        FOmset: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalOmset || 0),
+                        FBiayaLapangan: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalBiayaLapangan || 0),
+                        FNomPph23: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalPph23 || 0),
+                        FProfit: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(userData.GrandTotalProfit || 0),
+                        FMargin: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(GrandTotalMargin) + ' %'
+                    }, false);
+                    
+                    // Style the footer row
+                    var $footerRow = $gridObj.closest(".ui-jqgrid-view").find(".ui-jqgrid-sdiv tr.footrow");
+                    $footerRow.find("td").css('font-weight', 'bold');
+                    $footerRow.find("td[aria-describedby$='_FNMarketing']").css('text-align', 'right');
                 } else {
-                    $secondFooter.hide();
+                    $(this).jqGrid('footerData', 'set', {
+                        FNMarketing: "",
+                        FJumlahMuatan: "",
+                        FJumlahBongkaran: "",
+                        FJumlahExim: "",
+                        FOmset: "",
+                        FBiayaLapangan: "",
+                        FNomPph23: "",
+                        FProfit: "",
+                        FMargin: ""
+                    }, false);
                 }
 
                 if(typeof $.fn.jqGrid !== 'undefined' && typeof $grid.jqGrid('getGridParam', 'colModel') !== 'undefined') {
@@ -404,6 +417,7 @@
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
+            $('.clearsearchclass').removeAttr('style');
             
             // Generic explicit reset for footerData and custom footers
             try {

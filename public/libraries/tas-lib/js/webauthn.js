@@ -39,10 +39,50 @@ function recursiveBase64ToArrayBuffer(obj) {
     }
 }
 
+/**
+ * Petakan DOMException dari navigator.credentials ke pesan bahasa Indonesia.
+ * Mengembalikan { message, cancelled } — cancelled = true jika user membatalkan
+ * atau waktu habis (bukan kegagalan autentikasi sungguhan).
+ */
+function friendlyWebAuthnError(err) {
+    let name = err && err.name ? err.name : '';
+    switch (name) {
+        case 'NotAllowedError':
+            return { message: 'Proses dibatalkan atau waktu habis. Silakan coba lagi.', cancelled: true };
+        case 'AbortError':
+            return { message: 'Proses dihentikan. Silakan coba lagi.', cancelled: true };
+        case 'InvalidStateError':
+            return { message: 'Perangkat ini sudah pernah didaftarkan untuk akun Anda.', cancelled: false };
+        case 'SecurityError':
+            return { message: 'Koneksi tidak aman. Fitur biometrik hanya dapat digunakan melalui HTTPS.', cancelled: false };
+        case 'NotSupportedError':
+            return { message: 'Perangkat Anda tidak mendukung fitur biometrik ini.', cancelled: false };
+        case 'ConstraintError':
+            return { message: 'Perangkat tidak memenuhi persyaratan verifikasi biometrik.', cancelled: false };
+        default:
+            return { message: 'Verifikasi biometrik gagal. Silakan coba lagi.', cancelled: false };
+    }
+}
+
+/**
+ * Ambil pesan ramah dari respons AJAX yang gagal.
+ */
+function friendlyAjaxError(err) {
+    if (err && err.responseJSON) {
+        let res = err.responseJSON;
+        if (typeof res.message === 'string' && res.message) return res.message;
+        if (typeof res.error === 'string' && res.error) return res.error;
+    }
+    if (err && err.status === 0) {
+        return 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
+    }
+    return 'Terjadi kesalahan pada server. Silakan coba lagi.';
+}
+
 // Function to handle login via WebAuthn
 function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCallback) {
     if (!window.PublicKeyCredential) {
-        showDialog("Browser Anda tidak mendukung WebAuthn / Login Biometrik.");
+        showDialog("Browser Anda tidak mendukung Login Biometrik.");
         return;
     }
 
@@ -83,30 +123,30 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCa
                                     window.location.href = redirectUrlOrCallback;
                                 }
                             } else {
-                                if (errorCallback) errorCallback(res.message || res.error);
-                                else showDialog("Login Gagal: " + (res.message || res.error));
+                                let errMsg = res.message || res.error || 'Login biometrik gagal. Silakan coba lagi.';
+                                if (errorCallback) errorCallback(errMsg);
+                                else showDialog(errMsg);
                             }
                         },
                         error: function(err) {
-                            let errMsg = "Unknown error";
-                            if (err.responseJSON) {
-                                errMsg = err.responseJSON.error || err.responseJSON.message || errMsg;
-                            }
+                            let errMsg = friendlyAjaxError(err);
                             if (errorCallback) errorCallback(errMsg);
-                            else showDialog("Login Error: " + errMsg);
+                            else showDialog(errMsg);
                         }
                     });
                 })
                 .catch(function(err) {
                     console.error(err);
-                    if (errorCallback) errorCallback(err.message);
-                    else showDialog("Proses dibatalkan atau gagal: " + err.message);
+                    let friendly = friendlyWebAuthnError(err);
+                    if (errorCallback) errorCallback(friendly.message, friendly.cancelled);
+                    else showDialog(friendly.message);
                 });
         },
         error: function(err) {
             console.error(err);
-            if (errorCallback) errorCallback(err.statusText);
-            else showDialog("Gagal mengambil data WebAuthn: " + err.statusText);
+            let errMsg = friendlyAjaxError(err);
+            if (errorCallback) errorCallback(errMsg);
+            else showDialog(errMsg);
         }
     });
 }
@@ -114,7 +154,7 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCa
 // Function to handle registration via WebAuthn
 function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
     if (!window.PublicKeyCredential) {
-        showDialog("Browser Anda tidak mendukung WebAuthn / Biometrik.");
+        showDialog("Browser Anda tidak mendukung Biometrik.");
         return;
     }
 
@@ -155,25 +195,22 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
                                 if (successCallback) successCallback();
                                 else showDialog("Pendaftaran biometrik berhasil!");
                             } else {
-                                showDialog("Pendaftaran Gagal: " + (res.message || res.error));
+                                showDialog(res.message || res.error || 'Pendaftaran biometrik gagal. Silakan coba lagi.');
                             }
                         },
                         error: function(err) {
-                            let errMsg = "Unknown error";
-                            if (err.responseJSON) {
-                                errMsg = err.responseJSON.error || err.responseJSON.message || errMsg;
-                            }
-                            showDialog("Pendaftaran Error: " + errMsg);
+                            showDialog(friendlyAjaxError(err));
                         }
                     });
                 })
                 .catch(function(err) {
                     console.error(err);
-                    showDialog("Proses dibatalkan atau gagal: " + err.message);
+                    showDialog(friendlyWebAuthnError(err).message);
                 });
         },
         error: function(err) {
-            showDialog("Gagal mengambil data WebAuthn: " + err.statusText);
+            console.error(err);
+            showDialog(friendlyAjaxError(err));
         }
     });
 }
