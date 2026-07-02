@@ -12,7 +12,7 @@ class AuthFilter implements FilterInterface
     {
         // Allow custom reset password link
         $uri = $request->getUri()->getPath();
-        if (preg_match('#.*-\d{2}-\d{2}-\d{4}-[^/]+-[a-f0-9]+$#i', urldecode($uri))) {
+        if (preg_match('#.*-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}-\d{2}-[a-f0-9]+$#i', urldecode($uri))) {
             return;
         }
 
