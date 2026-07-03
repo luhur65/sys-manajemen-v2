@@ -487,6 +487,17 @@
     $(document).ready(function() {
       $("input").attr("autocomplete", "off");
 
+      // Bersihkan sisa status lockscreen dari sesi sebelumnya. Status kunci
+      // disimpan di localStorage sehingga bertahan walau browser ditutup,
+      // sedangkan session login tidak — tanpa pembersihan ini, lockscreen
+      // langsung muncul lagi setelah user login ulang dengan password.
+      // Di halaman login tidak ada sesi yang perlu dilindungi lockscreen.
+      try {
+        localStorage.removeItem('idle-locked');
+        localStorage.removeItem('idle-last-activity');
+        localStorage.removeItem('idle-failed-attempts');
+      } catch (e) {}
+
       $('form').on('submit', function() {
         $(this).find('button[type="submit"]').prop('disabled', true);
         $('#processingLoader').removeClass('d-none');
@@ -658,16 +669,43 @@
         }
       });
 
+      // Kunci/buka form login selama proses biometrik berjalan agar tidak
+      // terjadi request ganda (double submit / double click quick login)
+      function setLoginFormBusy(busy) {
+          $('#user, #password').prop('disabled', busy);
+          $('form button[type="submit"]').prop('disabled', busy);
+          $('#btnWebAuthnLogin').prop('disabled', busy);
+      }
+
       // WebAuthn Login Button
       $('#btnWebAuthnLogin').on('click', function() {
           if (!window.PublicKeyCredential) {
               showDialog("Perangkat atau browser Anda tidak mendukung fitur Login Biometrik");
               return;
           }
+
+          let $btn = $(this);
+          let btnHtml = $btn.html();
+
+          setLoginFormBusy(true);
+          $btn.html('<i class="fas fa-spinner fa-spin" style="margin-right: 0.25rem;"></i> Memverifikasi...');
+
           startWebAuthnLogin(
               '<?= base_url() ?>webauthn/getLoginArgs',
               '<?= base_url() ?>webauthn/processLogin',
-              '<?= base_url() ?>home'
+              function() {
+                  // Sukses: form dibiarkan terkunci sampai berpindah halaman
+                  $btn.html('<i class="fas fa-check" style="margin-right: 0.25rem;"></i> Berhasil, mengalihkan...');
+                  window.location.href = '<?= base_url() ?>home';
+              },
+              function(errMsg, cancelled) {
+                  // Gagal / dibatalkan: buka kembali form
+                  setLoginFormBusy(false);
+                  $btn.html(btnHtml);
+                  // Pembatalan oleh user sendiri tidak perlu dialog;
+                  // error lain tetap ditampilkan
+                  if (!cancelled) showDialog(errMsg);
+              }
           );
       });
     })
