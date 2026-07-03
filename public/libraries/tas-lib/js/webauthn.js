@@ -41,8 +41,10 @@ function recursiveBase64ToArrayBuffer(obj) {
 
 /**
  * Petakan DOMException dari navigator.credentials ke pesan bahasa Indonesia.
- * Mengembalikan { message, cancelled } — cancelled = true jika user membatalkan
- * atau waktu habis (bukan kegagalan autentikasi sungguhan).
+ * Mengembalikan { message, cancelled, alreadyRegistered } — cancelled = true
+ * jika user membatalkan atau waktu habis (bukan kegagalan autentikasi
+ * sungguhan); alreadyRegistered = true jika perangkat sudah punya credential
+ * untuk user ini (ditolak lewat excludeCredentials).
  */
 function friendlyWebAuthnError(err) {
     let name = err && err.name ? err.name : '';
@@ -52,7 +54,7 @@ function friendlyWebAuthnError(err) {
         case 'AbortError':
             return { message: 'Proses dihentikan. Silakan coba lagi.', cancelled: true };
         case 'InvalidStateError':
-            return { message: 'Perangkat ini sudah pernah didaftarkan untuk akun Anda.', cancelled: false };
+            return { message: 'Perangkat ini sudah pernah didaftarkan untuk akun Anda.', cancelled: false, alreadyRegistered: true };
         case 'SecurityError':
             return { message: 'Koneksi tidak aman. Fitur biometrik hanya dapat digunakan melalui HTTPS.', cancelled: false };
         case 'NotSupportedError':
@@ -86,9 +88,18 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCa
         return;
     }
 
+    // Sertakan userid yang tersimpan di perangkat (di-set setiap kali user
+    // login) agar server mengirim daftar credentialId milik user tersebut.
+    // Wajib untuk perangkat lama yang tidak mendukung discoverable credential
+    // (mis. Android 8) — tanpa ini navigator.credentials.get selalu gagal
+    // dengan NotAllowedError di perangkat tersebut.
+    let storedUserid = null;
+    try { storedUserid = localStorage.getItem('lockscreen_userid'); } catch (e) {}
+
     $.ajax({
         url: loginUrl,
         type: 'GET',
+        data: storedUserid ? { userid: storedUserid } : null,
         dataType: 'json',
         success: function(options) {
             if (options.error) {
@@ -152,7 +163,10 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCa
 }
 
 // Function to handle registration via WebAuthn
-function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
+// errorCallback opsional menerima (message, info) — info adalah hasil
+// friendlyWebAuthnError (berisi flag cancelled / alreadyRegistered) atau null
+// untuk kegagalan non-WebAuthn (jaringan/server).
+function startWebAuthnRegister(registerUrl, processUrl, successCallback, errorCallback) {
     if (!window.PublicKeyCredential) {
         showDialog("Browser Anda tidak mendukung Biometrik.");
         return;
@@ -164,7 +178,9 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
         dataType: 'json',
         success: function(options) {
             if (options.error) {
-                showDialog(options.message || options.error);
+                let errMsg = options.message || options.error;
+                if (errorCallback) errorCallback(errMsg, null);
+                else showDialog(errMsg);
                 return;
             }
 
@@ -195,22 +211,30 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback) {
                                 if (successCallback) successCallback();
                                 else showDialog("Pendaftaran biometrik berhasil!");
                             } else {
-                                showDialog(res.message || res.error || 'Pendaftaran biometrik gagal. Silakan coba lagi.');
+                                let errMsg = res.message || res.error || 'Pendaftaran biometrik gagal. Silakan coba lagi.';
+                                if (errorCallback) errorCallback(errMsg, null);
+                                else showDialog(errMsg);
                             }
                         },
                         error: function(err) {
-                            showDialog(friendlyAjaxError(err));
+                            let errMsg = friendlyAjaxError(err);
+                            if (errorCallback) errorCallback(errMsg, null);
+                            else showDialog(errMsg);
                         }
                     });
                 })
                 .catch(function(err) {
                     console.error(err);
-                    showDialog(friendlyWebAuthnError(err).message);
+                    let friendly = friendlyWebAuthnError(err);
+                    if (errorCallback) errorCallback(friendly.message, friendly);
+                    else showDialog(friendly.message);
                 });
         },
         error: function(err) {
             console.error(err);
-            showDialog(friendlyAjaxError(err));
+            let errMsg = friendlyAjaxError(err);
+            if (errorCallback) errorCallback(errMsg, null);
+            else showDialog(errMsg);
         }
     });
 }

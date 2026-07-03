@@ -68,7 +68,18 @@ class Webauthn extends BaseController
             $userId = session()->get(SESSION_NAME . 'userid'); // the string ID
             $userPk = session()->get(SESSION_NAME . 'userpk');
             $username = session()->get(SESSION_NAME . 'username') ?? $userId;
-            
+
+            // Kirim credential yang sudah terdaftar sebagai excludeCredentials:
+            // perangkat yang sudah punya credential untuk user ini akan ditolak
+            // browser dengan InvalidStateError, sehingga tidak tercipta baris
+            // duplikat ketika penanda localStorage di perangkat hilang
+            // (clear browsing data, ganti browser, dsb).
+            $excludeCredentialIds = [];
+            $model = new MWebauthnModel();
+            foreach ($model->where('userpk', $userPk)->findAll() as $cred) {
+                $excludeCredentialIds[] = base64_decode($cred['credentialId']);
+            }
+
             // Generate cross-platform credential
             $createArgs = $this->webauthn->getCreateArgs(
                 $userPk, // userId (hex/binary or string). We use PK for unique internal id.
@@ -77,7 +88,8 @@ class Webauthn extends BaseController
                 60, // timeout
                 true, // require resident key (for passwordless login usually)
                 'required', // user verification requirement
-                null // cross-platform attachment (null = both)
+                null, // cross-platform attachment (null = both)
+                $excludeCredentialIds // tolak pendaftaran ulang perangkat yang sama
             );
 
             // Save challenge to session as a hex string to avoid serialization issues
@@ -169,12 +181,29 @@ class Webauthn extends BaseController
     {
         try {
             $this->initWebauthn();
-            
-            // For passwordless, we do not require userid up front. 
-            // We just get the challenge, and the authenticator returns the credentialId, which we look up.
-            
+
+            // Perangkat lama (mis. Android 8/Oreo) tidak mendukung discoverable
+            // credential, sehingga allowCredentials kosong selalu berakhir
+            // NotAllowedError meski perangkat sudah terdaftar. Jika client
+            // mengirim userid yang tersimpan di perangkat (di-set setiap kali
+            // user login), sertakan daftar credentialId milik user tersebut
+            // agar credential non-discoverable tetap bisa dipakai.
+            $credentialIds = [];
+            $userid = $this->request->getGet('userid');
+            if ($userid) {
+                $db = \Config\Database::connect();
+                $user = $db->table('tbluser')->where('userid', $userid)->get()->getRowArray();
+                if ($user) {
+                    $model = new MWebauthnModel();
+                    $creds = $model->where('userpk', $user['userpk'])->findAll();
+                    foreach ($creds as $cred) {
+                        $credentialIds[] = base64_decode($cred['credentialId']);
+                    }
+                }
+            }
+
             $getArgs = $this->webauthn->getGetArgs(
-                [], // allowed credentials (empty = allow any registered passwordless credential)
+                $credentialIds, // daftar credential user ini; kosong = passkey/discoverable (perangkat modern)
                 60, // timeout
                 true, // allowUsb
                 true, // allowNfc
