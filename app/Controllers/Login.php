@@ -186,7 +186,7 @@ class Login extends BaseController
             'expires_at' => date('Y-m-d H:i:s', strtotime('+1 hour'))
         ]);
 
-        $datetime = date('d-m-Y-H:i:s');
+        $datetime = date('d-m-Y-H-i-s');
         $resetLink = base_url(urlencode($username) . "-{$datetime}-{$rawToken}");
 
         // Send Email
@@ -289,7 +289,7 @@ class Login extends BaseController
     {
         $param = urldecode($param);
 
-        if (preg_match('/^(.*)-(\d{2}-\d{2}-\d{4}-\d{2}:\d{2}:\d{2})-([a-f0-9]+)$/i', $param, $matches)) {
+        if (preg_match('/^(.*)-(\d{2}-\d{2}-\d{4}-\d{2}-\d{2}-\d{2})-([a-f0-9]+)$/i', $param, $matches)) {
             $user = $matches[1];
             $token = $matches[3];
 

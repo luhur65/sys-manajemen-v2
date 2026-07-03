@@ -32,30 +32,67 @@
 <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 <script>
 $(document).ready(function() {
-    // Check if browser supports WebAuthn
-    if (window.PublicKeyCredential) {
-        let userId = '<?= session()->get(SESSION_NAME . "userid") ?>';
-        let regKey = 'webauthn_registered_' + userId;
-        let disKey = 'webauthn_dismissed_' + userId;
+    if (!window.PublicKeyCredential) return;
 
-        let isRegistered = localStorage.getItem(regKey);
-        let isDismissed = localStorage.getItem(disKey);
+    let userId = '<?= session()->get(SESSION_NAME . "userid") ?>';
+    let regKey = 'webauthn_registered_' + userId;
 
-        if (!isRegistered && !isDismissed) {
-            // Eksekusi otomatis tanpa modal/sweetalert
-            startWebAuthnRegister(
-                '<?= base_url('webauthn/getRegisterArgs') ?>',
-                '<?= base_url('webauthn/processRegister') ?>',
-                function() {
+    // Bersihkan kunci mekanisme lama (dismissed/opt-out/snooze) — penolakan
+    // tidak lagi disimpan; pengecekan perangkat kini diverifikasi ke server.
+    try {
+        localStorage.removeItem('webauthn_dismissed_' + userId);
+        localStorage.removeItem('webauthn_optout_' + userId);
+        localStorage.removeItem('webauthn_snooze_' + userId);
+    } catch (e) {}
+
+    // Daftarkan perangkat ini lewat prompt native browser. excludeCredentials
+    // di server menjamin perangkat yang sudah terdaftar tidak membuat duplikat.
+    function registerThisDevice() {
+        startWebAuthnRegister(
+            '<?= base_url('webauthn/getRegisterArgs') ?>',
+            '<?= base_url('webauthn/processRegister') ?>',
+            function(res) {
+                // Simpan credentialId sebagai penanda perangkat agar bisa
+                // diverifikasi diam-diam ke server di kunjungan berikutnya
+                localStorage.setItem(regKey, (res && res.credentialId) ? res.credentialId : '1');
+            },
+            function(errMsg, info) {
+                if (info && info.alreadyRegistered) {
+                    // Perangkat ternyata sudah terdaftar — pulihkan penanda
                     localStorage.setItem(regKey, '1');
-                    console.log('Perangkat berhasil didaftarkan.');
                 }
-            );
-            
-            // Tandai dismissed agar tidak nge-loop auto-trigger 
-            // jika user membatalkan (cancel) prompt native browser
-            localStorage.setItem(disKey, '1');
-        }
+                // Selain itu diam saja (mis. user membatalkan prompt);
+                // pendaftaran ditawarkan lagi saat membuka home berikutnya
+            }
+        );
     }
+
+    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function(available) {
+        if (!available) return;
+
+        let storedCred = localStorage.getItem(regKey);
+
+        // Perangkat baru (belum ada penanda) → langsung munculkan dialog
+        // pendaftaran passkey bawaan browser
+        if (!storedCred) {
+            registerThisDevice();
+            return;
+        }
+
+        // Penanda ada → verifikasi diam-diam ke server; kalau credential-nya
+        // sudah dihapus (mis. oleh admin di halaman profil), daftarkan ulang
+        $.ajax({
+            url: '<?= base_url('webauthn/checkDevice') ?>',
+            type: 'GET',
+            dataType: 'json',
+            data: (storedCred !== '1') ? { credid: storedCred } : {},
+            success: function(res) {
+                if (!res.registered) {
+                    localStorage.removeItem(regKey);
+                    registerThisDevice();
+                }
+            }
+        });
+    }).catch(function() {});
 });
 </script>
