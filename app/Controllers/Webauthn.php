@@ -86,7 +86,10 @@ class Webauthn extends BaseController
                 $userId, // username
                 $username, // displayName
                 60, // timeout
-                true, // require resident key (for passwordless login usually)
+                'preferred', // resident key: 'required' membuat perangkat lama (Android 8)
+                             // gagal membuat credential sama sekali; 'preferred' = perangkat
+                             // modern dapat passkey discoverable, perangkat lama dapat
+                             // credential biasa (login via allowCredentials)
                 'required', // user verification requirement
                 null, // cross-platform attachment (null = both)
                 $excludeCredentialIds // tolak pendaftaran ulang perangkat yang sama
@@ -134,24 +137,52 @@ class Webauthn extends BaseController
             
             // Check if credential ID already exists to avoid duplicates
             // SQL Server does not support '=' for TEXT columns, so we use LIKE
-            $existing = $model->like('credentialId', base64_encode($data->credentialId), 'none')->first();
+            $credentialIdB64 = base64_encode($data->credentialId);
+            $existing = $model->like('credentialId', $credentialIdB64, 'none')->first();
             if (!$existing) {
                 $model->insert([
                     'userpk' => $userPk,
-                    'credentialId' => base64_encode($data->credentialId),
+                    'credentialId' => $credentialIdB64,
                     'credentialPublicKey' => $data->credentialPublicKey,
                     'created_at' => date('Y-m-d H:i:s')
                 ]);
             }
 
             session()->remove('webauthn_challenge');
-            return $this->response->setJSON(['success' => true]);
+            // credentialId dikembalikan agar client bisa menyimpannya sebagai
+            // penanda perangkat dan memverifikasinya diam-diam via checkDevice
+            return $this->response->setJSON(['success' => true, 'credentialId' => $credentialIdB64]);
 
         } catch (\Exception $e) {
             return $this->errorResponse($e, 'processRegister', 'Pendaftaran biometrik gagal diverifikasi. Silakan coba lagi.', 400);
         }
     }
 
+
+    /**
+     * Pengecekan diam-diam dari halaman home: apakah credential milik
+     * perangkat ini (credid tersimpan di localStorage) masih terdaftar.
+     * Tanpa credid, jatuh ke pengecekan apakah user punya credential apa pun.
+     */
+    public function checkDevice()
+    {
+        if (!session()->has(SESSION_NAME . 'logged_in')) {
+            return $this->response->setJSON(['registered' => false]);
+        }
+
+        $userPk = session()->get(SESSION_NAME . 'userpk');
+        $model = new MWebauthnModel();
+
+        $credId = $this->request->getGet('credid');
+        if ($credId) {
+            // SQL Server does not support '=' for TEXT columns, so we use LIKE
+            $cred = $model->where('userpk', $userPk)->like('credentialId', $credId, 'none')->first();
+            return $this->response->setJSON(['registered' => (bool) $cred]);
+        }
+
+        $count = $model->where('userpk', $userPk)->countAllResults();
+        return $this->response->setJSON(['registered' => ($count > 0)]);
+    }
 
     /**
      * Check if user has any registered webauthn credentials

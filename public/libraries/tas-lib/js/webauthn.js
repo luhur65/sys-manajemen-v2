@@ -208,7 +208,7 @@ function startWebAuthnRegister(registerUrl, processUrl, successCallback, errorCa
                         dataType: 'json',
                         success: function(res) {
                             if (res.success) {
-                                if (successCallback) successCallback();
+                                if (successCallback) successCallback(res);
                                 else showDialog("Pendaftaran biometrik berhasil!");
                             } else {
                                 let errMsg = res.message || res.error || 'Pendaftaran biometrik gagal. Silakan coba lagi.';

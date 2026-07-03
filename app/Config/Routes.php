@@ -26,6 +26,7 @@ $routes->post('webauthn/processRegister', 'Webauthn::processRegister');
 $routes->get('webauthn/getLoginArgs', 'Webauthn::getLoginArgs');
 $routes->post('webauthn/processLogin', 'Webauthn::processLogin');
 $routes->get('webauthn/checkRegistered', 'Webauthn::checkRegistered');
+$routes->get('webauthn/checkDevice', 'Webauthn::checkDevice');
 
 // Grid Preferences Routes (JSON File Storage)
 $routes->get('gridpreference/load', 'GridPreference::load');
