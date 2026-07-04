@@ -98,6 +98,24 @@ class Home extends BaseController
                 'color' => 'bg-purple'
             ];
         }
+
+        if (hasPermission('omset', 'index')) {
+            $buttons[] = [
+                'title' => 'Laporan Omset Emkl',
+                'link'  => base_url('omset'),
+                'icon'  => 'fas fa-money-bill',
+                'color' => 'bg-purple'
+            ];
+        }
+
+        if (hasPermission('piutangemkl', 'index')) {
+            $buttons[] = [
+                'title' => 'Laporan Piutang Emkl',
+                'link'  => base_url('piutangemkl'),
+                'icon'  => 'fas fa-money-bill',
+                'color' => 'bg-olive'
+            ];
+        }
         
         $data['buttons'] = $buttons;
         
