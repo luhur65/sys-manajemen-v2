@@ -97,6 +97,11 @@ abstract class BaseController extends Controller
                 $fieldData = str_replace(',', '', $fieldData);
             }
 
+            // Handle calculated field FNTgl
+            if ($fieldName == 'FNTgl') {
+                $fieldName = "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))";
+            }
+
             switch ($rule->op) {
                 case "eq":
                     $fieldOperation = " = '" . $fieldData . "'";
