@@ -141,7 +141,7 @@
 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return 'stop';
             },
@@ -320,7 +320,7 @@
 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $("#jqGridAcos").jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $("#jqGridAcos").jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return 'stop';
             },
@@ -407,7 +407,7 @@
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 $gridAcos.jqGrid('clearGridData');
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $gridAcos.jqGrid('getGridParam', 'postData'), 1, $gridAcos.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGridAcos", "<?= base_url('useracl/getAcos') ?>", $gridAcos.jqGrid('getGridParam', 'postData'), 1, $gridAcos.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return false;
             }
@@ -618,7 +618,7 @@
                 $('#crudModal').modal('hide');
                 if (action == 'add') {
                     if(typeof loadGridData === 'function') {
-                        loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'jump', 'page');
+                        loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'jump', 'reload');
                     } else {
                         $grid.trigger("reloadGrid");
                     }

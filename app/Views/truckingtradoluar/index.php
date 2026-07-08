@@ -218,7 +218,7 @@
 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return 'stop';
             },
@@ -347,7 +347,7 @@
             
 
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGrid", apiUrl, $("#jqGrid").jqGrid('getGridParam', 'postData'), 1, $("#jqGrid").jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return false;
             }
@@ -555,7 +555,7 @@
                     var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                     $("#jqGridDetail").jqGrid('clearGridData');
                     if(typeof loadGridData === 'function') {
-                        loadGridData("#jqGridDetail", apiDetailUrl, $("#jqGridDetail").jqGrid('getGridParam', 'postData'), 1, $("#jqGridDetail").jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                        loadGridData("#jqGridDetail", apiDetailUrl, $("#jqGridDetail").jqGrid('getGridParam', 'postData'), 1, $("#jqGridDetail").jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                     }
                     return false;
                 }

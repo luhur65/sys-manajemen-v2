@@ -92,7 +92,7 @@
 
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGridAcl", gridAclUrl, $gridAcl.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return 'stop';
             },
