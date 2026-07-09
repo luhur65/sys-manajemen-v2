@@ -90,24 +90,24 @@ class Piutangemkl extends BaseController
         $responce->records = $count;
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $row->FNTrans;
-            $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
-                $row->FNTrans,
-                $row->FNInvoice,
-                $row->FNShipper,
-                $row->FNominal,
-                $row->FSisa,
-                $row->FTOP,
-                $row->FTglJT ? date('d-M-Y', strtotime($row->FTglJT)) : '',
-                $row->FSelisih,
-                $row->FJnsRemind,
-                $row->FNoJob,
-                $row->FBlnJob,
-                $row->FThnJob,
-                $row->FNTgl ? date('d-M-Y', strtotime($row->FNTgl)) : '',
-                $row->FJnsJob,
-                $row->FJnsPiutang
+            $responce->rows[$i] = array(
+                'id'         => $row->FNTrans,
+                'FTgl'       => $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                'FNTrans'    => $row->FNTrans,
+                'FNInvoice'  => $row->FNInvoice,
+                'FNShipper'  => $row->FNShipper,
+                'FNominal'   => $row->FNominal,
+                'FSisa'      => $row->FSisa,
+                'FTOP'       => $row->FTOP,
+                'FTglJT'     => $row->FTglJT ? date('d-M-Y', strtotime($row->FTglJT)) : '',
+                'FSelisih'   => $row->FSelisih,
+                'FJnsRemind' => $row->FJnsRemind,
+                'FNoJob'     => $row->FNoJob,
+                'FBlnJob'    => $row->FBlnJob,
+                'FThnJob'    => $row->FThnJob,
+                'FNTgl'      => $row->FNTgl ? date('d-M-Y', strtotime($row->FNTgl)) : '',
+                'FJnsJob'    => $row->FJnsJob,
+                'FJnsPiutang'=> $row->FJnsPiutang
             );
             $i++;
         }
@@ -162,6 +162,11 @@ class Piutangemkl extends BaseController
             // Handle date fields to match UI format (dd-MMM-yyyy)
             if ($fieldName == 'FTgl' || $fieldName == 'FTglJT') {
                 $fieldName = "UPPER(FORMAT($fieldName, 'dd-MMM-yyyy'))";
+            }
+            
+            // Handle calculated field FNTgl
+            if ($fieldName == 'FNTgl') {
+                $fieldName = "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))";
             }
 
             // Handle numeric fields: Strip commas from input and cast column to string for LIKE search

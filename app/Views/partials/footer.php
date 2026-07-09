@@ -80,14 +80,17 @@
     <script src="<?= asset('libraries/tas-lib/js/pager.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/MonthPicker.min.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/YearPicker.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/GridPreferenceManager.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/ColumnSettingsManager.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/GridAutoInjector.js') ?>"></script>
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
     <script>
         // Simpan userid secara lokal untuk keperluan auto-relogin lockscreen jika sesi server expire
         localStorage.setItem('lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
     </script>
-    <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>?v=<?= time() ?>"></script>
-    <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>?v=<?= time() ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>
     <?php endif; ?>
 
     <script>

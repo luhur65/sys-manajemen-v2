@@ -239,9 +239,29 @@
                 if (indexRow >= limit) indexRow = (indexRow - limit * (page - 1))
             },
             onSortCol: function(index, iCol, sortorder) {
+                // Fix: Update jqGrid internal state so it toggles next time and sends correct sort to server
+                this.p.sortorder = sortorder;
+                this.p.sortname = index;
+                var pd = $(this).jqGrid('getGridParam', 'postData');
+                if (pd) {
+                    pd.sidx = index;
+                    pd.sord = sortorder;
+                }
+
+                // Update UI sorting arrows manually since we are using return 'stop'
+                var previousSelectedTh = this.grid.headers[this.p.lastsort].el;
+                var newSelectedTh = this.grid.headers[iCol].el;
+                $("span.s-ico", previousSelectedTh).hide();
+                $("span.s-ico", newSelectedTh).show();
+                var disabledClass = "ui-state-disabled";
+                $("span.ui-icon-asc, span.ui-icon-desc", newSelectedTh).addClass(disabledClass);
+                $("span.ui-icon-" + sortorder, newSelectedTh).removeClass(disabledClass);
+                this.p.lastsort = iCol;
+
+
                 var targetGridId = this.id || 'jqGrid'; if (typeof lazyStates !== 'undefined' && lazyStates[targetGridId]) lazyStates[targetGridId].cachedData = {};
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $(this).jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return 'stop';
             },
@@ -332,7 +352,7 @@
             
 
                 if(typeof loadGridData === 'function') {
-                    loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'page');
+                    loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, $grid.jqGrid('getGridParam', 'rowNum'), 'jump', 'reload');
                 }
                 return false;
             }

@@ -62,6 +62,11 @@ class MovertopModel extends Model
         if (empty($surut)) {
             $surut = "FTgl";
         }
+        
+        // Handle sorting for calculated field FNTgl
+        if ($surut == 'FNTgl') {
+            $surut = "FThnJob " . $sord . ", FBlnJob";
+        }
 
         $sql = $this->dbtruck->query("SELECT * FROM (
             SELECT FNTrans, FNInvoice, FNominal, FSisa, FTgl, FTglJT, FSelisih, FTglHariIni, FNShipper, FTOP, FJnsRemind, FJnsJob, 
