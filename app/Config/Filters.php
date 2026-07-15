@@ -29,7 +29,7 @@ class Filters extends BaseFilters
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
-        'secureheaders' => SecureHeaders::class,
+        'secureheaders' => \App\Filters\SecurityHeaders::class,
         'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
