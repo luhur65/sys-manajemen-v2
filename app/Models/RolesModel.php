@@ -8,7 +8,7 @@ class RolesModel extends Model
 {
     protected $table = 'tblroles';
     protected $primaryKey = 'roleid';
-    protected $useAutoIncrement = true;
+    protected $useAutoIncrement = false;
     protected $returnType = 'object';
     protected $allowedFields = ['roleid', 'rolename', 'modifiedon', 'modifiedby'];
     protected $useTimestamps = false;
@@ -112,13 +112,17 @@ class RolesModel extends Model
                 return false;
             }
         } else {
-            $id = $this->insert($save, true);
-            if ($id !== false) {
+            $maxQuery = $this->db->query("SELECT ISNULL(MAX(roleid), 0) as max_id FROM tblroles");
+            $newRoleId = (int)$maxQuery->getRow()->max_id + 1;
+            $save['roleid'] = $newRoleId;
+
+            $insertResult = $this->insert($save);
+            if ($insertResult !== false) {
                 $acos = [];
                 if (isset($data['role_permission']) && isset($data['role_permission']['acos'])) {
                     $acos = $data['role_permission']['acos'];
                 }
-                $this->saveRolePermission($id, $acos);
+                $this->saveRolePermission($newRoleId, $acos);
             } else {
                 $this->db->transRollback();
                 return false;
