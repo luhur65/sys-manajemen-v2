@@ -8,10 +8,11 @@ class RolesModel extends Model
 {
     protected $table = 'tblroles';
     protected $primaryKey = 'roleid';
-    protected $useAutoIncrement = true;
+    protected $useAutoIncrement = false;
     protected $returnType = 'object';
     protected $allowedFields = ['roleid', 'rolename', 'modifiedon', 'modifiedby'];
     protected $useTimestamps = false;
+    public $lastErrorMsg = '';
 
     protected $alias = 'r';
 
@@ -107,19 +108,26 @@ class RolesModel extends Model
                 $this->saveRolePermission($id, $acos);
             } else {
                 $error = $this->db->error();
+                $this->lastErrorMsg = 'Update failed. DB Error: ' . json_encode($error);
                 file_put_contents(WRITEPATH . 'logs/roles_update_error.txt', date('Y-m-d H:i:s') . ' - Update Error: ' . print_r($error, true) . "\n", FILE_APPEND);
                 $this->db->transRollback();
                 return false;
             }
         } else {
-            $id = $this->insert($save, true);
-            if ($id !== false) {
+            $maxQuery = $this->db->query("SELECT ISNULL(MAX(roleid), 0) as max_id FROM tblroles");
+            $newRoleId = (int)$maxQuery->getRow()->max_id + 1;
+            $save['roleid'] = $newRoleId;
+
+            $insertResult = $this->insert($save);
+            if ($insertResult !== false) {
                 $acos = [];
                 if (isset($data['role_permission']) && isset($data['role_permission']['acos'])) {
                     $acos = $data['role_permission']['acos'];
                 }
-                $this->saveRolePermission($id, $acos);
+                $this->saveRolePermission($newRoleId, $acos);
             } else {
+                $error = $this->db->error();
+                $this->lastErrorMsg = 'Insert failed on tblroles. Data: ' . json_encode($save) . ' DB Error: ' . json_encode($error);
                 $this->db->transRollback();
                 return false;
             }
@@ -127,6 +135,9 @@ class RolesModel extends Model
 
         if ($this->db->transStatus() === false) {
             $error = $this->db->error();
+            if (empty($this->lastErrorMsg)) {
+                $this->lastErrorMsg = 'Transaction failed. DB Error: ' . json_encode($error);
+            }
             file_put_contents(WRITEPATH . 'logs/roles_db_error.txt', date('Y-m-d H:i:s') . ' - DB Error: ' . print_r($error, true) . "\n", FILE_APPEND);
             $this->db->transRollback();
             return false;
@@ -197,7 +208,8 @@ class RolesModel extends Model
                             'modifiedon' => date("Y-m-d H:i:s")
                         ]);
                     } catch (\Exception $e) {
-                        file_put_contents(WRITEPATH . 'logs/roles_db_error.txt', date('Y-m-d H:i:s') . ' - Insert Error (New): ' . $e->getMessage() . "\n", FILE_APPEND);
+                        $this->lastErrorMsg = 'Exception in saveBatchData tblacl: ' . $e->getMessage();
+                        return false;
                     }
                 }
                 return true;

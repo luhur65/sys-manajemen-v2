@@ -110,9 +110,10 @@ class Roles extends BaseController
                 
                 $status = $this->rolesModel->saveData($data);
                 $dbError = $this->rolesModel->db->error();
+                $lastErrorMsg = $this->rolesModel->lastErrorMsg ?? '';
                 return $this->response->setJSON([
                     'status' => $status ? 'sukses' : 'gagal',
-                    'message' => $status ? '' : ($dbError['message'] ?? json_encode($this->rolesModel->errors()))
+                    'message' => $status ? '' : ($lastErrorMsg ?: ($dbError['message'] ?? json_encode($this->rolesModel->errors())))
                 ]);
             } elseif ($action == 'del') {
                 $status = $this->rolesModel->deleteRole($id);
