@@ -58,7 +58,9 @@ class Grafikbiayakantorbandinglaba extends BaseController
             'JKT' => 'Jakarta',
             'MDN' => 'Medan',
             'SBY' => 'Surabaya',
-            'MKS' => 'Makassar'
+            'MKS' => 'Makassar',
+            'BTG' => 'Bitung',
+            'SMG' => 'Semarang'
         ];
         $namaCabangLengkap = $cabangNames[$cabang] ?? 'Jakarta';
 
