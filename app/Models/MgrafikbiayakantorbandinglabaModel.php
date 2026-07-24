@@ -54,4 +54,14 @@ class MgrafikbiayakantorbandinglabaModel extends Model
     {
         return $this->_get_where_cabang('emklmakassar', $where);
     }
+
+    public function get_whereBTG($where = '')
+    {
+        return $this->_get_where_cabang('emklbitung', $where);
+    }
+
+    public function get_whereSMG($where = '')
+    {
+        return $this->_get_where_cabang('emklsemarang', $where);
+    }
 }
