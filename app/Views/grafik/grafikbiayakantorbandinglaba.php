@@ -185,9 +185,23 @@
                     var cabangName = res.cabangCABANG ? res.cabangCABANG.toUpperCase() : '';
                     myChart.setTitle({ text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang ' + cabangName }, { text: 'Per ' + (res.jlhblnCABANG || 0) + ' Bulan, Tahun ' + (res.TahunCABANG || "") });
                     
-                    myChart.xAxis[0].setCategories(getArrayData(res.FTglCABANG));
-                    myChart.series[0].setData(getArrayData(res.TotalBiayaCABANG));
-                    myChart.series[1].setData(getArrayData(res.TotalLabaCABANG));
+                    // Bersihkan single quote dari PHP pada kategori
+                    var categories = getArrayData(res.FTglCABANG).map(function(val) {
+                        return typeof val === 'string' ? val.replace(/'/g, '') : val;
+                    });
+                    
+                    // Pastikan data yang masuk adalah float/angka, bukan string
+                    var dataBiaya = getArrayData(res.TotalBiayaCABANG).map(function(val) {
+                        return parseFloat(val) || 0;
+                    });
+                    
+                    var dataLaba = getArrayData(res.TotalLabaCABANG).map(function(val) {
+                        return parseFloat(val) || 0;
+                    });
+
+                    myChart.xAxis[0].setCategories(categories);
+                    myChart.series[0].setData(dataBiaya);
+                    myChart.series[1].setData(dataLaba);
                     
                     $('#textLastUpdate').text('Last Update : ' + (res.LastUpdateCABANG || '-'));
                 },
