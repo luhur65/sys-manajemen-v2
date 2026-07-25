@@ -80,6 +80,10 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $dataProcessed = $this->processData($dataMentah, 'CABANG', $namaCabangLengkap);
         $data = array_merge($data, $dataProcessed);
 
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON($data);
+        }
+
         return $this->render('grafik/grafikbiayakantorbandinglaba', $data);
     }
 

@@ -7,9 +7,9 @@
     <!-- Filter Card -->
     <div class="card card-primary card-outline card-filter">
         <div class="card-body">
-            <form method="GET" action="<?= site_url('grafikbiayakantorbandinglaba') ?>" id="formFilter">
+            <form id="formFilter">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Cabang</label>
                             <select name="cabang" id="cabangSelect" class="form-control select2">
@@ -22,28 +22,16 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
-                        </div>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-group filter-input-group w-100">
-                            <div class="d-flex w-100">
-                                <button type="submit" id="btnFilter" class="btn btn-primary w-50 mr-1">
-                                    <i class="fas fa-filter"></i> Filter
-                                </button>
-                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href='<?= site_url('grafikbiayakantorbandinglaba') ?>'">
-                                    <i class="fas fa-undo"></i> Reset
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -172,6 +160,53 @@
                 color: '#28a745',
                 data: getArrayData([<?= isset($TotalLabaCABANG) && is_array($TotalLabaCABANG) ? implode(',', $TotalLabaCABANG) : (isset($TotalLabaCABANG) ? $TotalLabaCABANG : '[]') ?>])
             }]
+        });
+
+        // AJAX Chart Update Function
+        function fetchAndUpdateChart() {
+            var cabang = $('#cabangSelect').val();
+            var tgl_dari = $('#tgl_dari').val();
+            var tgl_sampai = $('#tgl_sampai').val();
+
+            myChart.showLoading('Memuat data...');
+            
+            $.ajax({
+                url: '<?= site_url('grafikbiayakantorbandinglaba') ?>',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    cabang: cabang,
+                    tgl_dari: tgl_dari,
+                    tgl_sampai: tgl_sampai
+                },
+                success: function(res) {
+                    myChart.hideLoading();
+                    
+                    var cabangName = res.cabangCABANG ? res.cabangCABANG.toUpperCase() : '';
+                    myChart.setTitle({ text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang ' + cabangName }, { text: 'Per ' + (res.jlhblnCABANG || 0) + ' Bulan, Tahun ' + (res.TahunCABANG || "") });
+                    
+                    myChart.xAxis[0].setCategories(getArrayData(res.FTglCABANG));
+                    myChart.series[0].setData(getArrayData(res.TotalBiayaCABANG));
+                    myChart.series[1].setData(getArrayData(res.TotalLabaCABANG));
+                    
+                    $('#textLastUpdate').text('Last Update : ' + (res.LastUpdateCABANG || '-'));
+                },
+                error: function() {
+                    myChart.hideLoading();
+                    alert('Terjadi kesalahan saat mengambil data grafik.');
+                }
+            });
+        }
+
+        // Bind events
+        $('#cabangSelect').on('change', function() {
+            fetchAndUpdateChart();
+        });
+
+        // Event for monthpicker (bisa dipicu dari onClose atau dp.change, dll. Standarnya event change input).
+        $('#tgl_dari, #tgl_sampai').on('change', function() {
+            // Cek jika field kosong atau ada nilainya, fetch data.
+            fetchAndUpdateChart();
         });
 
         // Apply initial theme
