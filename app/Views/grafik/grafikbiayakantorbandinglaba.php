@@ -203,11 +203,19 @@
             fetchAndUpdateChart();
         });
 
-        // Event for monthpicker (bisa dipicu dari onClose atau dp.change, dll. Standarnya event change input).
-        $('#tgl_dari, #tgl_sampai').on('change', function() {
-            // Cek jika field kosong atau ada nilainya, fetch data.
-            fetchAndUpdateChart();
+        // Event untuk input teks manual
+        var filterTimeout;
+        $('#tgl_dari, #tgl_sampai').on('change blur', function() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(fetchAndUpdateChart, 300);
         });
+
+        // Khusus untuk plugin MonthPicker saat user memilih dari popup kalender
+        try {
+            $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'OnAfterChooseMonth', function() {
+                fetchAndUpdateChart();
+            });
+        } catch(e) {}
 
         // Apply initial theme
         myChart.update(getChartTheme());
