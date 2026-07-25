@@ -162,11 +162,32 @@
             }]
         });
 
+        // Menyimpan status filter terakhir agar tidak ter-trigger ganda jika value belum berubah
+        var lastFetchedData = {
+            cabang: '<?= esc($selectedCabang ?? '') ?>',
+            tgl_dari: '<?= esc($tgl_dari ?? '') ?>',
+            tgl_sampai: '<?= esc($tgl_sampai ?? '') ?>'
+        };
+
         // AJAX Chart Update Function
         function fetchAndUpdateChart() {
             var cabang = $('#cabangSelect').val();
             var tgl_dari = $('#tgl_dari').val();
             var tgl_sampai = $('#tgl_sampai').val();
+
+            // Cegah pemanggilan AJAX jika filter sama persis dengan yang terakhir di-request
+            if (lastFetchedData.cabang === cabang && 
+                lastFetchedData.tgl_dari === tgl_dari && 
+                lastFetchedData.tgl_sampai === tgl_sampai) {
+                return;
+            }
+
+            // Update memori filter terbaru
+            lastFetchedData = {
+                cabang: cabang,
+                tgl_dari: tgl_dari,
+                tgl_sampai: tgl_sampai
+            };
 
             myChart.showLoading('Memuat data...');
             
@@ -232,7 +253,7 @@
 
         // Event untuk input teks manual
         var filterTimeout;
-        $('#tgl_dari, #tgl_sampai').on('change blur', function() {
+        $('#tgl_dari, #tgl_sampai').on('change', function() {
             clearTimeout(filterTimeout);
             filterTimeout = setTimeout(fetchAndUpdateChart, 300);
         });
