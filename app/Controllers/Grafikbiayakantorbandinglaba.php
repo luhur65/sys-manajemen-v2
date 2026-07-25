@@ -65,16 +65,28 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $namaCabangLengkap = $cabangNames[$cabang] ?? 'Jakarta';
 
         $dataMentah = [];
+        $minBulan = '';
+        $maxBulan = '';
         if (method_exists($this->mgrafik, $method)) {
+            // Dapatkan seluruh data untuk cabang ini (tanpa filter) untuk mengetahui batas min & max
+            $dataSemua = $this->mgrafik->$method('')->getResultArray();
+            if (!empty($dataSemua)) {
+                $minBulan = $dataSemua[0]['bulan'];
+                $maxBulan = $dataSemua[count($dataSemua) - 1]['bulan'];
+            }
+            // Dapatkan data sesuai filter user
             $dataMentah = $this->mgrafik->$method($where)->getResultArray();
         }
         
+        $data['minBulan'] = $minBulan;
+        $data['maxBulan'] = $maxBulan;
+
         // Auto-populate input filter values using the actual data range if not submitted
-        if (empty($tgl_dari) && !empty($dataMentah)) {
-            $data['tgl_dari'] = $dataMentah[0]['bulan'];
+        if (empty($tgl_dari) && !empty($minBulan)) {
+            $data['tgl_dari'] = $minBulan;
         }
-        if (empty($tgl_sampai) && !empty($dataMentah)) {
-            $data['tgl_sampai'] = $dataMentah[count($dataMentah) - 1]['bulan'];
+        if (empty($tgl_sampai) && !empty($maxBulan)) {
+            $data['tgl_sampai'] = $maxBulan;
         }
         
         $dataProcessed = $this->processData($dataMentah, 'CABANG', $namaCabangLengkap);

@@ -204,6 +204,19 @@
                     myChart.series[1].setData(dataLaba);
                     
                     $('#textLastUpdate').text('Last Update : ' + (res.LastUpdateCABANG || '-'));
+                    
+                    // Update batas MonthPicker jika ada data
+                    if (res.minBulan && res.maxBulan) {
+                        try {
+                            var minParts = res.minBulan.split('-');
+                            var maxParts = res.maxBulan.split('-');
+                            var minDate = new Date(minParts[1], parseInt(minParts[0]) - 1);
+                            var maxDate = new Date(maxParts[1], parseInt(maxParts[0]) - 1);
+                            
+                            $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MinMonth', minDate);
+                            $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MaxMonth', maxDate);
+                        } catch(e) {}
+                    }
                 },
                 error: function() {
                     myChart.hideLoading();
@@ -229,6 +242,16 @@
             $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'OnAfterChooseMonth', function() {
                 fetchAndUpdateChart();
             });
+            
+            // Set batas awal MonthPicker saat halaman pertama kali dimuat
+            var initMin = '<?= esc($minBulan ?? '') ?>';
+            var initMax = '<?= esc($maxBulan ?? '') ?>';
+            if (initMin && initMax) {
+                var minP = initMin.split('-');
+                var maxP = initMax.split('-');
+                $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MinMonth', new Date(minP[1], parseInt(minP[0]) - 1));
+                $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MaxMonth', new Date(maxP[1], parseInt(maxP[0]) - 1));
+            }
         } catch(e) {}
 
         // Apply initial theme
