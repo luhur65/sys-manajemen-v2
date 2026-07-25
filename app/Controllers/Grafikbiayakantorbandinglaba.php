@@ -111,7 +111,8 @@ class Grafikbiayakantorbandinglaba extends BaseController
         if (empty($tgl_sampai) && !empty($maxBulan)) {
             $data['tgl_sampai'] = $maxBulan;
         }
-        
+        $data['debug_raw_data'] = isset($dataSemuaRaw) ? array_slice($dataSemuaRaw, 0, 10) : [];
+
         $dataProcessed = $this->processData($dataMentah, 'CABANG', $namaCabangLengkap);
         $data = array_merge($data, $dataProcessed);
 
@@ -212,32 +213,41 @@ class Grafikbiayakantorbandinglaba extends BaseController
 
     private function normalizeBulan($bulanStr)
     {
-        $bulanStr = trim($bulanStr);
-        // Jika sudah format MM-YYYY
-        if (preg_match('/^\d{2}-\d{4}$/', $bulanStr)) {
-            return $bulanStr;
+        $bulanStr = strtoupper(trim($bulanStr));
+        
+        // Coba tangkap tahun (format 20XX)
+        $year = '';
+        if (preg_match('/(20\d{2})/', $bulanStr, $m)) {
+            $year = $m[1];
+        } else {
+            return null; // Harus ada tahun
+        }
+
+        // Jika format aslinya sudah berupa MM-YYYY atau YYYY-MM
+        if (preg_match('/^(\d{2})-(\d{4})$/', $bulanStr, $m)) {
+            return $m[1] . '-' . $m[2];
+        }
+        if (preg_match('/^(\d{4})-(\d{2})$/', $bulanStr, $m)) {
+            return $m[2] . '-' . $m[1];
         }
         
-        if (strlen($bulanStr) >= 7) {
-            $monthTxt = strtoupper(substr($bulanStr, 0, 3));
-            $year = substr($bulanStr, -4);
-            
-            $map = [
-                'JAN' => '01', 'FEB' => '02', 'MAR' => '03', 'APR' => '04', 
-                'MEI' => '05', 'MAY' => '05', 'JUN' => '06', 'JUL' => '07', 
-                'AGS' => '08', 'AUG' => '08', 'SEP' => '09', 'OKT' => '10', 
-                'OCT' => '10', 'NOV' => '11', 'DES' => '12', 'DEC' => '12'
-            ];
-            
-            if (isset($map[$monthTxt])) {
-                return $map[$monthTxt] . '-' . $year;
+        // Mapping teks bulan (mencakup singkatan unik seperti AGUS)
+        $map = [
+            'JAN' => '01', 'FEB' => '02', 'MAR' => '03', 'APR' => '04', 
+            'MEI' => '05', 'MAY' => '05', 'JUN' => '06', 'JUL' => '07', 
+            'AGS' => '08', 'AGU' => '08', 'AUG' => '08', 'SEP' => '09', 
+            'OKT' => '10', 'OCT' => '10', 'NOV' => '11', 'DES' => '12', 'DEC' => '12'
+        ];
+        
+        foreach ($map as $txt => $num) {
+            if (strpos($bulanStr, $txt) !== false) {
+                return $num . '-' . $year;
             }
-            
-            // Coba parsing jika 2 huruf awalnya angka (misal "07 2025")
-            $firstTwo = substr($bulanStr, 0, 2);
-            if (is_numeric($firstTwo)) {
-                return $firstTwo . '-' . $year;
-            }
+        }
+        
+        // Coba parsing jika 2 digit awalnya angka (misal "07 2025" atau "07/2025")
+        if (preg_match('/^(\d{2})\b/', $bulanStr, $m)) {
+            return $m[1] . '-' . $year;
         }
         
         return null;
