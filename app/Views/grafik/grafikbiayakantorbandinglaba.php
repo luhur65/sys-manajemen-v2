@@ -17,8 +17,8 @@
                                 <option value="MDN" <?= ($selectedCabang == 'MDN') ? 'selected' : '' ?>>MEDAN</option>
                                 <option value="SBY" <?= ($selectedCabang == 'SBY') ? 'selected' : '' ?>>SURABAYA</option>
                                 <option value="MKS" <?= ($selectedCabang == 'MKS') ? 'selected' : '' ?>>MAKASSAR</option>
-                                <option value="BTG" <?= ($selectedCabang == 'BTG') ? 'selected' : '' ?>>BITUNG</option>
                                 <option value="SMG" <?= ($selectedCabang == 'SMG') ? 'selected' : '' ?>>SEMARANG</option>
+                                <option value="BTG" <?= ($selectedCabang == 'BTG') ? 'selected' : '' ?>>BITUNG</option>
                             </select>
                         </div>
                     </div>
