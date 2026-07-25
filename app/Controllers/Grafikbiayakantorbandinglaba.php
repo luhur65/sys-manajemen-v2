@@ -114,6 +114,11 @@ class Grafikbiayakantorbandinglaba extends BaseController
             $lastUpdate = '';
 
             foreach ($result as $row) {
+                // Lewati data yang bulannya kosong atau formatnya tidak valid (menghindari error Undefined array key -1)
+                if (empty($row['bulan']) || strlen(trim($row['bulan'])) < 7) {
+                    continue;
+                }
+
                 if (isset($row['ftglinput']) && $row['ftglinput'] > $lastUpdate) {
                     $lastUpdate = $row['ftglinput'];
                 }
