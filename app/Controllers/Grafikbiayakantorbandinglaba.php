@@ -163,14 +163,14 @@ class Grafikbiayakantorbandinglaba extends BaseController
                         $TotalBiayaPerBulan[$groupbln] = 0;
                         $TotalLabaPerBulan[$groupbln] = 0;
                     }
-                    $TotalBiayaPerBulan[$groupbln] += round((float)$biaya);
-                    $TotalLabaPerBulan[$groupbln] += round((float)$laba);
+                    $TotalBiayaPerBulan[$groupbln] += (float)$biaya;
+                    $TotalLabaPerBulan[$groupbln] += (float)$laba;
                 } else {
                     $groupbln++;
                     $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
                     $tahun[$groupbln] = $thndicari;
-                    $TotalBiayaPerBulan[$groupbln] = round((float)$biaya);
-                    $TotalLabaPerBulan[$groupbln] = round((float)$laba);
+                    $TotalBiayaPerBulan[$groupbln] = (float)$biaya;
+                    $TotalLabaPerBulan[$groupbln] = (float)$laba;
                 }
 
                 $blnsebelumnya = $blndicari;

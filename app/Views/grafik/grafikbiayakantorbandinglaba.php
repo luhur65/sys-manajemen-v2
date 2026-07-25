@@ -140,7 +140,7 @@
             tooltip: {
                 formatter: function () {
                     return '<b>' + this.series.name + '</b><br/>' +
-                           this.x + ': Rp ' + Highcharts.numberFormat(this.y, 0, ',', '.');
+                           this.x + ': Rp ' + Highcharts.numberFormat(this.y, 2, ',', '.');
                 }
             },
             credits: { enabled: false },
