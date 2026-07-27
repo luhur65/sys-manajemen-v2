@@ -39,8 +39,6 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $data['tgl_dari'] = $tgl_dari;
         $data['tgl_sampai'] = $tgl_sampai;
 
-        $whereArr = [];
-
         $valDari = null;
         $valSampai = null;
         if (!empty($tgl_dari)) {
@@ -48,6 +46,14 @@ class Grafikbiayakantorbandinglaba extends BaseController
         }
         if (!empty($tgl_sampai)) {
             $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
+        }
+
+        if ($valDari !== null && $valSampai !== null && $valDari > $valSampai) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['error' => 'Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!']);
+            } else {
+                session()->setFlashdata('error_grafik', 'Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!');
+            }
         }
 
         $method = 'get_where' . $cabang;

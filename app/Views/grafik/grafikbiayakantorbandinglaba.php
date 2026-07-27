@@ -57,8 +57,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts.js"></script>
 <script type="text/javascript">
     $(function () {
+        <?php if (session()->getFlashdata('error_grafik')) : ?>
+        alert('<?= session()->getFlashdata('error_grafik') ?>');
+        <?php endif; ?>
         
-        // Initialize Select2 if available
+        // Inisialisasi Monthpicker jika fungsinya tersedia
         if($.fn.select2) {
             $('.select2').select2();
         }
@@ -175,6 +178,23 @@
             var tgl_dari = $('#tgl_dari').val();
             var tgl_sampai = $('#tgl_sampai').val();
 
+            // Validasi di sisi Client
+            if (tgl_dari && tgl_sampai) {
+                var pDari = tgl_dari.split('-');
+                var pSampai = tgl_sampai.split('-');
+                if (pDari.length === 2 && pSampai.length === 2) {
+                    var valDari = parseInt(pDari[1] + pDari[0]);
+                    var valSampai = parseInt(pSampai[1] + pSampai[0]);
+                    if (valDari > valSampai) {
+                        alert('Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!');
+                        // Reset nilai value filter ke memori terakhir yang valid
+                        $('#tgl_dari').val(lastFetchedData.tgl_dari);
+                        $('#tgl_sampai').val(lastFetchedData.tgl_sampai);
+                        return;
+                    }
+                }
+            }
+
             // Cegah pemanggilan AJAX jika filter sama persis dengan yang terakhir di-request
             if (lastFetchedData.cabang === cabang && 
                 lastFetchedData.tgl_dari === tgl_dari && 
@@ -202,6 +222,11 @@
                 },
                 success: function(res) {
                     myChart.hideLoading();
+                    
+                    if (res.error) {
+                        alert(res.error);
+                        return;
+                    }
                     
                     var cabangName = res.cabangCABANG ? res.cabangCABANG.toUpperCase() : '';
                     myChart.setTitle({ text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang ' + cabangName }, { text: 'Per ' + (res.jlhblnCABANG || 0) + ' Bulan, Tahun ' + (res.TahunCABANG || "") });
