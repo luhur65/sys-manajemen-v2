@@ -26,14 +26,12 @@
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
-                            <div class="invalid-feedback error-bulan-dari" id="err_dari">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
-                            <div class="invalid-feedback error-bulan-sampai" id="err_sampai">Bulan sampai tidak boleh lebih kecil dari Bulan dari!</div>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -206,7 +204,7 @@
 
             // Reset error validation UI
             $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
-            $('.error-bulan-dari, .error-bulan-sampai').hide();
+            $('#tgl_dari, #tgl_sampai').siblings('.invalid-feedback').remove();
 
             // Validasi di sisi Client
             if (tgl_dari && tgl_sampai) {
@@ -218,10 +216,10 @@
                     if (valDari > valSampai) {
                         if (lastChangedInput === 'tgl_sampai') {
                             $('#tgl_sampai').addClass('is-invalid');
-                            $('#err_sampai').show();
+                            $('<div class="invalid-feedback">Bulan sampai tidak boleh lebih kecil dari Bulan dari!</div>').appendTo($('#tgl_sampai').parent());
                         } else {
                             $('#tgl_dari').addClass('is-invalid');
-                            $('#err_dari').show();
+                            $('<div class="invalid-feedback">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>').appendTo($('#tgl_dari').parent());
                         }
                         return;
                     }
@@ -265,10 +263,10 @@
                         $.each(res.errors, function(field, message) {
                             if (field === 'tgl_sampai') {
                                 $('#tgl_sampai').addClass('is-invalid');
-                                $('#err_sampai').text(message).show();
+                                $('<div class="invalid-feedback">' + message + '</div>').appendTo($('#tgl_sampai').parent());
                             } else if (field === 'tgl_dari') {
                                 $('#tgl_dari').addClass('is-invalid');
-                                $('#err_dari').text(message).show();
+                                $('<div class="invalid-feedback">' + message + '</div>').appendTo($('#tgl_dari').parent());
                             }
                         });
                         return;
@@ -353,7 +351,7 @@
             
             // Hapus status is-invalid jika ada
             $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
-            $('.error-bulan-dari, .error-bulan-sampai').hide();
+            $('#tgl_dari, #tgl_sampai').siblings('.invalid-feedback').remove();
             
             lastFetchedData.cabang = null; // force reload
             fetchAndUpdateChart();
