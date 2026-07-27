@@ -206,26 +206,6 @@
             $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
             $('#tgl_dari, #tgl_sampai').siblings('.invalid-feedback').remove();
 
-            // Validasi di sisi Client
-            if (tgl_dari && tgl_sampai) {
-                var pDari = tgl_dari.split('-');
-                var pSampai = tgl_sampai.split('-');
-                if (pDari.length === 2 && pSampai.length === 2) {
-                    var valDari = parseInt(pDari[1] + pDari[0]);
-                    var valSampai = parseInt(pSampai[1] + pSampai[0]);
-                    if (valDari > valSampai) {
-                        if (lastChangedInput === 'tgl_sampai') {
-                            $('#tgl_sampai').addClass('is-invalid');
-                            $('<div class="invalid-feedback">Bulan sampai tidak boleh lebih kecil dari Bulan dari!</div>').appendTo($('#tgl_sampai').parent());
-                        } else {
-                            $('#tgl_dari').addClass('is-invalid');
-                            $('<div class="invalid-feedback">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>').appendTo($('#tgl_dari').parent());
-                        }
-                        return;
-                    }
-                }
-            }
-
             // Cegah pemanggilan AJAX jika filter sama persis dengan yang terakhir di-request
             if (lastFetchedData.cabang === cabang && 
                 lastFetchedData.tgl_dari === tgl_dari && 
