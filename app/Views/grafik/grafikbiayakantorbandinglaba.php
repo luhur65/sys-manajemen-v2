@@ -253,14 +253,7 @@
                 success: function(res) {
                     myChart.hideLoading();
                     
-                    if (res.errors) {
-                        let formattedErrors = {};
-                        $.each(res.errors, function(field, message) {
-                            formattedErrors[field] = [message];
-                        });
-                        setErrorMessages($('#formFilter'), formattedErrors);
-                        return;
-                    }
+                    // Error validasi (HTTP 422) akan ditangkap oleh block error: di bawah, persis seperti Trucking (Laravel)
 
                     if (res.error) {
                         showDialog(res.error);
@@ -316,7 +309,14 @@
                 error: function(jqXHR, textStatus) {
                     if (textStatus !== 'abort') {
                         myChart.hideLoading();
-                        showDialog('Terjadi kesalahan saat mengambil data grafik.');
+                        
+                        // Menangani response HTTP 422 seperti Trucking (Laravel FormRequest)
+                        if (jqXHR.status === 422) {
+                            var res = jqXHR.responseJSON;
+                            setErrorMessages($('#formFilter'), res.errors);
+                        } else {
+                            showDialog('Terjadi kesalahan saat mengambil data grafik.');
+                        }
                     }
                 },
                 complete: function() {

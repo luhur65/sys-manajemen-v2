@@ -50,27 +50,21 @@ class Grafikbiayakantorbandinglaba extends BaseController
             $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
         }
 
-        // Konfigurasi Rule Validasi Kustom CI4
-        $rules = [
-            'tgl_dari' => [
-                'rules' => ($last_changed !== 'tgl_sampai') ? 'month_less_than_equal[tgl_sampai]' : 'permit_empty',
-                'errors' => [
-                    'month_less_than_equal' => 'Bulan dari tidak boleh lebih besar dari Bulan sampai!'
-                ]
-            ],
-            'tgl_sampai' => [
-                'rules' => ($last_changed === 'tgl_sampai') ? 'month_greater_than_equal[tgl_dari]' : 'permit_empty',
-                'errors' => [
-                    'month_greater_than_equal' => 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!'
-                ]
-            ]
-        ];
-
         if (!empty($tgl_dari) && !empty($tgl_sampai)) {
-            if (! $this->validate($rules)) {
+            if (! $this->validate($this->getPeriodeBulanRules($last_changed))) {
                 $errors = $this->validator->getErrors();
+                
+                // Format error seperti validasi FormRequest Laravel
+                $formattedErrors = [];
+                foreach ($errors as $field => $message) {
+                    $formattedErrors[$field] = [$message];
+                }
+
                 if ($this->request->isAJAX()) {
-                    return $this->response->setJSON(['errors' => $errors]);
+                    return $this->response->setStatusCode(422)->setJSON([
+                        'message' => 'The given data was invalid.',
+                        'errors' => $formattedErrors
+                    ]);
                 } else {
                     session()->setFlashdata('errors_grafik', $errors);
                 }
