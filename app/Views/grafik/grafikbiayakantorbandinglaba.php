@@ -8,9 +8,9 @@
     <div class="card card-primary card-outline card-filter">
         <div class="card-body">
             <form id="formFilter">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group filter-input-group">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-group filter-input-group mb-0">
                             <label class="filter-label">Cabang</label>
                             <select name="cabang" id="cabangSelect" class="form-control select2">
                                 <option value="MDN" <?= ($selectedCabang == 'MDN') ? 'selected' : '' ?>>MEDAN</option>
@@ -22,16 +22,25 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group filter-input-group">
+                    <div class="col-md-3">
+                        <div class="form-group filter-input-group mb-0">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
+                            <div class="invalid-feedback">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group filter-input-group">
+                    <div class="col-md-3">
+                        <div class="form-group filter-input-group mb-0">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
+                            <div class="invalid-feedback">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-0">
+                            <button type="button" class="btn btn-primary btn-block" id="btnFilter" style="height: 38px;">
+                                <i class="fa fa-filter"></i> Filter
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -182,6 +191,9 @@
             var tgl_dari = $('#tgl_dari').val();
             var tgl_sampai = $('#tgl_sampai').val();
 
+            // Reset error validation UI
+            $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
+
             // Validasi di sisi Client
             if (tgl_dari && tgl_sampai) {
                 var pDari = tgl_dari.split('-');
@@ -190,10 +202,7 @@
                     var valDari = parseInt(pDari[1] + pDari[0]);
                     var valSampai = parseInt(pSampai[1] + pSampai[0]);
                     if (valDari > valSampai) {
-                        showDialog('Bulan dari tidak boleh lebih besar dari Bulan sampai!');
-                        // Reset nilai value filter ke memori terakhir yang valid
-                        $('#tgl_dari').val(lastFetchedData.tgl_dari);
-                        $('#tgl_sampai').val(lastFetchedData.tgl_sampai);
+                        $('#tgl_dari, #tgl_sampai').addClass('is-invalid');
                         return;
                     }
                 }
@@ -276,13 +285,22 @@
         }
 
         // Bind events
-        $('#cabangSelect').on('change', function() {
+        $('#cabangSelect, #tgl_dari, #tgl_sampai').on('change', function() {
+            // Auto reload grafik jika tanggal valid, jika invalid hanya muncul tulisan merah
             fetchAndUpdateChart();
         });
 
-        // Event untuk input teks manual
+        // Trigger pencarian juga saat tombol filter diklik
+        $('#btnFilter').click(function(e) {
+            e.preventDefault();
+            // Force fetch dengan mengosongkan lastFetchedData agar check tidak return awal
+            lastFetchedData.cabang = null;
+            fetchAndUpdateChart();
+        });
+
+        // Event untuk input teks manual (jika user mengetik manual di field tanggal)
         var filterTimeout;
-        $('#tgl_dari, #tgl_sampai').on('change', function() {
+        $('#tgl_dari, #tgl_sampai').on('keyup', function() {
             clearTimeout(filterTimeout);
             filterTimeout = setTimeout(fetchAndUpdateChart, 300);
         });
