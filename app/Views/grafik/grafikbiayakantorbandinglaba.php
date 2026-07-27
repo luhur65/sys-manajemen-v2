@@ -26,13 +26,13 @@
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
+                            <div class="invalid-feedback error-bulan">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
-                            <div class="invalid-feedback error-bulan">Bulan sampai tidak boleh lebih kecil dari Bulan dari!</div>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -199,7 +199,7 @@
             var tgl_sampai = $('#tgl_sampai').val();
 
             // Reset error validation UI
-            $('#tgl_sampai').removeClass('is-invalid');
+            $('#tgl_dari').removeClass('is-invalid');
             $('.error-bulan').hide();
 
             // Validasi di sisi Client
@@ -210,7 +210,7 @@
                     var valDari = parseInt(pDari[1] + pDari[0]);
                     var valSampai = parseInt(pSampai[1] + pSampai[0]);
                     if (valDari > valSampai) {
-                        $('#tgl_sampai').addClass('is-invalid');
+                        $('#tgl_dari').addClass('is-invalid');
                         $('.error-bulan').show();
                         return;
                     }
@@ -327,7 +327,7 @@
             $('#tgl_sampai').val('');
             
             // Hapus status is-invalid jika ada
-            $('#tgl_sampai').removeClass('is-invalid');
+            $('#tgl_dari').removeClass('is-invalid');
             $('.error-bulan').hide();
             
             lastFetchedData.cabang = null; // force reload

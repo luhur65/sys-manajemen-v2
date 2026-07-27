@@ -50,9 +50,9 @@ class Grafikbiayakantorbandinglaba extends BaseController
 
         if ($valDari !== null && $valSampai !== null && $valDari > $valSampai) {
             if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['error' => 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!']);
+                return $this->response->setJSON(['error' => 'Bulan dari tidak boleh lebih besar dari Bulan sampai!']);
             } else {
-                session()->setFlashdata('error_grafik', 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!');
+                session()->setFlashdata('error_grafik', 'Bulan dari tidak boleh lebih besar dari Bulan sampai!');
             }
         }
 
