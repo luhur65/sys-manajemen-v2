@@ -1,6 +1,20 @@
 <style>
     #ui-datepicker-div { display: none; }
     .card-filter { margin-bottom: 15px; }
+
+    /* Perbaikan UX untuk highlight bulan yang aktif di DatePicker/MonthPicker (terutama Dark Mode) */
+    .ui-datepicker .ui-state-active,
+    .month-picker-month-table a.ui-state-active,
+    body.dark-mode .ui-datepicker .ui-state-active,
+    body.dark-mode .ui-datepicker .ui-state-highlight,
+    body.dark-mode .month-picker-month-table a.ui-state-active,
+    body.dark-mode .month-picker-month-table a.ui-state-highlight {
+        background-color: #007bff !important; /* Warna biru primer Bootstrap */
+        color: #ffffff !important;
+        border-color: #007bff !important;
+        border-radius: 4px;
+        font-weight: bold;
+    }
 </style>
 
 <div class="container-fluid">
