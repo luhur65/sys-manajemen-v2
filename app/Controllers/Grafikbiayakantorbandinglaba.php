@@ -31,7 +31,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $data['title'] = 'Grafik Biaya Kantor Banding Laba';
 
         // Ambil filter dari request
-        $cabang = $this->request->getGet('cabang') ?? 'MDN';
+        $cabang = $this->request->getGet('cabang') ?? 'JKT';
         $tgl_dari = $this->request->getGet('tgl_dari'); 
         $tgl_sampai = $this->request->getGet('tgl_sampai');
         
@@ -39,7 +39,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $data['tgl_dari'] = $tgl_dari;
         $data['tgl_sampai'] = $tgl_sampai;
 
-        $whereArr = [];
+        $last_changed = $this->request->getGet('last_changed') ?? 'tgl_dari';
 
         $valDari = null;
         $valSampai = null;
@@ -48,6 +48,27 @@ class Grafikbiayakantorbandinglaba extends BaseController
         }
         if (!empty($tgl_sampai)) {
             $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
+        }
+
+        if (!empty($tgl_dari) && !empty($tgl_sampai)) {
+            if (! $this->validate($this->getPeriodeBulanRules($last_changed))) {
+                $errors = $this->validator->getErrors();
+                
+                // Format error seperti validasi FormRequest Laravel
+                $formattedErrors = [];
+                foreach ($errors as $field => $message) {
+                    $formattedErrors[$field] = [$message];
+                }
+
+                if ($this->request->isAJAX()) {
+                    return $this->response->setStatusCode(422)->setJSON([
+                        'message' => 'The given data was invalid.',
+                        'errors' => $formattedErrors
+                    ]);
+                } else {
+                    session()->setFlashdata('errors_grafik', $errors);
+                }
+            }
         }
 
         $method = 'get_where' . $cabang;

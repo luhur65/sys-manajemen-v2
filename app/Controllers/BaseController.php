@@ -172,4 +172,26 @@ abstract class BaseController extends Controller
 
         return $where;
     }
+
+    /**
+     * Logic Umum (Reusable) untuk validasi Bulan Dari dan Bulan Sampai
+     * Mempertahankan fitur UX: Error hanya muncul di input yang terakhir diubah user.
+     */
+    protected function getPeriodeBulanRules($last_changed = 'tgl_dari')
+    {
+        return [
+            'tgl_dari' => [
+                'rules' => ($last_changed !== 'tgl_sampai') ? 'permit_empty|month_less_than_equal[tgl_sampai]' : 'permit_empty',
+                'errors' => [
+                    'month_less_than_equal' => 'Bulan dari tidak boleh lebih besar dari Bulan sampai!'
+                ]
+            ],
+            'tgl_sampai' => [
+                'rules' => ($last_changed === 'tgl_sampai') ? 'permit_empty|month_greater_than_equal[tgl_dari]' : 'permit_empty',
+                'errors' => [
+                    'month_greater_than_equal' => 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!'
+                ]
+            ]
+        ];
+    }
 }

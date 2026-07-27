@@ -1,6 +1,20 @@
 <style>
     #ui-datepicker-div { display: none; }
     .card-filter { margin-bottom: 15px; }
+
+    /* Perbaikan UX untuk highlight bulan yang aktif di DatePicker/MonthPicker (terutama Dark Mode) */
+    .ui-datepicker .ui-state-active,
+    .month-picker-month-table a.ui-state-active,
+    body.dark-mode .ui-datepicker .ui-state-active,
+    body.dark-mode .ui-datepicker .ui-state-highlight,
+    body.dark-mode .month-picker-month-table a.ui-state-active,
+    body.dark-mode .month-picker-month-table a.ui-state-highlight {
+        background-color: #007bff !important; /* Warna biru primer Bootstrap */
+        color: #ffffff !important;
+        border-color: #007bff !important;
+        border-radius: 4px;
+        font-weight: bold;
+    }
 </style>
 
 <div class="container-fluid">
@@ -9,7 +23,7 @@
         <div class="card-body">
             <form id="formFilter">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Cabang</label>
                             <select name="cabang" id="cabangSelect" class="form-control select2">
@@ -22,16 +36,29 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group filter-input-group w-100">
+                            <label class="filter-label d-none d-md-block">&nbsp;</label>
+                            <div class="d-flex w-100">
+                                <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
+                                    <i class="fas fa-undo"></i> Reset
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -54,11 +81,18 @@
     </div>
 </div>
 
+<!-- Dialog Containers untuk alert showDialog dari mains.js -->
+<div id="dialog-message" title="Pesan" class="text-center" style="display: none;"></div>
+<div id="dialog-warning-message" title="Peringatan" class="text-center" style="display: none;"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts.js"></script>
 <script type="text/javascript">
     $(function () {
+        <?php if (session()->getFlashdata('error_grafik')) : ?>
+        showDialog('<?= session()->getFlashdata('error_grafik') ?>');
+        <?php endif; ?>
         
-        // Initialize Select2 if available
+        // Inisialisasi Monthpicker jika fungsinya tersedia
         if($.fn.select2) {
             $('.select2').select2();
         }
@@ -169,11 +203,22 @@
             tgl_sampai: '<?= esc($tgl_sampai ?? '') ?>'
         };
 
+        var currentAjaxReq = null;
+        var lastChangedInput = 'tgl_dari'; // Default
+
+        // Track last modified input for dynamic error placement
+        $('#tgl_dari').on('change keyup', function() { lastChangedInput = 'tgl_dari'; });
+        $('#tgl_sampai').on('change keyup', function() { lastChangedInput = 'tgl_sampai'; });
+
         // AJAX Chart Update Function
         function fetchAndUpdateChart() {
             var cabang = $('#cabangSelect').val();
             var tgl_dari = $('#tgl_dari').val();
             var tgl_sampai = $('#tgl_sampai').val();
+
+            // Reset error validation UI
+            $('#formFilter .is-invalid').removeClass('is-invalid');
+            $('#formFilter .invalid-feedback').remove();
 
             // Cegah pemanggilan AJAX jika filter sama persis dengan yang terakhir di-request
             if (lastFetchedData.cabang === cabang && 
@@ -191,21 +236,43 @@
 
             myChart.showLoading('Memuat data...');
             
-            $.ajax({
+            if (currentAjaxReq !== null) {
+                currentAjaxReq.abort();
+            }
+            
+            currentAjaxReq = $.ajax({
                 url: '<?= site_url('grafikbiayakantorbandinglaba') ?>',
                 type: 'GET',
                 dataType: 'json',
                 data: {
                     cabang: cabang,
                     tgl_dari: tgl_dari,
-                    tgl_sampai: tgl_sampai
+                    tgl_sampai: tgl_sampai,
+                    last_changed: lastChangedInput
                 },
                 success: function(res) {
                     myChart.hideLoading();
                     
+                    // Error validasi (HTTP 422) akan ditangkap oleh block error: di bawah, persis seperti Trucking (Laravel)
+
+                    if (res.error) {
+                        showDialog(res.error);
+                        return;
+                    }
+                    
                     var cabangName = res.cabangCABANG ? res.cabangCABANG.toUpperCase() : '';
                     myChart.setTitle({ text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang ' + cabangName }, { text: 'Per ' + (res.jlhblnCABANG || 0) + ' Bulan, Tahun ' + (res.TahunCABANG || "") });
                     
+                    // Kembalikan nilai tanggal dari backend (misal jika reset, backend akan mengirimkan min/max bulan)
+                    if (res.tgl_dari) {
+                        $('#tgl_dari').val(res.tgl_dari);
+                        lastFetchedData.tgl_dari = res.tgl_dari;
+                    }
+                    if (res.tgl_sampai) {
+                        $('#tgl_sampai').val(res.tgl_sampai);
+                        lastFetchedData.tgl_sampai = res.tgl_sampai;
+                    }
+
                     // Bersihkan single quote dari PHP pada kategori
                     var categories = getArrayData(res.FTglCABANG).map(function(val) {
                         return typeof val === 'string' ? val.replace(/'/g, '') : val;
@@ -239,21 +306,60 @@
                         } catch(e) {}
                     }
                 },
-                error: function() {
-                    myChart.hideLoading();
-                    alert('Terjadi kesalahan saat mengambil data grafik.');
+                error: function(jqXHR, textStatus) {
+                    if (textStatus !== 'abort') {
+                        myChart.hideLoading();
+                        
+                        // Menangani response HTTP 422 seperti Trucking (Laravel FormRequest)
+                        if (jqXHR.status === 422) {
+                            var res = jqXHR.responseJSON;
+                            setErrorMessages($('#formFilter'), res.errors);
+                        } else {
+                            showDialog('Terjadi kesalahan saat mengambil data grafik.');
+                        }
+                    }
+                },
+                complete: function() {
+                    currentAjaxReq = null;
                 }
             });
         }
 
         // Bind events
-        $('#cabangSelect').on('change', function() {
+        $('#cabangSelect, #tgl_dari, #tgl_sampai').on('change', function() {
+            // Auto reload grafik jika tanggal valid, jika invalid hanya muncul tulisan merah
             fetchAndUpdateChart();
         });
 
-        // Event untuk input teks manual
+        // Trigger pencarian juga saat tombol filter diklik
+        $('#btnFilter').click(function(e) {
+            e.preventDefault();
+            // Force fetch dengan mengosongkan lastFetchedData agar check tidak return awal
+            lastFetchedData.cabang = null;
+            fetchAndUpdateChart();
+        });
+
+        // Event Reset tanpa reload halaman
+        $('#btnReset').click(function(e) {
+            e.preventDefault();
+            $('#cabangSelect').val('JKT');
+            if($.fn.select2) {
+                $('#cabangSelect').trigger('change.select2');
+            }
+            $('#tgl_dari').val('');
+            $('#tgl_sampai').val('');
+            
+            // Hapus status is-invalid jika ada
+            $('#formFilter .is-invalid').removeClass('is-invalid');
+            $('#formFilter .invalid-feedback').remove();
+            
+            lastFetchedData.cabang = null; // force reload
+            fetchAndUpdateChart();
+        });
+
+        // Event untuk input teks manual (jika user mengetik manual di field tanggal)
         var filterTimeout;
-        $('#tgl_dari, #tgl_sampai').on('change', function() {
+        $('#tgl_dari, #tgl_sampai').on('keyup', function() {
             clearTimeout(filterTimeout);
             filterTimeout = setTimeout(fetchAndUpdateChart, 300);
         });
