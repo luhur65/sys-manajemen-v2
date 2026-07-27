@@ -54,6 +54,10 @@
     </div>
 </div>
 
+<!-- Dialog Containers untuk alert showDialog dari mains.js -->
+<div id="dialog-message" title="Pesan" style="display: none;"></div>
+<div id="dialog-warning-message" title="Peringatan" style="display: none;"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts.js"></script>
 <script type="text/javascript">
     $(function () {
