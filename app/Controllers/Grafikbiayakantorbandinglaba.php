@@ -41,6 +41,15 @@ class Grafikbiayakantorbandinglaba extends BaseController
 
         $last_changed = $this->request->getGet('last_changed') ?? 'tgl_dari';
 
+        $valDari = null;
+        $valSampai = null;
+        if (!empty($tgl_dari)) {
+            $valDari = substr($tgl_dari, 3, 4) . substr($tgl_dari, 0, 2);
+        }
+        if (!empty($tgl_sampai)) {
+            $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
+        }
+
         // Konfigurasi Rule Validasi Kustom CI4
         $rules = [
             'tgl_dari' => [
