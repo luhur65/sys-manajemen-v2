@@ -48,11 +48,24 @@ class Grafikbiayakantorbandinglaba extends BaseController
             $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
         }
 
+        $last_changed = $this->request->getGet('last_changed') ?? 'tgl_dari';
+
         if ($valDari !== null && $valSampai !== null && $valDari > $valSampai) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['error' => 'Bulan dari tidak boleh lebih besar dari Bulan sampai!']);
+            if ($last_changed === 'tgl_sampai') {
+                $error_msg = 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!';
+                $error_field = 'tgl_sampai';
             } else {
-                session()->setFlashdata('error_grafik', 'Bulan dari tidak boleh lebih besar dari Bulan sampai!');
+                $error_msg = 'Bulan dari tidak boleh lebih besar dari Bulan sampai!';
+                $error_field = 'tgl_dari';
+            }
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'error' => $error_msg,
+                    'error_field' => $error_field
+                ]);
+            } else {
+                session()->setFlashdata('error_grafik', $error_msg);
             }
         }
 

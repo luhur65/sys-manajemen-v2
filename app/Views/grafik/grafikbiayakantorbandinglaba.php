@@ -255,13 +255,22 @@
                 data: {
                     cabang: cabang,
                     tgl_dari: tgl_dari,
-                    tgl_sampai: tgl_sampai
+                    tgl_sampai: tgl_sampai,
+                    last_changed: lastChangedInput
                 },
                 success: function(res) {
                     myChart.hideLoading();
                     
                     if (res.error) {
-                        showDialog(res.error);
+                        if (res.error_field === 'tgl_sampai') {
+                            $('#tgl_sampai').addClass('is-invalid');
+                            $('#err_sampai').text(res.error).show();
+                        } else if (res.error_field === 'tgl_dari') {
+                            $('#tgl_dari').addClass('is-invalid');
+                            $('#err_dari').text(res.error).show();
+                        } else {
+                            showDialog(res.error);
+                        }
                         return;
                     }
                     
