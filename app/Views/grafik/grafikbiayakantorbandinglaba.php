@@ -13,8 +13,8 @@
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Cabang</label>
                             <select name="cabang" id="cabangSelect" class="form-control select2">
-                                <option value="JKT" <?= ($selectedCabang == 'JKT') ? 'selected' : '' ?>>JAKARTA</option>
                                 <option value="MDN" <?= ($selectedCabang == 'MDN') ? 'selected' : '' ?>>MEDAN</option>
+                                <option value="JKT" <?= ($selectedCabang == 'JKT') ? 'selected' : '' ?>>JAKARTA</option>
                                 <option value="SBY" <?= ($selectedCabang == 'SBY') ? 'selected' : '' ?>>SURABAYA</option>
                                 <option value="MKS" <?= ($selectedCabang == 'MKS') ? 'selected' : '' ?>>MAKASSAR</option>
                                 <option value="SMG" <?= ($selectedCabang == 'SMG') ? 'selected' : '' ?>>SEMARANG</option>
