@@ -41,17 +41,14 @@ class Grafikbiayakantorbandinglaba extends BaseController
 
         $whereArr = [];
 
+        $valDari = null;
+        $valSampai = null;
         if (!empty($tgl_dari)) {
-            // Asumsi input dari monthpicker: MM-YYYY (contoh: 05-2026)
             $valDari = substr($tgl_dari, 3, 4) . substr($tgl_dari, 0, 2);
-            $whereArr[] = "(RIGHT(bulan, 4) + LEFT(bulan, 2)) >= '$valDari'";
         }
         if (!empty($tgl_sampai)) {
             $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
-            $whereArr[] = "(RIGHT(bulan, 4) + LEFT(bulan, 2)) <= '$valSampai'";
         }
-
-        $where = count($whereArr) > 0 ? implode(" AND ", $whereArr) : "";
 
         $method = 'get_where' . $cabang;
         $cabangNames = [
@@ -65,20 +62,63 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $namaCabangLengkap = $cabangNames[$cabang] ?? 'Jakarta';
 
         $dataMentah = [];
+        $minBulan = '';
+        $maxBulan = '';
         if (method_exists($this->mgrafik, $method)) {
-            $dataMentah = $this->mgrafik->$method($where)->getResultArray();
+            // Dapatkan seluruh data tanpa filter where SQL (karena format bulan antar cabang tidak konsisten)
+            $dataSemuaRaw = $this->mgrafik->$method('')->getResultArray();
+            
+            // Normalisasi, konversi, dan sorting data di PHP
+            $dataSemuaClean = [];
+            foreach ($dataSemuaRaw as $row) {
+                if (empty($row['bulan'])) continue;
+                
+                $normBulan = $this->normalizeBulan($row['bulan']);
+                if (!$normBulan) continue;
+                
+                $row['bulan'] = $normBulan; // Timpa format aslinya ke MM-YYYY
+                $sortKey = substr($normBulan, 3, 4) . substr($normBulan, 0, 2); // YYYYMM
+                $row['_sortKey'] = (int)$sortKey;
+                $dataSemuaClean[] = $row;
+            }
+
+            // Sort berdasarkan YYYYMM secara Ascending
+            usort($dataSemuaClean, function($a, $b) {
+                return $a['_sortKey'] <=> $b['_sortKey'];
+            });
+
+            if (!empty($dataSemuaClean)) {
+                $minBulan = $dataSemuaClean[0]['bulan'];
+                $maxBulan = $dataSemuaClean[count($dataSemuaClean) - 1]['bulan'];
+            }
+
+            // Filter secara manual di PHP
+            foreach ($dataSemuaClean as $row) {
+                if ($valDari !== null && $row['_sortKey'] < (int)$valDari) continue;
+                if ($valSampai !== null && $row['_sortKey'] > (int)$valSampai) continue;
+                
+                $dataMentah[] = $row;
+            }
         }
         
+        $data['minBulan'] = $minBulan;
+        $data['maxBulan'] = $maxBulan;
+
         // Auto-populate input filter values using the actual data range if not submitted
-        if (empty($tgl_dari) && !empty($dataMentah)) {
-            $data['tgl_dari'] = $dataMentah[0]['bulan'];
+        if (empty($tgl_dari) && !empty($minBulan)) {
+            $data['tgl_dari'] = $minBulan;
         }
-        if (empty($tgl_sampai) && !empty($dataMentah)) {
-            $data['tgl_sampai'] = $dataMentah[count($dataMentah) - 1]['bulan'];
+        if (empty($tgl_sampai) && !empty($maxBulan)) {
+            $data['tgl_sampai'] = $maxBulan;
         }
-        
+        $data['debug_raw_data'] = isset($dataSemuaRaw) ? array_slice($dataSemuaRaw, 0, 10) : [];
+
         $dataProcessed = $this->processData($dataMentah, 'CABANG', $namaCabangLengkap);
         $data = array_merge($data, $dataProcessed);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON($data);
+        }
 
         return $this->render('grafik/grafikbiayakantorbandinglaba', $data);
     }
@@ -98,6 +138,11 @@ class Grafikbiayakantorbandinglaba extends BaseController
             $lastUpdate = '';
 
             foreach ($result as $row) {
+                // Lewati data yang bulannya kosong atau formatnya tidak valid (menghindari error Undefined array key -1)
+                if (empty($row['bulan']) || strlen(trim($row['bulan'])) < 7) {
+                    continue;
+                }
+
                 if (isset($row['ftglinput']) && $row['ftglinput'] > $lastUpdate) {
                     $lastUpdate = $row['ftglinput'];
                 }
@@ -119,14 +164,14 @@ class Grafikbiayakantorbandinglaba extends BaseController
                         $TotalBiayaPerBulan[$groupbln] = 0;
                         $TotalLabaPerBulan[$groupbln] = 0;
                     }
-                    $TotalBiayaPerBulan[$groupbln] += $biaya;
-                    $TotalLabaPerBulan[$groupbln] += $laba;
+                    $TotalBiayaPerBulan[$groupbln] += (float)$biaya;
+                    $TotalLabaPerBulan[$groupbln] += (float)$laba;
                 } else {
                     $groupbln++;
                     $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
                     $tahun[$groupbln] = $thndicari;
-                    $TotalBiayaPerBulan[$groupbln] = $biaya;
-                    $TotalLabaPerBulan[$groupbln] = $laba;
+                    $TotalBiayaPerBulan[$groupbln] = (float)$biaya;
+                    $TotalLabaPerBulan[$groupbln] = (float)$laba;
                 }
 
                 $blnsebelumnya = $blndicari;
@@ -164,5 +209,47 @@ class Grafikbiayakantorbandinglaba extends BaseController
                 "LastUpdate{$prefix}" => '-'
             ];
         }
+    }
+
+    private function normalizeBulan($bulanStr)
+    {
+        $bulanStr = strtoupper(trim($bulanStr));
+        
+        // Coba tangkap tahun (format 20XX)
+        $year = '';
+        if (preg_match('/(20\d{2})/', $bulanStr, $m)) {
+            $year = $m[1];
+        } else {
+            return null; // Harus ada tahun
+        }
+
+        // Jika format aslinya sudah berupa MM-YYYY atau YYYY-MM
+        if (preg_match('/^(\d{2})-(\d{4})$/', $bulanStr, $m)) {
+            return $m[1] . '-' . $m[2];
+        }
+        if (preg_match('/^(\d{4})-(\d{2})$/', $bulanStr, $m)) {
+            return $m[2] . '-' . $m[1];
+        }
+        
+        // Mapping teks bulan (mencakup singkatan unik seperti AGUS)
+        $map = [
+            'JAN' => '01', 'FEB' => '02', 'MAR' => '03', 'APR' => '04', 
+            'MEI' => '05', 'MAY' => '05', 'JUN' => '06', 'JUL' => '07', 
+            'AGS' => '08', 'AGU' => '08', 'AUG' => '08', 'SEP' => '09', 
+            'OKT' => '10', 'OCT' => '10', 'NOV' => '11', 'DES' => '12', 'DEC' => '12'
+        ];
+        
+        foreach ($map as $txt => $num) {
+            if (strpos($bulanStr, $txt) !== false) {
+                return $num . '-' . $year;
+            }
+        }
+        
+        // Coba parsing jika 2 digit awalnya angka (misal "07 2025" atau "07/2025")
+        if (preg_match('/^(\d{2})\b/', $bulanStr, $m)) {
+            return $m[1] . '-' . $year;
+        }
+        
+        return null;
     }
 }

@@ -7,43 +7,31 @@
     <!-- Filter Card -->
     <div class="card card-primary card-outline card-filter">
         <div class="card-body">
-            <form method="GET" action="<?= site_url('grafikbiayakantorbandinglaba') ?>" id="formFilter">
+            <form id="formFilter">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Cabang</label>
                             <select name="cabang" id="cabangSelect" class="form-control select2">
-                                <option value="JKT" <?= ($selectedCabang == 'JKT') ? 'selected' : '' ?>>JAKARTA</option>
                                 <option value="MDN" <?= ($selectedCabang == 'MDN') ? 'selected' : '' ?>>MEDAN</option>
+                                <option value="JKT" <?= ($selectedCabang == 'JKT') ? 'selected' : '' ?>>JAKARTA</option>
                                 <option value="SBY" <?= ($selectedCabang == 'SBY') ? 'selected' : '' ?>>SURABAYA</option>
                                 <option value="MKS" <?= ($selectedCabang == 'MKS') ? 'selected' : '' ?>>MAKASSAR</option>
-                                <option value="BTG" <?= ($selectedCabang == 'BTG') ? 'selected' : '' ?>>BITUNG</option>
                                 <option value="SMG" <?= ($selectedCabang == 'SMG') ? 'selected' : '' ?>>SEMARANG</option>
+                                <option value="BTG" <?= ($selectedCabang == 'BTG') ? 'selected' : '' ?>>BITUNG</option>
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
-                        </div>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-group filter-input-group w-100">
-                            <div class="d-flex w-100">
-                                <button type="submit" id="btnFilter" class="btn btn-primary w-50 mr-1">
-                                    <i class="fas fa-filter"></i> Filter
-                                </button>
-                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href='<?= site_url('grafikbiayakantorbandinglaba') ?>'">
-                                    <i class="fas fa-undo"></i> Reset
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -152,7 +140,7 @@
             tooltip: {
                 formatter: function () {
                     return '<b>' + this.series.name + '</b><br/>' +
-                           this.x + ': Rp ' + Highcharts.numberFormat(this.y, 0, ',', '.');
+                           this.x + ': Rp ' + Highcharts.numberFormat(this.y, 2, ',', '.');
                 }
             },
             credits: { enabled: false },
@@ -173,6 +161,119 @@
                 data: getArrayData([<?= isset($TotalLabaCABANG) && is_array($TotalLabaCABANG) ? implode(',', $TotalLabaCABANG) : (isset($TotalLabaCABANG) ? $TotalLabaCABANG : '[]') ?>])
             }]
         });
+
+        // Menyimpan status filter terakhir agar tidak ter-trigger ganda jika value belum berubah
+        var lastFetchedData = {
+            cabang: '<?= esc($selectedCabang ?? '') ?>',
+            tgl_dari: '<?= esc($tgl_dari ?? '') ?>',
+            tgl_sampai: '<?= esc($tgl_sampai ?? '') ?>'
+        };
+
+        // AJAX Chart Update Function
+        function fetchAndUpdateChart() {
+            var cabang = $('#cabangSelect').val();
+            var tgl_dari = $('#tgl_dari').val();
+            var tgl_sampai = $('#tgl_sampai').val();
+
+            // Cegah pemanggilan AJAX jika filter sama persis dengan yang terakhir di-request
+            if (lastFetchedData.cabang === cabang && 
+                lastFetchedData.tgl_dari === tgl_dari && 
+                lastFetchedData.tgl_sampai === tgl_sampai) {
+                return;
+            }
+
+            // Update memori filter terbaru
+            lastFetchedData = {
+                cabang: cabang,
+                tgl_dari: tgl_dari,
+                tgl_sampai: tgl_sampai
+            };
+
+            myChart.showLoading('Memuat data...');
+            
+            $.ajax({
+                url: '<?= site_url('grafikbiayakantorbandinglaba') ?>',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    cabang: cabang,
+                    tgl_dari: tgl_dari,
+                    tgl_sampai: tgl_sampai
+                },
+                success: function(res) {
+                    myChart.hideLoading();
+                    
+                    var cabangName = res.cabangCABANG ? res.cabangCABANG.toUpperCase() : '';
+                    myChart.setTitle({ text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang ' + cabangName }, { text: 'Per ' + (res.jlhblnCABANG || 0) + ' Bulan, Tahun ' + (res.TahunCABANG || "") });
+                    
+                    // Bersihkan single quote dari PHP pada kategori
+                    var categories = getArrayData(res.FTglCABANG).map(function(val) {
+                        return typeof val === 'string' ? val.replace(/'/g, '') : val;
+                    });
+                    
+                    // Pastikan data yang masuk adalah float/angka, bukan string
+                    var dataBiaya = getArrayData(res.TotalBiayaCABANG).map(function(val) {
+                        return parseFloat(val) || 0;
+                    });
+                    
+                    var dataLaba = getArrayData(res.TotalLabaCABANG).map(function(val) {
+                        return parseFloat(val) || 0;
+                    });
+
+                    myChart.xAxis[0].setCategories(categories);
+                    myChart.series[0].setData(dataBiaya);
+                    myChart.series[1].setData(dataLaba);
+                    
+                    $('#textLastUpdate').text('Last Update : ' + (res.LastUpdateCABANG || '-'));
+                    
+                    // Update batas MonthPicker jika ada data
+                    if (res.minBulan && res.maxBulan) {
+                        try {
+                            var minParts = res.minBulan.split('-');
+                            var maxParts = res.maxBulan.split('-');
+                            var minDate = new Date(minParts[1], parseInt(minParts[0]) - 1);
+                            var maxDate = new Date(maxParts[1], parseInt(maxParts[0]) - 1);
+                            
+                            $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MinMonth', minDate);
+                            $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MaxMonth', maxDate);
+                        } catch(e) {}
+                    }
+                },
+                error: function() {
+                    myChart.hideLoading();
+                    alert('Terjadi kesalahan saat mengambil data grafik.');
+                }
+            });
+        }
+
+        // Bind events
+        $('#cabangSelect').on('change', function() {
+            fetchAndUpdateChart();
+        });
+
+        // Event untuk input teks manual
+        var filterTimeout;
+        $('#tgl_dari, #tgl_sampai').on('change', function() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(fetchAndUpdateChart, 300);
+        });
+
+        // Khusus untuk plugin MonthPicker saat user memilih dari popup kalender
+        try {
+            $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'OnAfterChooseMonth', function() {
+                fetchAndUpdateChart();
+            });
+            
+            // Set batas awal MonthPicker saat halaman pertama kali dimuat
+            var initMin = '<?= esc($minBulan ?? '') ?>';
+            var initMax = '<?= esc($maxBulan ?? '') ?>';
+            if (initMin && initMax) {
+                var minP = initMin.split('-');
+                var maxP = initMax.split('-');
+                $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MinMonth', new Date(minP[1], parseInt(minP[0]) - 1));
+                $('#tgl_dari, #tgl_sampai').MonthPicker('option', 'MaxMonth', new Date(maxP[1], parseInt(maxP[0]) - 1));
+            }
+        } catch(e) {}
 
         // Apply initial theme
         myChart.update(getChartTheme());
