@@ -55,8 +55,8 @@
 </div>
 
 <!-- Dialog Containers untuk alert showDialog dari mains.js -->
-<div id="dialog-message" title="Pesan" style="display: none;"></div>
-<div id="dialog-warning-message" title="Peringatan" style="display: none;"></div>
+<div id="dialog-message" title="Pesan" class="text-center" style="display: none;"></div>
+<div id="dialog-warning-message" title="Peringatan" class="text-center" style="display: none;"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts.js"></script>
 <script type="text/javascript">
@@ -190,7 +190,7 @@
                     var valDari = parseInt(pDari[1] + pDari[0]);
                     var valSampai = parseInt(pSampai[1] + pSampai[0]);
                     if (valDari > valSampai) {
-                        showDialog('Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!');
+                        showDialog('Bulan dari tidak boleh lebih besar dari Bulan sampai!');
                         // Reset nilai value filter ke memori terakhir yang valid
                         $('#tgl_dari').val(lastFetchedData.tgl_dari);
                         $('#tgl_sampai').val(lastFetchedData.tgl_sampai);

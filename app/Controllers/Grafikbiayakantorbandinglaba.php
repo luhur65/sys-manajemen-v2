@@ -31,7 +31,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $data['title'] = 'Grafik Biaya Kantor Banding Laba';
 
         // Ambil filter dari request
-        $cabang = $this->request->getGet('cabang') ?? 'MDN';
+        $cabang = $this->request->getGet('cabang') ?? 'JKT';
         $tgl_dari = $this->request->getGet('tgl_dari'); 
         $tgl_sampai = $this->request->getGet('tgl_sampai');
         
@@ -50,9 +50,9 @@ class Grafikbiayakantorbandinglaba extends BaseController
 
         if ($valDari !== null && $valSampai !== null && $valDari > $valSampai) {
             if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['error' => 'Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!']);
+                return $this->response->setJSON(['error' => 'Bulan dari tidak boleh lebih besar dari Bulan sampai!']);
             } else {
-                session()->setFlashdata('error_grafik', 'Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!');
+                session()->setFlashdata('error_grafik', 'Bulan dari tidak boleh lebih besar dari Bulan sampai!');
             }
         }
 
