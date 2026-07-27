@@ -42,7 +42,7 @@
                                 <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
                                     <i class="fas fa-filter"></i> Filter
                                 </button>
-                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href='<?= site_url('grafikbiayakantorbandinglaba') ?>'">
+                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
                                     <i class="fas fa-undo"></i> Reset
                                 </button>
                             </div>
@@ -190,6 +190,8 @@
             tgl_sampai: '<?= esc($tgl_sampai ?? '') ?>'
         };
 
+        var currentAjaxReq = null;
+
         // AJAX Chart Update Function
         function fetchAndUpdateChart() {
             var cabang = $('#cabangSelect').val();
@@ -229,7 +231,11 @@
 
             myChart.showLoading('Memuat data...');
             
-            $.ajax({
+            if (currentAjaxReq !== null) {
+                currentAjaxReq.abort();
+            }
+            
+            currentAjaxReq = $.ajax({
                 url: '<?= site_url('grafikbiayakantorbandinglaba') ?>',
                 type: 'GET',
                 dataType: 'json',
@@ -282,9 +288,14 @@
                         } catch(e) {}
                     }
                 },
-                error: function() {
-                    myChart.hideLoading();
-                    showDialog('Terjadi kesalahan saat mengambil data grafik.');
+                error: function(jqXHR, textStatus) {
+                    if (textStatus !== 'abort') {
+                        myChart.hideLoading();
+                        showDialog('Terjadi kesalahan saat mengambil data grafik.');
+                    }
+                },
+                complete: function() {
+                    currentAjaxReq = null;
                 }
             });
         }
@@ -300,6 +311,23 @@
             e.preventDefault();
             // Force fetch dengan mengosongkan lastFetchedData agar check tidak return awal
             lastFetchedData.cabang = null;
+            fetchAndUpdateChart();
+        });
+
+        // Event Reset tanpa reload halaman
+        $('#btnReset').click(function(e) {
+            e.preventDefault();
+            $('#cabangSelect').val('JKT');
+            if($.fn.select2) {
+                $('#cabangSelect').trigger('change.select2');
+            }
+            $('#tgl_dari').val('');
+            $('#tgl_sampai').val('');
+            
+            // Hapus status is-invalid jika ada
+            $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
+            
+            lastFetchedData.cabang = null; // force reload
             fetchAndUpdateChart();
         });
 
