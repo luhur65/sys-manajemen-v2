@@ -58,7 +58,7 @@
 <script type="text/javascript">
     $(function () {
         <?php if (session()->getFlashdata('error_grafik')) : ?>
-        alert('<?= session()->getFlashdata('error_grafik') ?>');
+        showDialog('<?= session()->getFlashdata('error_grafik') ?>');
         <?php endif; ?>
         
         // Inisialisasi Monthpicker jika fungsinya tersedia
@@ -186,7 +186,7 @@
                     var valDari = parseInt(pDari[1] + pDari[0]);
                     var valSampai = parseInt(pSampai[1] + pSampai[0]);
                     if (valDari > valSampai) {
-                        alert('Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!');
+                        showDialog('Validasi Error: Bulan dari tidak boleh lebih besar dari Bulan sampai!');
                         // Reset nilai value filter ke memori terakhir yang valid
                         $('#tgl_dari').val(lastFetchedData.tgl_dari);
                         $('#tgl_sampai').val(lastFetchedData.tgl_sampai);
@@ -224,7 +224,7 @@
                     myChart.hideLoading();
                     
                     if (res.error) {
-                        alert(res.error);
+                        showDialog(res.error);
                         return;
                     }
                     
@@ -266,7 +266,7 @@
                 },
                 error: function() {
                     myChart.hideLoading();
-                    alert('Terjadi kesalahan saat mengambil data grafik.');
+                    showDialog('Terjadi kesalahan saat mengambil data grafik.');
                 }
             });
         }
