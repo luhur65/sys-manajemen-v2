@@ -261,16 +261,21 @@
                 success: function(res) {
                     myChart.hideLoading();
                     
+                    if (res.errors) {
+                        $.each(res.errors, function(field, message) {
+                            if (field === 'tgl_sampai') {
+                                $('#tgl_sampai').addClass('is-invalid');
+                                $('#err_sampai').text(message).show();
+                            } else if (field === 'tgl_dari') {
+                                $('#tgl_dari').addClass('is-invalid');
+                                $('#err_dari').text(message).show();
+                            }
+                        });
+                        return;
+                    }
+
                     if (res.error) {
-                        if (res.error_field === 'tgl_sampai') {
-                            $('#tgl_sampai').addClass('is-invalid');
-                            $('#err_sampai').text(res.error).show();
-                        } else if (res.error_field === 'tgl_dari') {
-                            $('#tgl_dari').addClass('is-invalid');
-                            $('#err_dari').text(res.error).show();
-                        } else {
-                            showDialog(res.error);
-                        }
+                        showDialog(res.error);
                         return;
                     }
                     

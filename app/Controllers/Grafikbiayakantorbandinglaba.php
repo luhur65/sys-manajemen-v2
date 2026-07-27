@@ -39,33 +39,32 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $data['tgl_dari'] = $tgl_dari;
         $data['tgl_sampai'] = $tgl_sampai;
 
-        $valDari = null;
-        $valSampai = null;
-        if (!empty($tgl_dari)) {
-            $valDari = substr($tgl_dari, 3, 4) . substr($tgl_dari, 0, 2);
-        }
-        if (!empty($tgl_sampai)) {
-            $valSampai = substr($tgl_sampai, 3, 4) . substr($tgl_sampai, 0, 2);
-        }
-
         $last_changed = $this->request->getGet('last_changed') ?? 'tgl_dari';
 
-        if ($valDari !== null && $valSampai !== null && $valDari > $valSampai) {
-            if ($last_changed === 'tgl_sampai') {
-                $error_msg = 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!';
-                $error_field = 'tgl_sampai';
-            } else {
-                $error_msg = 'Bulan dari tidak boleh lebih besar dari Bulan sampai!';
-                $error_field = 'tgl_dari';
-            }
+        // Konfigurasi Rule Validasi Kustom CI4
+        $rules = [
+            'tgl_dari' => [
+                'rules' => ($last_changed !== 'tgl_sampai') ? 'month_less_than_equal[tgl_sampai]' : 'permit_empty',
+                'errors' => [
+                    'month_less_than_equal' => 'Bulan dari tidak boleh lebih besar dari Bulan sampai!'
+                ]
+            ],
+            'tgl_sampai' => [
+                'rules' => ($last_changed === 'tgl_sampai') ? 'month_greater_than_equal[tgl_dari]' : 'permit_empty',
+                'errors' => [
+                    'month_greater_than_equal' => 'Bulan sampai tidak boleh lebih kecil dari Bulan dari!'
+                ]
+            ]
+        ];
 
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'error' => $error_msg,
-                    'error_field' => $error_field
-                ]);
-            } else {
-                session()->setFlashdata('error_grafik', $error_msg);
+        if (!empty($tgl_dari) && !empty($tgl_sampai)) {
+            if (! $this->validate($rules)) {
+                $errors = $this->validator->getErrors();
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON(['errors' => $errors]);
+                } else {
+                    session()->setFlashdata('errors_grafik', $errors);
+                }
             }
         }
 
