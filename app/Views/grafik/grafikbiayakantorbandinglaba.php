@@ -256,6 +256,16 @@
                     var cabangName = res.cabangCABANG ? res.cabangCABANG.toUpperCase() : '';
                     myChart.setTitle({ text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang ' + cabangName }, { text: 'Per ' + (res.jlhblnCABANG || 0) + ' Bulan, Tahun ' + (res.TahunCABANG || "") });
                     
+                    // Kembalikan nilai tanggal dari backend (misal jika reset, backend akan mengirimkan min/max bulan)
+                    if (res.tgl_dari) {
+                        $('#tgl_dari').val(res.tgl_dari);
+                        lastFetchedData.tgl_dari = res.tgl_dari;
+                    }
+                    if (res.tgl_sampai) {
+                        $('#tgl_sampai').val(res.tgl_sampai);
+                        lastFetchedData.tgl_sampai = res.tgl_sampai;
+                    }
+
                     // Bersihkan single quote dari PHP pada kategori
                     var categories = getArrayData(res.FTglCABANG).map(function(val) {
                         return typeof val === 'string' ? val.replace(/'/g, '') : val;
