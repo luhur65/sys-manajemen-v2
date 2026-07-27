@@ -32,11 +32,12 @@
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
-                            <div class="invalid-feedback error-bulan">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
+                            <div class="invalid-feedback error-bulan">Bulan sampai tidak boleh lebih kecil dari Bulan dari!</div>
                         </div>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group w-100">
+                            <label class="filter-label d-none d-md-block">&nbsp;</label>
                             <div class="d-flex w-100">
                                 <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
                                     <i class="fas fa-filter"></i> Filter
