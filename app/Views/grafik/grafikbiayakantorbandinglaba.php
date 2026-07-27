@@ -9,7 +9,7 @@
         <div class="card-body">
             <form id="formFilter">
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Cabang</label>
                             <select name="cabang" id="cabangSelect" class="form-control select2">
@@ -22,18 +22,30 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan dari</label>
                             <input type="text" class="form-control monthpicker" name="tgl_dari" id="tgl_dari" value="<?= esc($tgl_dari) ?>" autocomplete="off" placeholder="MM-YYYY">
                             <div class="invalid-feedback">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="form-group filter-input-group">
                             <label class="filter-label">Bulan sampai</label>
                             <input type="text" class="form-control monthpicker" name="tgl_sampai" id="tgl_sampai" value="<?= esc($tgl_sampai) ?>" autocomplete="off" placeholder="MM-YYYY">
                             <div class="invalid-feedback">Bulan dari tidak boleh lebih besar dari Bulan sampai!</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-group filter-input-group w-100">
+                            <div class="d-flex w-100">
+                                <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                                <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1" onclick="window.location.href='<?= site_url('grafikbiayakantorbandinglaba') ?>'">
+                                    <i class="fas fa-undo"></i> Reset
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -280,6 +292,14 @@
         // Bind events
         $('#cabangSelect, #tgl_dari, #tgl_sampai').on('change', function() {
             // Auto reload grafik jika tanggal valid, jika invalid hanya muncul tulisan merah
+            fetchAndUpdateChart();
+        });
+
+        // Trigger pencarian juga saat tombol filter diklik
+        $('#btnFilter').click(function(e) {
+            e.preventDefault();
+            // Force fetch dengan mengosongkan lastFetchedData agar check tidak return awal
+            lastFetchedData.cabang = null;
             fetchAndUpdateChart();
         });
 
