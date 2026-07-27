@@ -203,8 +203,8 @@
             var tgl_sampai = $('#tgl_sampai').val();
 
             // Reset error validation UI
-            $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
-            $('#tgl_dari, #tgl_sampai').siblings('.invalid-feedback').remove();
+            $('#formFilter .is-invalid').removeClass('is-invalid');
+            $('#formFilter .invalid-feedback').remove();
 
             // Cegah pemanggilan AJAX jika filter sama persis dengan yang terakhir di-request
             if (lastFetchedData.cabang === cabang && 
@@ -240,15 +240,11 @@
                     myChart.hideLoading();
                     
                     if (res.errors) {
+                        let formattedErrors = {};
                         $.each(res.errors, function(field, message) {
-                            if (field === 'tgl_sampai') {
-                                $('#tgl_sampai').addClass('is-invalid');
-                                $('<div class="invalid-feedback">' + message + '</div>').appendTo($('#tgl_sampai').parent());
-                            } else if (field === 'tgl_dari') {
-                                $('#tgl_dari').addClass('is-invalid');
-                                $('<div class="invalid-feedback">' + message + '</div>').appendTo($('#tgl_dari').parent());
-                            }
+                            formattedErrors[field] = [message];
                         });
+                        setErrorMessages($('#formFilter'), formattedErrors);
                         return;
                     }
 
@@ -330,8 +326,8 @@
             $('#tgl_sampai').val('');
             
             // Hapus status is-invalid jika ada
-            $('#tgl_dari, #tgl_sampai').removeClass('is-invalid');
-            $('#tgl_dari, #tgl_sampai').siblings('.invalid-feedback').remove();
+            $('#formFilter .is-invalid').removeClass('is-invalid');
+            $('#formFilter .invalid-feedback').remove();
             
             lastFetchedData.cabang = null; // force reload
             fetchAndUpdateChart();
