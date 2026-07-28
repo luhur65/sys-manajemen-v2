@@ -342,7 +342,7 @@
         // Event Reset tanpa reload halaman
         $('#btnReset').click(function(e) {
             e.preventDefault();
-            $('#cabangSelect').val('JKT');
+            $('#cabangSelect').val('MDN');
             if($.fn.select2) {
                 $('#cabangSelect').trigger('change.select2');
             }
