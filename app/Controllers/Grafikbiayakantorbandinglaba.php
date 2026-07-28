@@ -31,7 +31,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
         $data['title'] = 'Grafik Biaya Kantor Banding Laba';
 
         // Ambil filter dari request
-        $cabang = $this->request->getGet('cabang') ?? 'JKT';
+        $cabang = $this->request->getGet('cabang') ?? 'MDN';
         $tgl_dari = $this->request->getGet('tgl_dari'); 
         $tgl_sampai = $this->request->getGet('tgl_sampai');
         
