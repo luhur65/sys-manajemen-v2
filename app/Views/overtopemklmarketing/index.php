@@ -68,7 +68,7 @@
         let limit
         let postData
         var activeGrid
-        let sortname = 'FSelisih'
+        let sortname = 'FTgl'
         let sortorder = 'desc'
         let rowNum = 50
         const apiUrl = `<?= base_url('overtopemklmarketing/grid') ?>`;
@@ -236,7 +236,7 @@
             ],
             autowidth: true,
             shrinkToFit: false,
-            height: 400,
+            height: 300,
             rowNum: rowNum,
             toolbar: [true, "top"],
             rowList: [10, 20, 50, 100, 500],

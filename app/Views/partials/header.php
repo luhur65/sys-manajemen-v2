@@ -16,8 +16,8 @@
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') ?>">
     
-    <!-- JQGrid 570 Bootstrap 4 (From Trucking) -->
-    <link rel="stylesheet" href="<?= asset('libraries/jqgrid/590/css/ui.jqgrid-bootstrap4.css') ?>" />
+    <!-- JQGrid 570 Bootstrap 4 (From Trucking) --> 
+    <link rel="stylesheet" href="<?= asset('libraries/jqgrid/570/css/ui.jqgrid-bootstrap4.css') ?>" />
 
     <!-- Select2 -->
     <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/select2/css/select2.min.css') ?>">

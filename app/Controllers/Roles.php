@@ -6,6 +6,18 @@ use App\Models\RolesModel;
 
 class Roles extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel tblroles).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'roleid',
+        'rolename',
+        'modifiedby',
+        'modifiedon' => "FORMAT(modifiedon, 'dd-MM-yyyy hh:mm:ss')",
+        'modifiedonview' => "FORMAT(modifiedon, 'dd-MM-yyyy hh:mm:ss')",
+    ];
+
     protected $rolesModel;
 
     public function __construct()
@@ -38,11 +50,9 @@ class Roles extends BaseController
         $search = $this->request->getPost('_search');
         
         $where = " WHERE 1=1 ";
-        if ($search === "true" && !empty($filters)) {
-            $parsedFilters = json_decode($filters);
-            if (!empty($parsedFilters->rules)) {
-                $where = " WHERE (" . $this->operation($filters) . ")";
-            }
+        $operation = $search === "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where = " WHERE (" . $operation . ")";
         }
 
         $countQuery = $this->rolesModel->count($where);
@@ -140,59 +150,6 @@ class Roles extends BaseController
         }
 
         return $this->response->setJSON($data);
-    }
-
-    protected function operation($filters)
-    {
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
-        $where = " ";
-        $whereArray = array();
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        $db = \Config\Database::connect();
-        
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = $db->escapeString($rule->data);
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '" . $fieldData . "'"; break;
-                case "ne": $fieldOperation = " != '" . $fieldData . "'"; break;
-                case "lt": $fieldOperation = " < '" . $fieldData . "'"; break;
-                case "gt": $fieldOperation = " > '" . $fieldData . "'"; break;
-                case "le": $fieldOperation = " <= '" . $fieldData . "'"; break;
-                case "ge": $fieldOperation = " >= '" . $fieldData . "'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (" . $fieldData . ")"; break;
-                case "ni": $fieldOperation = " NOT IN '" . $fieldData . "'"; break;
-                case "bw": $fieldOperation = " LIKE '" . $fieldData . "%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '" . $fieldData . "%'"; break;
-                case "ew": $fieldOperation = " LIKE '%" . $fieldData . "'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%" . $fieldData . "'"; break;
-                case "cn": $fieldOperation = " LIKE '%" . $fieldData . "%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%" . $fieldData . "%'"; break;
-                default: $fieldOperation = ""; break;
-            }
-            if ($fieldOperation != "") {
-                if ($fieldName == "modifiedon") {
-                    $whereArray[] = "FORMAT(modifiedon,'dd-MM-yyyy hh:mm:ss')" . $fieldOperation;
-                } else if ($fieldName == "modifiedby") {
-                    $whereArray[] = "modifiedby" . $fieldOperation;
-                } else {
-                    $whereArray[] = $fieldName . $fieldOperation;
-                }
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            $where .= join(" " . $groupOperation . " ", $whereArray);
-        } else {
-            $where = " ";
-        }
-        return $where;
     }
 
     public function test_roles()

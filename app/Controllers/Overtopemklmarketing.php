@@ -8,6 +8,33 @@ use Psr\Log\LoggerInterface;
 
 class Overtopemklmarketing extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (view LapEMKL_OverDue per marketing).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FNTrans',
+        'FNInvoice',
+        'FNShipper',
+        'FJnsRemind',
+        'FNoJob',
+        'FBlnJob',
+        'FThnJob',
+        'FJnsJob',
+        'FJnsPiutang',
+        'FTglHariIni',
+        'FTgl' => "FORMAT(CAST(FTgl AS DATETIME), 'dd-MMM-yyyy', 'en-US')",
+        'FTglJT' => "FORMAT(CAST(FTglJT AS DATETIME), 'dd-MMM-yyyy', 'en-US')",
+        'FNTgl' => "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))",
+        'FNominal' => ['sql' => 'FNominal', 'numeric' => true],
+        'FSisa' => ['sql' => 'FSisa', 'numeric' => true],
+        'FSelisih' => ['sql' => 'FSelisih', 'numeric' => true],
+        'FTOP' => ['sql' => 'FTOP', 'numeric' => true],
+        'FNMarketing',
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
     protected $movertopmarketingModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -54,12 +81,13 @@ class Overtopemklmarketing extends BaseController
         
         $where = "";
         
-        if ($search == "true") {
-            $where = " AND (" . $this->operationAll($filters) . ")";
+        $operation = $search == "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where = " AND (" . $operation . ")";
         }
         
         if (!empty($marketing)) {
-            $where .= " AND FNMarketing = '" . addslashes($marketing) . "'";
+            $where .= " AND FNMarketing = " . $this->escapeFilterValue($marketing);
         }
 
         $sql = $this->movertopmarketingModel->count($where, $cabang);

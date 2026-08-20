@@ -9,6 +9,21 @@ use Psr\Log\LoggerInterface;
 
 class Supirpercabang extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel MSupir).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FKSupir',
+        'FNSupir',
+        'FAlamat',
+        'FKota',
+        'FTelp',
+        'FAktif',
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
     protected $msupirpercabang;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -44,8 +59,9 @@ class Supirpercabang extends BaseController
         $cabang = strtoupper($cbg);
 
         $where = "";
-        if ($search == "true" || $search === true) {
-            $where .= " AND (" . $this->operation($filters) . ")";
+        $operation = ($search == "true" || $search === true) ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where .= " AND (" . $operation . ")";
         }
 
         $count = $this->msupirpercabang->count_supir($where, $cabang);
@@ -116,27 +132,4 @@ class Supirpercabang extends BaseController
         return true;
     }
 
-    private function operation($filters)
-    {
-        if (empty($filters)) return "1=1";
-        $filters = json_decode($filters);
-        if (!isset($filters->rules)) return "1=1";
-        
-        $where = "";
-        $rules = $filters->rules;
-        $groupOp = $filters->groupOp;
-        
-        foreach ($rules as $index => $rule) {
-            $field = $rule->field;
-            $data = $rule->data;
-            
-            if ($index > 0) {
-                $where .= " " . $groupOp . " ";
-            }
-            
-            $where .= " $field LIKE '%$data%' ";
-        }
-        
-        return $where;
-    }
 }

@@ -6,6 +6,17 @@ use CodeIgniter\Model;
 
 class MtruckingtradoluardetailexpModel extends Model
 {
+    /**
+     * Whitelist kolom yang boleh dipakai pada filter grid jqGrid.
+     * Disimpan huruf kecil semua supaya pencocokan tidak case-sensitive.
+     */
+    private const FILTER_FIELDS = [
+        'ftgl', 'fntrans', 'fnocontseal', 'fnshipper', 'fnopol', 'forderan',
+        'fncontainer', 'flokasibongkarmuat', 'fnominalhargatrucking',
+        'fnominalhargatruckingpusat', 'fselisih', 'fketerangan',
+        'fnemkllaintradoluar',
+    ];
+
     protected $DBGroup = 'dbtruck';
     
     public function getGridData($cabang, $params)
@@ -36,8 +47,17 @@ class MtruckingtradoluardetailexpModel extends Model
             if ($filters && isset($filters['rules'])) {
                 $builder->groupStart();
                 foreach ($filters['rules'] as $rule) {
-                    $field = $rule['field'];
-                    $data = $rule['data'];
+                    $field = isset($rule['field']) ? (string) $rule['field'] : '';
+                    $data  = isset($rule['data']) ? (string) $rule['data'] : '';
+
+                    // Nama kolom berasal dari client, jadi wajib lolos whitelist
+                    // sebelum diserahkan ke Query Builder.
+                    if (! in_array(strtolower($field), self::FILTER_FIELDS, true)) {
+                        log_message('warning', '[Trucking Trado Luar Detail] Filter pada kolom tidak dikenal ditolak: ' . $field);
+
+                        continue;
+                    }
+
                     $builder->like($field, $data);
                 }
                 $builder->groupEnd();

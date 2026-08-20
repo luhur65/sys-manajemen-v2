@@ -20,18 +20,37 @@ class MloginModel extends Model
     {
         $builder = $this->db->table($this->table);
         $builder->where('userid', $userid);
-        $fieldPassword = 'password';
-        if ($this->isDev == 1) {
-            $fieldPassword = 'password1';
-        }
-        $builder->where($fieldPassword, $password);
         $builder->limit(1);
         $sql = $builder->get();
         if ($sql->getNumRows() == 1) {
-            return $sql;
-        } else {
-            return false;
+            $row = $sql->getRow();
+            $fieldPassword = 'password';
+            if ($this->isDev == 1) {
+                $fieldPassword = 'password1';
+            }
+            $hash = (string)$row->$fieldPassword;
+            $hashTrim = trim($hash);
+
+            // Cek apakah hash adalah bcrypt/argon2 (berawalan $2y$, $2a$, $2b$, $argon2)
+            if (str_starts_with($hashTrim, '$2y$') || str_starts_with($hashTrim, '$2a$') || str_starts_with($hashTrim, '$2b$') || str_starts_with($hashTrim, '$argon2')) {
+                if (password_verify($password, $hashTrim)) {
+                    return $sql;
+                }
+            } else {
+                // Belum dimigrasi, anggap hash adalah MD5
+                if (strcasecmp(md5($password), $hashTrim) === 0) {
+                    // Update ke bcrypt on-the-fly
+                    $newHash = password_hash($password, PASSWORD_BCRYPT);
+                    $this->db->table($this->table)
+                             ->where('userid', $userid)
+                             ->update([$fieldPassword => $newHash]);
+                    
+                    // Kembalikan query baru agar objek session mendapatkan hash yang terbaru
+                    return $this->db->table($this->table)->where('userid', $userid)->get();
+                }
+            }
         }
+        return false;
     }
 
     public function cek()

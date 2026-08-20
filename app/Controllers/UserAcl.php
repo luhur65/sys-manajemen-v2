@@ -6,6 +6,29 @@ use App\Models\UserAclModel;
 
 class UserAcl extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel tbluseracl).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'useraclid',
+        'userpk',
+        'acoid',
+        'modifiedby',
+        'modifiedon' => "FORMAT(modifiedon, 'dd-MM-yyyy hh:mm:ss')",
+        'modifiedonview' => "FORMAT(modifiedon, 'dd-MM-yyyy hh:mm:ss')",
+    ];
+
+    /**
+     * Whitelist kolom filter untuk grid daftar ACO (tabel tblacos).
+     */
+    private const FILTER_FIELDS_ACOS = [
+        'acosid',
+        'class',
+        'method',
+        'displayname',
+    ];
+
     protected $userAclModel;
 
     public function __construct()
@@ -75,11 +98,9 @@ class UserAcl extends BaseController
         $where1 = " WHERE userpk = " . $db->escapeString($userpk);
         $where2 = "";
 
-        if ($search === "true" && !empty($filters)) {
-            $parsedFilters = json_decode($filters);
-            if (!empty($parsedFilters->rules)) {
-                $where2 = " AND (" . $this->operation($filters) . ")";
-            }
+        $operation = $search === "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where2 = " AND (" . $operation . ")";
         }
         $where = $where1 . " " . $where2;
 
@@ -144,14 +165,10 @@ class UserAcl extends BaseController
         $db = \Config\Database::connect();
         $builder = $db->table('tblacos');
 
-        if ($search === "true" && !empty($filters)) {
-            $parsedFilters = json_decode($filters);
-            if (!empty($parsedFilters->rules)) {
-                $whereCondition = $this->operation($filters);
-                if (!empty($whereCondition)) {
-                    $builder->where($whereCondition);
-                }
-            }
+        $whereCondition = $search === "true" ? $this->operationAll($filters, self::FILTER_FIELDS_ACOS) : '';
+        if ($whereCondition !== '') {
+            // Kondisi sudah lolos whitelist dan di-escape oleh GridFilter.
+            $builder->where($whereCondition, null, false);
         }
 
         $countBuilder = clone $builder;
@@ -215,55 +232,4 @@ class UserAcl extends BaseController
     }
     
     // Adapted from old CI3 operation
-    protected function operation($filters)
-    {
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
-        $where = " ";
-        $whereArray = array();
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        $db = \Config\Database::connect();
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = $db->escapeString($rule->data);
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '" . $fieldData . "'"; break;
-                case "ne": $fieldOperation = " != '" . $fieldData . "'"; break;
-                case "lt": $fieldOperation = " < '" . $fieldData . "'"; break;
-                case "gt": $fieldOperation = " > '" . $fieldData . "'"; break;
-                case "le": $fieldOperation = " <= '" . $fieldData . "'"; break;
-                case "ge": $fieldOperation = " >= '" . $fieldData . "'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (" . $fieldData . ")"; break;
-                case "ni": $fieldOperation = " NOT IN '" . $fieldData . "'"; break;
-                case "bw": $fieldOperation = " LIKE '" . $fieldData . "%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '" . $fieldData . "%'"; break;
-                case "ew": $fieldOperation = " LIKE '%" . $fieldData . "'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%" . $fieldData . "'"; break;
-                case "cn": $fieldOperation = " LIKE '%" . $fieldData . "%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%" . $fieldData . "%'"; break;
-                default: $fieldOperation = ""; break;
-            }
-            if ($fieldOperation != "") {
-                if ($fieldName == "modifiedon") {
-                    $whereArray[] = "FORMAT(modifiedon,'dd-MM-yyyy hh:mm:ss')" . $fieldOperation;
-                } else if ($fieldName == "modifiedby") {
-                    $whereArray[] = "modifiedby" . $fieldOperation;
-                } else {
-                    $whereArray[] = $fieldName . $fieldOperation;
-                }
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            $where .= join(" " . $groupOperation . " ", $whereArray);
-        } else {
-            $where = " ";
-        }
-        return $where;
-    }
 }

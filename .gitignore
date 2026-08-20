@@ -128,3 +128,21 @@ _modules/*
 update_omset.php
 
 writable/*
+
+# public test files
+/public/test_*.php
+
+# scratch files
+/scratch/*
+/scratch_*.py
+/scratch_*.ps1
+/scratch_*.sql
+/scratch_*.php
+refactor_*.js
+
+
+# others
+catatan_*.md
+dokumentasi_*.md
+simulate.php
+temp_*.js

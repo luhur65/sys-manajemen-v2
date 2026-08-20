@@ -8,6 +8,26 @@ use Psr\Log\LoggerInterface;
 
 class Orderan extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel Omset per cabang).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FBulan',
+        'FTgl' => "FORMAT(CAST(FTgl AS DATETIME), 'dd-MMM-yyyy', 'en-US')",
+        'FJumlahMuatan' => ['sql' => 'FJumlahMuatan', 'numeric' => true],
+        'FJumlahBongkaran' => ['sql' => 'FJumlahBongkaran', 'numeric' => true],
+        'FJumlahExim' => ['sql' => 'FJumlahExim', 'numeric' => true],
+        'FOmset' => ['sql' => 'FOmset', 'numeric' => true],
+        'FBiayaLapangan' => ['sql' => 'FBiayaLapangan', 'numeric' => true],
+        'FNomPph23' => ['sql' => 'FNomPph23', 'numeric' => true],
+        'FProfit' => ['sql' => 'FProfit', 'numeric' => true],
+        'FMargin' => ['sql' => 'FMargin', 'numeric' => true],
+        'FTglUpdate',
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
     protected $momsetModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -48,8 +68,9 @@ class Orderan extends BaseController
         
         $where = "";
         
-        if ($search == "true") {
-            $where = " AND (" . $this->operationAll($filters) . ")";
+        $operation = $search == "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where = " AND (" . $operation . ")";
         }
         
         if (!empty($tgl_dari) && !empty($tgl_sampai)) {

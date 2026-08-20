@@ -6,6 +6,46 @@ use App\Models\MtruckingtradoluarModel;
 
 class Truckingtradoluar extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel TradoLuar per cabang - grid rekap harian).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FTgl' => "FORMAT(CAST(FTgl AS DATETIME), 'dd-MMM-yyyy', 'en-US')",
+        'FUkuran20Muatan',
+        'FUkuran2x20Muatan',
+        'FUkuran40Muatan',
+        'FUkuran20Bongkaran',
+        'FUkuran2x20Bongkaran',
+        'FUkuran40Bongkaran',
+        'FUkuran20Import',
+        'FUkuran2x20Import',
+        'FUkuran40Import',
+        'FUkuran20Eksport',
+        'FUkuran2x20Eksport',
+        'FUkuran40Eksport',
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
+    /**
+     * Whitelist kolom filter untuk grid detail per tanggal.
+     */
+    private const FILTER_FIELDS_DETAIL = [
+        'FTgl' => "FORMAT(CAST(FTgl AS DATETIME), 'dd-MMM-yyyy', 'en-US')",
+        'FNTrans',
+        'FNoContSeal',
+        'FNShipper',
+        'FNoPol',
+        'FOrderan',
+        'FNContainer',
+        'FLokasiBongkarMuat',
+        'FNominalHargaTrucking',
+        'FNominalHargaTruckingPusat',
+        'FKeterangan',
+        'FSelisih' => ['sql' => 'FSelisih', 'numeric' => true],
+    ];
+
     protected $mtruckingtradoluarModel;
 
     public function __construct()
@@ -33,7 +73,7 @@ class Truckingtradoluar extends BaseController
 
         $where = " ";
 
-        $operation = trim($this->operationAll($filters));
+        $operation = $this->operationAll($filters);
         if ($operation != '') {
             $where = " AND ($operation)";
         }
@@ -120,7 +160,7 @@ class Truckingtradoluar extends BaseController
 
         $where = " ";
 
-        $operation = trim($this->operationAll($filters));
+        $operation = $this->operationAll($filters, self::FILTER_FIELDS_DETAIL);
         if ($operation != '') {
             $where = " AND ($operation)";
         }

@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
+        'acl'           => \App\Filters\AclFilter::class,
     ];
 
     /**
@@ -77,6 +78,9 @@ class Filters extends BaseFilters
             // 'csrf',
             // 'invalidchars',
             'auth' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password']],
+            // Menegakkan ACL database (tblacos/tblacl/tbluseracl/tbluserroles) pada
+            // pasangan class/method hasil routing. Harus berada setelah 'auth'.
+            'acl' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password']],
         ],
         'after' => [
             // 'honeypot',

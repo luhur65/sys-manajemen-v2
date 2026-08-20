@@ -89,8 +89,12 @@
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
     <script>
-        // Simpan userid secara lokal untuk keperluan auto-relogin lockscreen jika sesi server expire
-        localStorage.setItem('lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
+        // Simpan userid secara lokal untuk keperluan auto-relogin lockscreen jika sesi server expire.
+        // Key diberi prefix 'sysmodern_' -- HARUS SAMA dengan APP_NS di lockscreen.js --
+        // karena localStorage di-scope per-origin browser, bukan per-folder/path. Tanpa prefix,
+        // proyek CI4 lain (mis. emkl-approval-sby-ci4) yang kebetulan diakses dari origin sama
+        // akan saling menimpa key ini.
+        localStorage.setItem('sysmodern_lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
     </script>
     <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>

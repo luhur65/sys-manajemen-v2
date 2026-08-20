@@ -9,6 +9,17 @@ use Psr\Log\LoggerInterface;
 
 class Tracing extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel tbltracing).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'UserId',
+        'shipper',
+        'cabang',
+        'waktulogin' => "FORMAT(waktulogin, 'dd-MM-yyyy HH:mm:ss')",
+    ];
+
     protected $tracingModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -43,12 +54,13 @@ class Tracing extends BaseController
         $where = "";
 
         if (!empty($cabang) && $cabang != 'All') {
-            $where .= " AND cabang = '" . $cabang . "'";
+            $where .= " AND cabang = " . $this->escapeFilterValue($cabang);
         }
 
         // Terapkan filter pencarian jqGrid bawaan monolith jika diperlukan
-        if ($search === "true" && !empty($filters)) {
-            $where .= " AND (" . $this->operation($filters) . ")";
+        $operation = $search === "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where .= " AND (" . $operation . ")";
         }
 
         $count = $this->tracingModel->count_tracing($where);
@@ -91,68 +103,4 @@ class Tracing extends BaseController
         return $this->response->setJSON($responce);
     }
 
-    private function operation($filters)
-    {
-        // Custom search operation filter equivalent to the one in BaseController/Legacy Code
-        $filters = json_decode($filters);
-        $where = " ";
-        $whereArray = array();
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        foreach ($rules as $rule) {
-            $field = $rule->field;
-            $data = $rule->data;
-            switch ($rule->op) {
-                case "eq":
-                    $operator = " = ";
-                    break;
-                case "ne":
-                    $operator = " != ";
-                    break;
-                case "lt":
-                    $operator = " < ";
-                    break;
-                case "le":
-                    $operator = " <= ";
-                    break;
-                case "gt":
-                    $operator = " > ";
-                    break;
-                case "ge":
-                    $operator = " >= ";
-                    break;
-                case "bw":
-                    $operator = " LIKE ";
-                    $data .= "%";
-                    break;
-                case "bn":
-                    $operator = " NOT LIKE ";
-                    $data .= "%";
-                    break;
-                case "ew":
-                    $operator = " LIKE ";
-                    $data = "%" . $data;
-                    break;
-                case "en":
-                    $operator = " NOT LIKE ";
-                    $data = "%" . $data;
-                    break;
-                case "cn":
-                    $operator = " LIKE ";
-                    $data = "%" . $data . "%";
-                    break;
-                case "nc":
-                    $operator = " NOT LIKE ";
-                    $data = "%" . $data . "%";
-                    break;
-            }
-            $whereArray[] = $field . $operator . "'" . $data . "'";
-        }
-        if (count($whereArray) > 0) {
-            $where .= join(" " . $groupOperation . " ", $whereArray);
-        } else {
-            $where = "1=1";
-        }
-        return $where;
-    }
 }

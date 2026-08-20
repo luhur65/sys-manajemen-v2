@@ -262,7 +262,7 @@
             ],
             autowidth: true,
             shrinkToFit: false,
-            height: 400,
+            height: 350,
             rowNum: rowNum,
             toolbar: [true, "top"],
             rowList: [50, 100, 500, 1000],
