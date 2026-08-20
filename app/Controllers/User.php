@@ -8,6 +8,24 @@ use CodeIgniter\Controller;
 
 class User extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (join tbluser + tblroles r).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'userpk' => 'tbluser.userpk',
+        'userid' => 'tbluser.userid',
+        'username' => 'tbluser.username',
+        'dashboard' => 'tbluser.dashboard',
+        'email' => 'tbluser.email',
+        'nowhatsapp' => 'tbluser.nowhatsapp',
+        'aktif' => 'tbluser.aktif',
+        'modifiedby' => 'tbluser.modifiedby',
+        'rolename' => 'r.rolename',
+        'modifiedon' => "FORMAT(tbluser.modifiedon, 'dd-MM-yyyy HH:mm:ss')",
+        'modifiedonview' => "FORMAT(tbluser.modifiedon, 'dd-MM-yyyy HH:mm:ss')",
+    ];
+
     protected $muserModel;
 
     public function __construct()
@@ -42,11 +60,9 @@ class User extends BaseController
         $where1 = " WHERE 1=1 ";
         $where2 = "";
 
-        if ($search == "true" && !empty($filters)) {
-            $operation = trim($this->operation($filters));
-            if (!empty($operation)) {
-                $where2 = " AND (" . $operation . ")";
-            }
+        $operation = $search == "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where2 = " AND (" . $operation . ")";
         }
         $where = $where1 . " " . $where2;
 
@@ -123,63 +139,6 @@ class User extends BaseController
         }
 
         return $this->response->setJSON($response);
-    }
-
-    private function operation($filters)
-    {
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
-        $where = " ";
-        $whereArray = [];
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = str_replace("'", "''", $rule->data); // escape string
-            
-            // Map column names for filtering
-            if ($fieldName == 'rolename') {
-                $fieldName = "r.rolename";
-            } else {
-                $fieldName = "tbluser." . $fieldName;
-            }
-
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '" . $fieldData . "'"; break;
-                case "ne": $fieldOperation = " != '" . $fieldData . "'"; break;
-                case "lt": $fieldOperation = " < '" . $fieldData . "'"; break;
-                case "gt": $fieldOperation = " > '" . $fieldData . "'"; break;
-                case "le": $fieldOperation = " <= '" . $fieldData . "'"; break;
-                case "ge": $fieldOperation = " >= '" . $fieldData . "'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (" . $fieldData . ")"; break;
-                case "ni": $fieldOperation = " NOT IN ('" . $fieldData . "')"; break;
-                case "bw": $fieldOperation = " LIKE '" . $fieldData . "%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '" . $fieldData . "%'"; break;
-                case "ew": $fieldOperation = " LIKE '%" . $fieldData . "'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%" . $fieldData . "'"; break;
-                case "cn": $fieldOperation = " LIKE '%" . $fieldData . "%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%" . $fieldData . "%'"; break;
-                default: $fieldOperation = ""; break;
-            }
-
-            if ($fieldOperation != "") {
-                if (strpos($fieldName, 'modifiedon') !== false) {
-                    $whereArray[] = "FORMAT(tbluser.modifiedon,'dd-MM-yyyy HH:mm:ss')" . $fieldOperation;
-                } else {
-                    $whereArray[] = $fieldName . $fieldOperation;
-                }
-            }
-        }
-        if (count($whereArray) > 0) {
-            $where .= join(" " . $groupOperation . " ", $whereArray);
-        } else {
-            $where = " ";
-        }
-        return $where;
     }
 
     public function crud()

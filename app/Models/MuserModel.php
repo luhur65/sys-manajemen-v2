@@ -144,7 +144,7 @@ class MuserModel extends Model
 
     public function _hashPassword($password)
     {
-        return md5($password);
+        return password_hash($password, PASSWORD_BCRYPT);
     }
 
     public function count($where)

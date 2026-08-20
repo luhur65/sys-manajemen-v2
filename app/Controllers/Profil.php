@@ -50,22 +50,32 @@ use App\Controllers\BaseController;
 	public function editpassword(){
 		$userpk = session()->get(SESSION_NAME.'userpk');
 		$password = session()->get(SESSION_NAME.'password');
-		$password1 = md5(rawurldecode($this->request->getGet('password1')));
-		$password2 = md5(rawurldecode($this->request->getGet('password2')));
-		$password3 = md5(rawurldecode($this->request->getGet('password3')));
-		if($password!=$password1){
+		$password1 = rawurldecode((string)$this->request->getGet('password1'));
+		$password2 = rawurldecode((string)$this->request->getGet('password2'));
+		$password3 = rawurldecode((string)$this->request->getGet('password3'));
+        
+        $isValid = false;
+        $hashTrim = trim((string)$password);
+        if (str_starts_with($hashTrim, '$2y$') || str_starts_with($hashTrim, '$2a$') || str_starts_with($hashTrim, '$2b$') || str_starts_with($hashTrim, '$argon2')) {
+            $isValid = password_verify($password1, $hashTrim);
+        } else {
+            $isValid = (strcasecmp(md5($password1), $hashTrim) === 0);
+        }
+
+		if(!$isValid){
 			echo"1";
 		}
 		else if($password2!=$password3){
 			echo"2";
 		}
 		else{
-			$data = array('password' => $password2 );
+            $newHash = password_hash($password2, PASSWORD_BCRYPT);
+			$data = array('password' => $newHash );
 			$data = $this->muserModel->edit("tbluser",$data,$userpk);
-			session()->set(SESSION_NAME.'password', $password2);
+			session()->set(SESSION_NAME.'password', $newHash);
 			$insert = [
                 'userpk' => $userpk,
-                'password' => $password2,
+                'password' => $newHash,
                 'modifiedby' => session()->get(SESSION_NAME.'username'),
                 'modifiedon' => date('Y-m-d H:i:s')
             ];

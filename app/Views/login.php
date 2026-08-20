@@ -455,8 +455,6 @@
     </p>
   </div>
 
-  <div id="dialog-message" title="Pesan" style="display:none;"></div>
-  
   <!-- jQuery -->
   <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
   <!-- jQuery UI -->
@@ -469,18 +467,68 @@
   <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 
   <script>
-    // Standalone showDialog untuk halaman login tanpa memuat seluruh mains.js
-    function showDialog(message) {
-        $("#dialog-message").html('<div class="text-center"><i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i><p>' + message + '</p></div>');
-        $("#dialog-message").dialog({
+    // Standalone dialog untuk halaman login tanpa memuat seluruh mains.js.
+    //
+    // Semua dialog di halaman ini WAJIB lewat buildDialog(). jQuery UI hanya
+    // menjalankan callback `create` sekali (saat instance dibuat), dan saat
+    // inisialisasi elemennya dipindahkan ke akhir <body>. Jadi memanggil
+    // .dialog({...}) berulang kali pada elemen yang sama membuat tampilannya
+    // berubah-ubah: tombol Ok kehilangan class ui-button, ikon close hilang,
+    // dsb. Karena itu instance lama selalu dihancurkan dulu (destroy juga
+    // mengembalikan elemen ke posisi & title aslinya) sebelum dibuat ulang,
+    // sehingga hasil render selalu identik di setiap pemanggilan.
+    function buildDialog(selector, content, extraOptions) {
+        let $el = $(selector);
+
+        if ($el.hasClass("ui-dialog-content")) {
+            $el.dialog("destroy");
+        }
+
+        $el.html(content);
+        $el.dialog($.extend({
             modal: true,
-            width: $(window).width() > 400 ? 400 : '90%',
-            dialogClass: 'dialog-login-error',
-            buttons: {
-                Ok: function() {
+            resizable: false,
+            buttons: [{
+                text: "Ok",
+                click: function() {
                     $(this).dialog("close");
-                }
+                },
+            }, ],
+            open: function() {
+                $(this).css({
+                    'max-width': '600px',
+                });
+                $(this).dialog("option", "position", {
+                    my: "center",
+                    at: "center",
+                    of: window
+                });
+            },
+            create: function() {
+                let $wrapper = $(this).closest(".ui-dialog");
+
+                $wrapper.find(".ui-dialog-buttonset button")
+                    .addClass("ui-button ui-corner-all ui-widget custom-success-btn");
+
+                $wrapper.find(".ui-dialog-titlebar button")
+                    .addClass("ui-button ui-corner-all ui-widget ui-button-icon-only")
+                    .append(`<span class="ui-button-icon ui-icon ui-icon-closethick"></span>`);
             }
+        }, extraOptions || {}));
+    }
+
+    function showDialog(message) {
+        buildDialog("#dialog-message", `
+            <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
+            <br>${message}`);
+    }
+
+    function showSuccessDialog(message) {
+        buildDialog("#dialog-success-message", `
+            <span class="fa fa-check" aria-hidden="true" style="font-size:25px;"></span>
+            <p>${message}</p>`, {
+            width: 'auto',
+            height: 'auto'
         });
     }
 
@@ -492,10 +540,14 @@
       // sedangkan session login tidak — tanpa pembersihan ini, lockscreen
       // langsung muncul lagi setelah user login ulang dengan password.
       // Di halaman login tidak ada sesi yang perlu dilindungi lockscreen.
+      // Key diberi prefix 'sysmodern_' -- HARUS SAMA dengan APP_NS di
+      // lockscreen.js -- karena localStorage di-scope per-origin browser,
+      // bukan per-folder/path, dan proyek CI4 lain bisa saja diakses dari
+      // origin yang sama.
       try {
-        localStorage.removeItem('idle-locked');
-        localStorage.removeItem('idle-last-activity');
-        localStorage.removeItem('idle-failed-attempts');
+        localStorage.removeItem('sysmodern_idle-locked');
+        localStorage.removeItem('sysmodern_idle-last-activity');
+        localStorage.removeItem('sysmodern_idle-failed-attempts');
       } catch (e) {}
 
       $('form').on('submit', function() {
@@ -540,44 +592,7 @@
                 }
                 $('#processingLoader').addClass('d-none')
 
-                $("#dialog-success-message").find("p").remove();
-                $("#dialog-success-message").append(
-                  `<p> ${response.message} </p>`
-                );
-                $("#dialog-success-message").dialog({
-                  modal: true,
-                  width: 'auto',
-                  height: 'auto',
-                  resizable: false,
-                  buttons: [{
-                    text: "Ok",
-                    click: function() {
-                      $(this).dialog("close");
-                    },
-                  }, ],
-                  open: function() {
-                    $(this).css({
-                      'max-width': '600px',
-                    });
-                    $(this).dialog("option", "position", {
-                      my: "center",
-                      at: "center",
-                      of: window
-                    });
-                  },
-                  create: function() {
-                    $(this).closest(".ui-dialog")
-                      .find(".ui-dialog-buttonset button")
-                      .addClass("ui-button ui-corner-all ui-widget custom-success-btn");
-
-                    $(this).closest(".ui-dialog")
-                      .find(".ui-dialog-titlebar button")
-                      .addClass("ui-button ui-corner-all ui-widget ui-button-icon-only");
-                    $(this).closest(".ui-dialog")
-                      .find(".ui-dialog-titlebar button")
-                      .append(`<span class="ui-button-icon ui-icon ui-icon-closethick"></span>`);
-                  }
-                });
+                showSuccessDialog(response.message);
               },
               error: (error) => {
                 $('#processingLoader').addClass('d-none');
@@ -585,17 +600,7 @@
                   $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
                 }
                 let errorMsg = error.responseJSON?.errors?.user || error.responseJSON?.error || 'Terjadi kesalahan sistem';
-                $("#dialog-message").html(`
-                            <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
-                          <br>${errorMsg}`);
-                $("#dialog-message").dialog({
-                  modal: true,
-                  buttons: [{ text: "Ok", click: function() { $(this).dialog("close"); } }],
-                  create: function() {
-                    $(this).closest(".ui-dialog").find(".ui-dialog-buttonset button").addClass("ui-button ui-corner-all ui-widget custom-success-btn");
-                    $(this).closest(".ui-dialog").find(".ui-dialog-titlebar button").addClass("ui-button ui-corner-all ui-widget ui-button-icon-only").append(`<span class="ui-button-icon ui-icon ui-icon-closethick"></span>`);
-                  }
-                });
+                showDialog(errorMsg);
               }
             })
           })
@@ -604,33 +609,7 @@
               $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
             }
             let errorMsg = error.responseJSON?.errors?.user || 'Terjadi kesalahan sistem';
-            $("#dialog-message").html(`
-                            <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
-                          `)
-            $("#dialog-message").append(
-              `<br>${errorMsg}`
-            );
-            $("#dialog-message").dialog({
-              modal: true,
-              buttons: [{
-                text: "Ok",
-                click: function() {
-                  $(this).dialog("close");
-                },
-              }, ],
-              create: function() {
-                $(this).closest(".ui-dialog")
-                  .find(".ui-dialog-buttonset button")
-                  .addClass("ui-button ui-corner-all ui-widget custom-success-btn");
-
-                $(this).closest(".ui-dialog")
-                  .find(".ui-dialog-titlebar button")
-                  .addClass("ui-button ui-corner-all ui-widget ui-button-icon-only");
-                $(this).closest(".ui-dialog")
-                  .find(".ui-dialog-titlebar button")
-                  .append(`<span class="ui-button-icon ui-icon ui-icon-closethick"></span>`);
-              }
-            });
+            showDialog(errorMsg);
           })
 
       });

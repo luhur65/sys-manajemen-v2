@@ -1,3 +1,6 @@
+    <footer class="main-footer">
+        <strong>Design &copy; by <a href="#">IT PUSAT</a>.</strong>
+    </footer>
     </div>
     <!-- ./wrapper -->
 
@@ -6,10 +9,10 @@
     <div id="lockscreen-overlay" style="display:none; position:fixed; inset:0; z-index:10050; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); align-items:center; justify-content:center;">
         <div class="card shadow-lg" style="width: 95%; max-width: 400px;">
             <div class="card-header bg-primary">
-                <h3 class="card-title"><i class="fas fa-lock"></i> SESI TERKUNCI</h3>
+                <h3 class="card-title"><i class="fas fa-lock"></i> LOCK SCREEN</h3>
             </div>
             <div class="card-body">
-                <p class="text-sm">Sesi Anda terkunci karena tidak ada aktivitas selama 15 menit. Masukkan password untuk melanjutkan.</p>
+                <p class="text-sm">Layar dikunci karena tidak ada aktivitas selama 15 menit. Masukkan password untuk melanjutkan.</p>
                 <form id="lockscreen-form">
                     <div class="form-group">
                         <label>Username</label>
@@ -30,7 +33,7 @@
                         </div>
                         <p id="lockscreen-error" class="text-danger text-sm font-weight-bold mt-2" style="display:none;"></p>
                     </div>
-                    <button type="submit" id="lockscreen-btn" class="btn btn-primary btn-block mt-2">Buka Kunci</button>
+                    <button type="submit" id="lockscreen-btn" class="btn btn-primary btn-block mt-2">BUKA KUNCI</button>
                     <button type="button" id="lockscreen-biometric-btn" class="btn btn-outline-dark btn-block mt-2" style="display:none;" onclick="triggerLockscreenBiometric()">
                         <i class="fas fa-fingerprint"></i> Quick Login
                     </button>
@@ -69,8 +72,8 @@
     <script src="<?= asset('libraries/highlight/highlight.js') ?>"></script>
 
     <!-- JQGrid 570 (From Trucking) -->
-    <script src="<?= asset('libraries/jqgrid/570/js/i18n/grid.locale-en.js') ?>" type="text/javascript"></script>
-    <script src="<?= asset('libraries/jqgrid/570/js/jquery.jqGrid.min.js') ?>" type="text/javascript"></script>
+    <script src="<?= asset('libraries/jqgrid/590/js/i18n/grid.locale-en.js') ?>" type="text/javascript"></script>
+    <script src="<?= asset('libraries/jqgrid/590/js/jquery.jqGrid.min.js') ?>" type="text/javascript"></script>
 
     <!-- TAS Libraries -->
     <script src="<?= asset('libraries/tas-lib/js/mains.js') ?>"></script>
@@ -86,8 +89,12 @@
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
     <script>
-        // Simpan userid secara lokal untuk keperluan auto-relogin lockscreen jika sesi server expire
-        localStorage.setItem('lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
+        // Simpan userid secara lokal untuk keperluan auto-relogin lockscreen jika sesi server expire.
+        // Key diberi prefix 'sysmodern_' -- HARUS SAMA dengan APP_NS di lockscreen.js --
+        // karena localStorage di-scope per-origin browser, bukan per-folder/path. Tanpa prefix,
+        // proyek CI4 lain (mis. emkl-approval-sby-ci4) yang kebetulan diakses dari origin sama
+        // akan saling menimpa key ini.
+        localStorage.setItem('sysmodern_lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
     </script>
     <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>

@@ -9,6 +9,34 @@ use Psr\Log\LoggerInterface;
 
 class Menu extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel tblmenu).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'menuid',
+        'menuname',
+        'menuseq',
+        'menuparent',
+        'menuicon',
+        'link',
+        'menuexe',
+        'acoid',
+        'modifiedby',
+        'modifiedon' => "FORMAT(modifiedon, 'dd-MM-yyyy HH:mm:ss')",
+        'modifiedonview' => "FORMAT(modifiedon, 'dd-MM-yyyy HH:mm:ss')",
+    ];
+
+    /**
+     * Whitelist kolom filter untuk grid lookup ACO (tabel tblacos).
+     */
+    private const FILTER_FIELDS_ACOS = [
+        'acosid',
+        'class',
+        'method',
+        'displayname',
+    ];
+
     protected MmenuModel $mmenuModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -39,18 +67,9 @@ class Menu extends BaseController
         $search = $this->request->getPost('_search');
         $where = " WHERE 1=1 ";
 
-        if ($search == "true") {
-            $operation = $this->operation($filters);
-            if (!empty($operation)) {
-                $where .= " AND (" . $operation . ")";
-            }
-        }
-
-        if (!empty($filters)) {
-            $filterDecoded = json_decode($filters);
-            if (!empty($filterDecoded->rules)) {
-                $where .= " AND (" . $this->operation($filters) . ")";
-            }
+        $operation = $search == "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where .= " AND (" . $operation . ")";
         }
 
         $sql = $this->mmenuModel->count($where);
@@ -113,11 +132,9 @@ class Menu extends BaseController
         $search = $this->request->getPost('_search');
         $where = " WHERE 1=1 ";
 
-        if ($search == "true" && !empty($filters)) {
-            $operation = $this->operation($filters);
-            if (!empty($operation)) {
-                $where .= " AND (" . $operation . ")";
-            }
+        $operation = $search == "true" ? $this->operationAll($filters, self::FILTER_FIELDS_ACOS) : '';
+        if ($operation !== '') {
+            $where .= " AND (" . $operation . ")";
         }
 
         $sql = $this->mmenuModel->countAcos($where);
@@ -213,59 +230,6 @@ class Menu extends BaseController
             'data'   => $data,
             'route'  => $route
         ]);
-    }
-
-    private function operation($filters)
-    {
-        if (empty($filters)) return "";
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
-        
-        $whereArray = array();
-        if (empty($filters->rules)) return "";
-        
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = $this->mmenuModel->escapeString($rule->data);
-            $fieldOperation = "";
-            
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '" . $fieldData . "'"; break;
-                case "ne": $fieldOperation = " != '" . $fieldData . "'"; break;
-                case "lt": $fieldOperation = " < '" . $fieldData . "'"; break;
-                case "gt": $fieldOperation = " > '" . $fieldData . "'"; break;
-                case "le": $fieldOperation = " <= '" . $fieldData . "'"; break;
-                case "ge": $fieldOperation = " >= '" . $fieldData . "'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (" . $fieldData . ")"; break;
-                case "ni": $fieldOperation = " NOT IN '" . $fieldData . "'"; break;
-                case "bw": $fieldOperation = " LIKE '" . $fieldData . "%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '" . $fieldData . "%'"; break;
-                case "ew": $fieldOperation = " LIKE '%" . $fieldData . "'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%" . $fieldData . "'"; break;
-                case "cn": $fieldOperation = " LIKE '%" . $fieldData . "%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%" . $fieldData . "%'"; break;
-            }
-            if ($fieldOperation != "") {
-                if ($fieldName == "modifiedon") {
-                    $whereArray[] = "FORMAT(modifiedon,'dd-MM-yyyy HH:mm:ss')" . $fieldOperation;
-                } else {
-                    $whereArray[] = $fieldName . $fieldOperation;
-                }
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            return join(" " . $groupOperation . " ", $whereArray);
-        } else {
-            return "";
-        }
     }
 
     public function reseq()

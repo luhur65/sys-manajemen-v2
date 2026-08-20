@@ -6,6 +6,19 @@ use App\Models\MshippernewModel;
 
 class NewShipper extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel shipper baru).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FNCabang',
+        'FNShipper',
+        'FNMarketing',
+        'FTgl' => "FORMAT(CAST(FTgl AS DATETIME), 'dd-MMM-yyyy', 'en-US')",
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
     protected $mshippernewModel;
 
     public function __construct()
@@ -44,11 +57,9 @@ class NewShipper extends BaseController
         }
 
         $where = "";
-        if ($search == 'true' && !empty($filters)) {
-            $operation = trim($this->operation($filters));
-            if (!empty($operation)) {
-                $where = "(" . $operation . ")";
-            }
+        $operation = $search == 'true' ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where = "(" . $operation . ")";
         }
 
         $offset = ($page - 1) * $limit;
@@ -85,52 +96,4 @@ class NewShipper extends BaseController
         return $this->response->setJSON($response);
     }
 
-    private function operation($filters)
-    {
-        $filters = json_decode($filters);
-        $where = "";
-        $whereArray = [];
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-
-        foreach ($rules as $rule) {
-            $field = $rule->field;
-            $data = $rule->data;
-            
-            // Map jqGrid operations to SQL Server operators
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '" . $data . "'"; break;
-                case "ne": $fieldOperation = " != '" . $data . "'"; break;
-                case "lt": $fieldOperation = " < '" . $data . "'"; break;
-                case "le": $fieldOperation = " <= '" . $data . "'"; break;
-                case "gt": $fieldOperation = " > '" . $data . "'"; break;
-                case "ge": $fieldOperation = " >= '" . $data . "'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (" . $data . ")"; break;
-                case "ni": $fieldOperation = " NOT IN ('" . $data . "')"; break;
-                case "bw": $fieldOperation = " LIKE '" . $data . "%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '" . $data . "%'"; break;
-                case "ew": $fieldOperation = " LIKE '%" . $data . "'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%" . $data . "'"; break;
-                case "cn": $fieldOperation = " LIKE '%" . $data . "%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%" . $data . "%'"; break;
-                default: $fieldOperation = ""; break;
-            }
-
-            if ($fieldOperation != "") {
-                if (strtoupper($field) === 'FTGL') {
-                    $whereArray[] = "FORMAT(CAST(" . $field . " AS DATETIME), 'dd-MMM-yyyy', 'en-US')" . $fieldOperation;
-                } else {
-                    $whereArray[] = $field . $fieldOperation;
-                }
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            $where .= join(" $groupOperation ", $whereArray);
-        }
-
-        return $where;
-    }
 }

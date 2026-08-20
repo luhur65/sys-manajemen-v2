@@ -67,3 +67,14 @@
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# SECURITY
+#--------------------------------------------------------------------
+
+# Penegakan ACL (App\Filters\AclFilter).
+#   true  = request tanpa hak akses ditolak dengan HTTP 403 (default)
+#   false = hanya dicatat sebagai "ACL WOULD-DENY" di writable/logs,
+#           request tetap diteruskan. Pakai ini saat transisi untuk
+#           menemukan baris tblacos yang masih kurang.
+# security.aclEnforce = true

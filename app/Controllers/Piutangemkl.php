@@ -12,6 +12,32 @@ use Psr\Log\LoggerInterface;
 
 class Piutangemkl extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (view LapEMKL_Piutang).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FNTrans',
+        'FNInvoice',
+        'FNShipper',
+        'FJnsRemind',
+        'FNoJob',
+        'FBlnJob',
+        'FThnJob',
+        'FJnsJob',
+        'FJnsPiutang',
+        'FTglHariIni',
+        'FTgl' => "UPPER(FORMAT(FTgl, 'dd-MMM-yyyy'))",
+        'FTglJT' => "UPPER(FORMAT(FTglJT, 'dd-MMM-yyyy'))",
+        'FNTgl' => "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))",
+        'FNominal' => ['sql' => 'CAST(FNominal AS VARCHAR)', 'numeric' => true],
+        'FSisa' => ['sql' => 'CAST(FSisa AS VARCHAR)', 'numeric' => true],
+        'FSelisih' => ['sql' => 'FSelisih', 'numeric' => true],
+        'FTOP' => ['sql' => 'FTOP', 'numeric' => true],
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
     protected $mpiutangemklModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -49,7 +75,7 @@ class Piutangemkl extends BaseController
         // $search = $this->request->getPost('_search');
         $where = " ";
 
-        $operation = trim($this->operationAll($filters));
+        $operation = $this->operationAll($filters);
 
         if ($operation != '') {
             $where = " AND ($operation)";
@@ -60,7 +86,7 @@ class Piutangemkl extends BaseController
         $jnstitipan = $this->request->getPost('isTitipan');
 
         if ($jnsjob && $jnsjob != 'A') {
-            $where .= " AND FJnsJob LIKE '$jnsjob%'";
+            $where .= " AND FJnsJob LIKE " . $this->escapeFilterValue($jnsjob . '%');
         }
         if ($jnstitipan == '1') {
             $where .= " AND FJnsPiutang = 'TITIPAN'";
@@ -130,80 +156,5 @@ class Piutangemkl extends BaseController
             $hasil = $key->FlastUpdate;
         }
         return $hasil;
-    }
-
-    protected function operationAll($filters)
-    {
-        if (empty($filters)) return " ";
-
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
-
-        if (!$filters) return '';
-
-        if (
-            !isset($filters->rules) ||
-            empty($filters->rules)
-        ) {
-            return '';
-        }
-
-        $where = " ";
-        $whereArray = array();
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = $rule->data;
-
-            // Handle date fields to match UI format (dd-MMM-yyyy)
-            if ($fieldName == 'FTgl' || $fieldName == 'FTglJT') {
-                $fieldName = "UPPER(FORMAT($fieldName, 'dd-MMM-yyyy'))";
-            }
-            
-            // Handle calculated field FNTgl
-            if ($fieldName == 'FNTgl') {
-                $fieldName = "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))";
-            }
-
-            // Handle numeric fields: Strip commas from input and cast column to string for LIKE search
-            if ($fieldName == 'FNominal' || $fieldName == 'FSisa') {
-                $fieldData = str_replace(',', '', $fieldData);
-                $fieldName = "CAST($fieldName AS VARCHAR)";
-            }
-
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '" . $fieldData . "'"; break;
-                case "ne": $fieldOperation = " != '" . $fieldData . "'"; break;
-                case "lt": $fieldOperation = " < '" . $fieldData . "'"; break;
-                case "gt": $fieldOperation = " > '" . $fieldData . "'"; break;
-                case "le": $fieldOperation = " <= '" . $fieldData . "'"; break;
-                case "ge": $fieldOperation = " >= '" . $fieldData . "'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (" . $fieldData . ")"; break;
-                case "ni": $fieldOperation = " NOT IN '" . $fieldData . "'"; break;
-                case "bw": $fieldOperation = " LIKE '" . $fieldData . "%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '" . $fieldData . "%'"; break;
-                case "ew": $fieldOperation = " LIKE '%" . $fieldData . "'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%" . $fieldData . "'"; break;
-                case "cn": $fieldOperation = " LIKE '%" . $fieldData . "%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%" . $fieldData . "%'"; break;
-                default: $fieldOperation = ""; break;
-            }
-
-            if ($fieldOperation != "") {
-                $whereArray[] = $fieldName . $fieldOperation;
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            return join(" " . $groupOperation . " ", $whereArray);
-        }
-
-        return '';
     }
 }

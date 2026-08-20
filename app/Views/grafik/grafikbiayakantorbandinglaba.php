@@ -122,7 +122,7 @@
             return {
                 chart: { backgroundColor: 'transparent' },
                 title: { style: { color: isDark ? '#ffffff' : '#333333' } },
-                subtitle: { style: { color: isDark ? '#cccccc' : '#666666' } },
+                subtitle: { style: { color: isDark ? '#ffffff' : '#666666' } }, // Warna tulisan periode dibuat full putih
                 xAxis: { labels: { style: { color: isDark ? '#cccccc' : '#666666' } } },
                 yAxis: {
                     title: { style: { color: isDark ? '#cccccc' : '#666666' } },
@@ -132,6 +132,10 @@
                 legend: {
                     itemStyle: { color: isDark ? '#cccccc' : '#333333' },
                     itemHoverStyle: { color: isDark ? '#ffffff' : '#000000' }
+                },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(52, 58, 64, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                    style: { color: isDark ? '#ffffff' : '#333333' }
                 },
                 plotOptions: {
                     series: {
@@ -146,8 +150,34 @@
             };
         };
 
+        // Format data awal secara dinamis agar yang lebih tinggi selalu di atas, dan lebih rendah di bawah
+        var initialDataBiaya = getArrayData([<?= isset($TotalBiayaCABANG) && is_array($TotalBiayaCABANG) ? implode(',', $TotalBiayaCABANG) : (isset($TotalBiayaCABANG) ? $TotalBiayaCABANG : '[]') ?>]).map(function(v) { return parseFloat(v) || 0; });
+        var initialDataLaba = getArrayData([<?= isset($TotalLabaCABANG) && is_array($TotalLabaCABANG) ? implode(',', $TotalLabaCABANG) : (isset($TotalLabaCABANG) ? $TotalLabaCABANG : '[]') ?>]).map(function(v) { return parseFloat(v) || 0; });
+        
+        var formattedBiaya = [];
+        var formattedLaba = [];
+        for (var i = 0; i < initialDataBiaya.length; i++) {
+            var valB = initialDataBiaya[i];
+            var valL = initialDataLaba[i];
+            
+            if (valB >= valL) {
+                formattedBiaya.push({ y: valB, dataLabels: { verticalAlign: 'bottom', y: -15 } });
+                formattedLaba.push({ y: valL, dataLabels: { verticalAlign: 'top', y: 15 } });
+            } else {
+                formattedBiaya.push({ y: valB, dataLabels: { verticalAlign: 'top', y: 15 } });
+                formattedLaba.push({ y: valL, dataLabels: { verticalAlign: 'bottom', y: -15 } });
+            }
+        }
+
         var myChart = Highcharts.chart('grafikCabang', {
-            chart: { type: 'line' },
+            chart: { 
+                type: 'line',
+                scrollablePlotArea: {
+                    minWidth: 700,
+                    scrollPositionX: 1,
+                    opacity: 0 // Menghilangkan overlay kotak putih bawaan scrollablePlotArea Highcharts
+                }
+            },
             title: { text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang <?= strtoupper($cabangCABANG ?? '') ?>' },
             subtitle: { text: 'Per <?= $jlhblnCABANG ?? 0 ?> Bulan, Tahun <?= $TahunCABANG ?? "" ?>' },
             xAxis: { categories: [<?= isset($FTglCABANG) && is_array($FTglCABANG) ? implode(',', $FTglCABANG) : (isset($FTglCABANG) ? $FTglCABANG : '[]') ?>] },
@@ -165,6 +195,8 @@
                     dataLabels: {
                         enabled: true,
                         allowOverlap: true,
+                        crop: false,
+                        overflow: 'justify',
                         formatter: function () {
                             return formatRupiah(this.y);
                         }
@@ -188,11 +220,11 @@
             series: [{
                 name: 'Biaya Kantor',
                 color: '#dc3545',
-                data: getArrayData([<?= isset($TotalBiayaCABANG) && is_array($TotalBiayaCABANG) ? implode(',', $TotalBiayaCABANG) : (isset($TotalBiayaCABANG) ? $TotalBiayaCABANG : '[]') ?>])
+                data: formattedBiaya
             }, {
                 name: 'Laba Bersih',
                 color: '#28a745',
-                data: getArrayData([<?= isset($TotalLabaCABANG) && is_array($TotalLabaCABANG) ? implode(',', $TotalLabaCABANG) : (isset($TotalLabaCABANG) ? $TotalLabaCABANG : '[]') ?>])
+                data: formattedLaba
             }]
         });
 
@@ -287,9 +319,24 @@
                         return parseFloat(val) || 0;
                     });
 
+                    var formattedBiayaAjax = [];
+                    var formattedLabaAjax = [];
+                    for (var i = 0; i < dataBiaya.length; i++) {
+                        var valB = dataBiaya[i];
+                        var valL = dataLaba[i];
+                        
+                        if (valB >= valL) {
+                            formattedBiayaAjax.push({ y: valB, dataLabels: { verticalAlign: 'bottom', y: -15 } });
+                            formattedLabaAjax.push({ y: valL, dataLabels: { verticalAlign: 'top', y: 15 } });
+                        } else {
+                            formattedBiayaAjax.push({ y: valB, dataLabels: { verticalAlign: 'top', y: 15 } });
+                            formattedLabaAjax.push({ y: valL, dataLabels: { verticalAlign: 'bottom', y: -15 } });
+                        }
+                    }
+
                     myChart.xAxis[0].setCategories(categories);
-                    myChart.series[0].setData(dataBiaya);
-                    myChart.series[1].setData(dataLaba);
+                    myChart.series[0].setData(formattedBiayaAjax);
+                    myChart.series[1].setData(formattedLabaAjax);
                     
                     $('#textLastUpdate').text('Last Update : ' + (res.LastUpdateCABANG || '-'));
                     

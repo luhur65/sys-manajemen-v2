@@ -9,6 +9,21 @@ use Psr\Log\LoggerInterface;
 
 class Parameter extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (tabel tblparameter).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'parameter_key',
+        'parametergrpid',
+        'parameterid',
+        'parametertext',
+        'parametermemo',
+        'modifiedby',
+        'modifiedon' => "FORMAT(modifiedon, 'dd-MM-yyyy HH:mm:ss')",
+        'modifiedonview' => "FORMAT(modifiedon, 'dd-MM-yyyy HH:mm:ss')",
+    ];
+
     protected MparameterModel $mparameterModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -39,18 +54,9 @@ class Parameter extends BaseController
         $search = $this->request->getPost('_search');
         $where = " WHERE 1=1 ";
 
-        if ($search == "true") {
-            $operation = $this->operation($filters);
-            if (!empty($operation)) {
-                $where .= " AND (" . $operation . ")";
-            }
-        }
-
-        if (!empty($filters)) {
-            $filterDecoded = json_decode($filters);
-            if (!empty($filterDecoded->rules)) {
-                $where .= " AND (" . $this->operation($filters) . ")";
-            }
+        $operation = $search == "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where .= " AND (" . $operation . ")";
         }
 
         $sql = $this->mparameterModel->count($where);
@@ -130,58 +136,4 @@ class Parameter extends BaseController
         return $this->response->setJSON($data);
     }
 
-    protected function operation($filters)
-    {
-        if (empty($filters)) return " 1=1 ";
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
-        
-        $whereArray = array();
-        
-        if (!isset($filters->rules)) return " 1=1 ";
-        
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = addslashes($rule->data);
-
-            switch ($rule->op) {
-                case "eq": $fieldOperation = " = '".$fieldData."'"; break;
-                case "ne": $fieldOperation = " != '".$fieldData."'"; break;
-                case "lt": $fieldOperation = " < '".$fieldData."'"; break;
-                case "gt": $fieldOperation = " > '".$fieldData."'"; break;
-                case "le": $fieldOperation = " <= '".$fieldData."'"; break;
-                case "ge": $fieldOperation = " >= '".$fieldData."'"; break;
-                case "nu": $fieldOperation = " = ''"; break;
-                case "nn": $fieldOperation = " != ''"; break;
-                case "in": $fieldOperation = " IN (".$fieldData.")"; break;
-                case "ni": $fieldOperation = " NOT IN '".$fieldData."'"; break;
-                case "bw": $fieldOperation = " LIKE '".$fieldData."%'"; break;
-                case "bn": $fieldOperation = " NOT LIKE '".$fieldData."%'"; break;
-                case "ew": $fieldOperation = " LIKE '%".$fieldData."'"; break;
-                case "en": $fieldOperation = " NOT LIKE '%".$fieldData."'"; break;
-                case "cn": $fieldOperation = " LIKE '%".$fieldData."%'"; break;
-                case "nc": $fieldOperation = " NOT LIKE '%".$fieldData."%'"; break;
-                default: $fieldOperation = ""; break;
-            }
-            
-            if ($fieldOperation != "") {
-                if ($fieldName == "modifiedon") {
-                    $whereArray[] = "FORMAT(modifiedon,'dd-MM-yyyy HH:mm:ss')".$fieldOperation;
-                } else {
-                    $whereArray[] = $fieldName.$fieldOperation;
-                }
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            return join(" ".$groupOperation." ", $whereArray);
-        } else {
-            return " 1=1 ";
-        }
-    }
 }

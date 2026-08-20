@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Libraries\GridFilter;
 use App\Models\MmenutopModel;
 use Psr\Log\LoggerInterface;
 
@@ -30,6 +31,20 @@ abstract class BaseController extends Controller
     protected $helpers = ['url', 'form', 'my_helper', 'global_helper', 'asset_helper'];
     protected string $layout = 'home';
     protected $mmenutopModel;
+
+    /**
+     * Whitelist kolom yang boleh dipakai pada filter grid jqGrid.
+     * Wajib diisi oleh controller yang memanggil operationAll().
+     *
+     * @see \App\Libraries\GridFilter::build() untuk bentuk yang diterima.
+     */
+    protected array $filterFields = [];
+
+    /**
+     * Grup database yang mengeksekusi query grid. Dipakai untuk meng-escape
+     * nilai filter dengan aturan driver yang benar. null = grup default.
+     */
+    protected ?string $filterDbGroup = null;
 
     /**
      * @return void
@@ -71,106 +86,43 @@ abstract class BaseController extends Controller
         return 'partials/layouts/' . $this->layout;
     }
 
-    protected function operationAll($filters)
+    /**
+     * Menerjemahkan JSON filter jqGrid menjadi kondisi WHERE yang aman.
+     *
+     * Nama kolom disaring lewat whitelist dan nilainya di-escape oleh driver
+     * database yang bersangkutan, jadi tidak ada lagi input client yang masuk
+     * sebagai sintaks SQL.
+     *
+     * @param mixed       $filters   Isi POST `filters`.
+     * @param array|null  $fieldMap  Whitelist kolom; null memakai $filterFields.
+     * @param string|null $dbGroup   Grup database; null memakai $filterDbGroup.
+     *
+     * @return string Kondisi tanpa kurung dan tanpa `AND` di depan, atau string
+     *                kosong bila tidak ada rule yang valid.
+     */
+    protected function operationAll($filters, ?array $fieldMap = null, ?string $dbGroup = null): string
     {
-        if (empty($filters)) return " ";
+        $gridFilter = new GridFilter($dbGroup ?? $this->filterDbGroup);
 
-        $filters = str_replace('\"', '"', $filters);
-        $filters = str_replace('"[', '[', $filters);
-        $filters = str_replace(']"', ']', $filters);
-        $filters = json_decode($filters);
+        return $gridFilter->build($filters, $fieldMap ?? $this->filterFields);
+    }
 
-        if (!$filters) return " ";
+    /**
+     * Meng-escape satu nilai menjadi literal SQL yang aman, memakai driver dari
+     * grup database yang akan menjalankan query-nya.
+     *
+     * Dipakai untuk filter tambahan di luar grid (dropdown cabang, marketing,
+     * periode) yang sebelumnya dikonkatenasi mentah atau lewat addslashes().
+     * addslashes() TIDAK aman untuk SQL Server: backslash bukan karakter escape
+     * di sana, sehingga kutip tunggal tetap lolos.
+     *
+     * @return string Literal lengkap dengan tanda kutipnya.
+     */
+    protected function escapeFilterValue($value, ?string $dbGroup = null): string
+    {
+        $db = \Config\Database::connect($dbGroup ?? $this->filterDbGroup);
 
-        $where = " ";
-        $whereArray = array();
-        $rules = $filters->rules;
-        $groupOperation = $filters->groupOp;
-        $found = 0;
-
-        foreach ($rules as $rule) {
-            $fieldName = $rule->field;
-            $fieldData = $rule->data; // TODO: Implement proper escaping if not using Query Builder
-
-            $numericColumns = ['FNOMINAL', 'FSISA', 'FSELISIH', 'FTOP', 'FJUMLAHMUATAN', 'FJUMLAHBONGKARAN', 'FJUMLAHEXIM', 'FOMSET', 'FBIAYALAPANGAN', 'FNOMPPH23', 'FPROFIT', 'FMARGIN'];
-            if (in_array(strtoupper($fieldName), $numericColumns)) {
-                $fieldData = str_replace(',', '', $fieldData);
-            }
-
-            // Handle calculated field FNTgl
-            if ($fieldName == 'FNTgl') {
-                $fieldName = "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))";
-            }
-
-            switch ($rule->op) {
-                case "eq":
-                    $fieldOperation = " = '" . $fieldData . "'";
-                    break;
-                case "ne":
-                    $fieldOperation = " != '" . $fieldData . "'";
-                    break;
-                case "lt":
-                    $fieldOperation = " < '" . $fieldData . "'";
-                    break;
-                case "gt":
-                    $fieldOperation = " > '" . $fieldData . "'";
-                    break;
-                case "le":
-                    $fieldOperation = " <= '" . $fieldData . "'";
-                    break;
-                case "ge":
-                    $fieldOperation = " >= '" . $fieldData . "'";
-                    break;
-                case "nu":
-                    $fieldOperation = " = ''";
-                    break;
-                case "nn":
-                    $fieldOperation = " != ''";
-                    break;
-                case "in":
-                    $fieldOperation = " IN (" . $fieldData . ")";
-                    break;
-                case "ni":
-                    $fieldOperation = " NOT IN '" . $fieldData . "'";
-                    break;
-                case "bw":
-                    $fieldOperation = " LIKE '" . $fieldData . "%'";
-                    break;
-                case "bn":
-                    $fieldOperation = " NOT LIKE '" . $fieldData . "%'";
-                    break;
-                case "ew":
-                    $fieldOperation = " LIKE '%" . $fieldData . "'";
-                    break;
-                case "en":
-                    $fieldOperation = " NOT LIKE '%" . $fieldData . "'";
-                    break;
-                case "cn":
-                    $fieldOperation = " LIKE '%" . $fieldData . "%'";
-                    break;
-                case "nc":
-                    $fieldOperation = " NOT LIKE '%" . $fieldData . "%'";
-                    break;
-                default:
-                    $fieldOperation = "";
-                    break;
-            }
-
-            if ($fieldOperation != "") {
-                $dateColumns = ['FTGL', 'FTGLJT', 'FNTGL'];
-                if (in_array(strtoupper($fieldName), $dateColumns)) {
-                    $whereArray[] = "FORMAT(CAST(" . $fieldName . " AS DATETIME), 'dd-MMM-yyyy', 'en-US')" . $fieldOperation;
-                } else {
-                    $whereArray[] = $fieldName . $fieldOperation;
-                }
-            }
-        }
-
-        if (count($whereArray) > 0) {
-            $where .= join(" " . $groupOperation . " ", $whereArray);
-        }
-
-        return $where;
+        return $db->escape((string) $value);
     }
 
     /**

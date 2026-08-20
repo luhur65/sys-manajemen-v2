@@ -61,7 +61,7 @@ class Login extends BaseController
 
         $this->response->setHeader("Cache-Control", "no-cache, must-revalidate");
         $userid = $this->request->getPost('userid');
-        $password = md5($this->request->getPost('password'));
+        $password = (string)$this->request->getPost('password');
 
         $cek = $this->mloginModel->login($userid, $password);
 
@@ -107,7 +107,7 @@ class Login extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Sesi telah berakhir permanen. Silakan muat ulang halaman.']);
         }
         
-        $password = md5($this->request->getPost('password'));
+        $password = (string)$this->request->getPost('password');
         $cek = $this->mloginModel->login($userid, $password);
         
         if ($cek != "" && $cek->getNumRows() > 0) {
@@ -276,7 +276,7 @@ class Login extends BaseController
         
         if ($userRow) {
             $muserModel->update($userRow->userpk, [
-                'password' => md5($password)
+                'password' => password_hash($password, PASSWORD_BCRYPT)
             ]);
         }
 

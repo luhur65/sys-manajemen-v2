@@ -8,6 +8,26 @@ use Psr\Log\LoggerInterface;
 
 class Omsetrekapmarketingsby extends BaseController
 {
+    /**
+     * Whitelist kolom filter grid jqGrid (view vRekapOmsetMarketing).
+     * Kolom di luar daftar ini ditolak oleh GridFilter.
+     */
+    protected array $filterFields = [
+        'FBulan',
+        'FNMarketing',
+        'FJumlahMuatan' => ['sql' => 'FJumlahMuatan', 'numeric' => true],
+        'FJumlahBongkaran' => ['sql' => 'FJumlahBongkaran', 'numeric' => true],
+        'FJumlahExim' => ['sql' => 'FJumlahExim', 'numeric' => true],
+        'FOmset' => ['sql' => 'FOmset', 'numeric' => true],
+        'FBiayaLapangan' => ['sql' => 'FBiayaLapangan', 'numeric' => true],
+        'FNomPph23' => ['sql' => 'FNomPph23', 'numeric' => true],
+        'FProfit' => ['sql' => 'FProfit', 'numeric' => true],
+        'FMargin' => ['sql' => 'FMargin', 'numeric' => true],
+        'FTglUpdate',
+    ];
+
+    protected ?string $filterDbGroup = 'dbtruck';
+
     protected $momsetrekapmarketingsbyModel;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
@@ -70,18 +90,19 @@ class Omsetrekapmarketingsby extends BaseController
         
         $where = "";
         
-        if ($search == "true") {
-            $where = " AND (" . $this->operationAll($filters) . ")";
+        $operation = $search == "true" ? $this->operationAll($filters) : '';
+        if ($operation !== '') {
+            $where = " AND (" . $operation . ")";
         }
         
         if ($jenis == 'bln' && !empty($bln)) {
-            $where .= " AND FBulan = '" . addslashes($bln) . "'";
+            $where .= " AND FBulan = " . $this->escapeFilterValue($bln);
         } else if ($jenis == 'thn' && !empty($thn)) {
-            $where .= " AND FBulan LIKE '%" . addslashes($thn) . "'";
+            $where .= " AND FBulan LIKE " . $this->escapeFilterValue('%' . $thn);
         }
         
         if (!empty($marketing) && $marketing != 'ALL') {
-            $where .= " AND FNMarketing = '" . addslashes($marketing) . "'";
+            $where .= " AND FNMarketing = " . $this->escapeFilterValue($marketing);
         }
 
         $sql = $this->momsetrekapmarketingsbyModel->count($where);
