@@ -94,7 +94,11 @@ function startWebAuthnLogin(loginUrl, processUrl, redirectUrlOrCallback, errorCa
     // (mis. Android 8) — tanpa ini navigator.credentials.get selalu gagal
     // dengan NotAllowedError di perangkat tersebut.
     let storedUserid = null;
-    try { storedUserid = localStorage.getItem('lockscreen_userid'); } catch (e) {}
+    // Key diberi prefix 'sysmodern_' -- HARUS SAMA dengan APP_NS di
+    // lockscreen.js -- karena localStorage di-scope per-origin browser, bukan
+    // per-folder/path, dan proyek CI4 lain bisa saja diakses dari origin yang
+    // sama.
+    try { storedUserid = localStorage.getItem('sysmodern_lockscreen_userid'); } catch (e) {}
 
     $.ajax({
         url: loginUrl,
