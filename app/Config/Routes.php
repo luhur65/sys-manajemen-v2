@@ -18,6 +18,9 @@ $routes->get('/', 'Login::index');
 $routes->post('forgot-password', 'Login::forgotPassword');
 $routes->get('reset-password', 'Login::resetPasswordForm');
 $routes->post('reset-password', 'Login::resetPasswordSubmit');
+// Link reset password kustom: /reset/<username>-dd-mm-yyyy-hh-ii-ss-<token>
+// Route eksplisit & terbatas satu segmen. Token tetap diverifikasi di controller.
+$routes->get('reset/(:segment)', 'Login::resetPasswordCustom/$1', ['as' => 'reset.custom']);
 
 
 // Webauthn Routes
@@ -1022,7 +1025,3 @@ $routes->match(['GET', 'POST'], 'grafikbiayakantorbandinglaba', 'Grafikbiayakant
 $routes->match(['GET', 'POST'], 'Grafikbiayakantorbandinglaba', 'Grafikbiayakantorbandinglaba::index');
 $routes->match(['GET', 'POST'], 'grafikbiayakantorbandinglaba/index', 'Grafikbiayakantorbandinglaba::index');
 $routes->match(['GET', 'POST'], 'Grafikbiayakantorbandinglaba/index', 'Grafikbiayakantorbandinglaba::index');
-
-// Fallback Route for Password Reset Custom Links
-$routes->get('sys-modern/(.*)', 'Login::resetPasswordCustom/$1');
-$routes->get('(.*)', 'Login::resetPasswordCustom/$1');

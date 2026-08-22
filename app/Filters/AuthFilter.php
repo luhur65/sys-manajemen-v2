@@ -8,16 +8,25 @@ use CodeIgniter\HTTP\ResponseInterface;
 
 class AuthFilter implements FilterInterface
 {
+    /**
+     * Memeriksa sesi login untuk setiap request.
+     *
+     * Pengecualian (mis. halaman login dan link reset password) didaftarkan
+     * sebagai route eksplisit pada daftar `except` di Config\Filters, BUKAN
+     * dengan mencocokkan bentuk string URL di sini. Pencocokan berbasis pola URL
+     * pernah membuka celah bypass autentikasi karena pola dievaluasi terhadap
+     * path apa pun, bukan terhadap route yang benar-benar cocok.
+     */
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Allow custom reset password link
-        $uri = $request->getUri()->getPath();
-        if (preg_match('#.*-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}-\d{2}-[a-f0-9]+$#i', urldecode($uri))) {
-            return;
-        }
-
         // SESSION_NAME is defined in Constants.php
-        if (!session()->get(SESSION_NAME . 'logged_in')) {
+        if (! session()->get(SESSION_NAME . 'logged_in')) {
+            if ($request->isAJAX()) {
+                return service('response')
+                    ->setStatusCode(401)
+                    ->setJSON(['error' => 'Session expired']);
+            }
+
             return redirect()->to(base_url('login'));
         }
     }

@@ -77,10 +77,10 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
-            'auth' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password']],
+            'auth' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password', 'reset/*']],
             // Menegakkan ACL database (tblacos/tblacl/tbluseracl/tbluserroles) pada
             // pasangan class/method hasil routing. Harus berada setelah 'auth'.
-            'acl' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password']],
+            'acl' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password', 'reset/*']],
         ],
         'after' => [
             // 'honeypot',

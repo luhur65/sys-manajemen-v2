@@ -213,4 +213,26 @@ class ContentSecurityPolicy extends BaseConfig
      * Replace nonce tag automatically?
      */
     public bool $autoNonce = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Di development, Debug Toolbar menyuntikkan tag-nya memakai
+        // csp_script_nonce()/csp_style_nonce(). Begitu sebuah nonce masuk ke
+        // direktif script-src/style-src (dan *-elem), browser mengabaikan
+        // 'unsafe-inline' pada direktif tersebut sesuai spec CSP, sehingga
+        // seluruh <script>/<style> inline di view ikut terblokir dan halaman
+        // terlihat seperti kehilangan asset.
+        //
+        // Karena itu saat debug aktif CSP dijalankan sebagai report-only:
+        // pelanggaran tetap terlihat di console browser, tapi tidak memblokir.
+        // Production (CI_DEBUG = false) tetap enforcing.
+        //
+        // Sengaja memakai CI_DEBUG, bukan ENVIRONMENT, karena CI_DEBUG persis
+        // menandai kapan Debug Toolbar (dan nonce-nya) ikut aktif.
+        if (defined('CI_DEBUG') && CI_DEBUG) {
+            $this->reportOnly = true;
+        }
+    }
 }

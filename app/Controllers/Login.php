@@ -187,23 +187,47 @@ class Login extends BaseController
         ]);
 
         $datetime = date('d-m-Y-H-i-s');
-        $resetLink = base_url(urlencode($username) . "-{$datetime}-{$rawToken}");
+        $resetLink = base_url('reset/' . urlencode($username) . "-{$datetime}-{$rawToken}");
 
         // Send Email
         if (!empty($email)) {
-            $emailService = \Config\Services::email();
-            $emailService->setMailType('html');
-            $emailService->setTo($email);
-            $emailService->setSubject(config('email')->subjectResetPassword);
-            
-            $htmlMessage = view('auth/email_reset_password', [
-                'userName' => $username,
-                'resetLink' => $resetLink
-            ]);
-            $emailService->setMessage($htmlMessage);
-            if (!$emailService->send()) {
+            $emailSent = false;
+
+            try {
+                $emailService = \Config\Services::email();
+                $emailService->setMailType('html');
+                $emailService->setTo($email);
+                $emailService->setSubject(config('email')->subjectResetPassword);
+
+                $htmlMessage = view('auth/email_reset_password', [
+                    'userName' => $username,
+                    'resetLink' => $resetLink
+                ]);
+                $emailService->setMessage($htmlMessage);
+
+                $emailSent = $emailService->send();
+
+                if (!$emailSent) {
+                    // Detail teknis SMTP hanya masuk ke log, tidak pernah ditampilkan ke user
+                    log_message('error', 'Reset password: gagal mengirim email ke {email}. Debug: {debug}', [
+                        'email' => $email,
+                        'debug' => $emailService->printDebugger(['headers'])
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                log_message('error', 'Reset password: exception saat mengirim email ke {email}. {message}', [
+                    'email' => $email,
+                    'message' => $e->getMessage()
+                ]);
+            }
+
+            if (!$emailSent) {
+                // Token yang sudah terlanjur dibuat dibuang supaya tidak menggantung
+                $resetModel->where('username', $username)->delete();
+
                 return $this->response->setStatusCode(500)->setJSON([
-                    'error' => 'Gagal mengirim email: ' . $emailService->printDebugger(['headers'])
+                    'error' => 'Maaf, link reset password belum bisa dikirim saat ini. Silakan coba beberapa saat lagi atau hubungi Admin IT.',
+                    'csrfToken' => csrf_hash()
                 ]);
             }
         }
