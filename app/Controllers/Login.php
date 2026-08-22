@@ -67,6 +67,12 @@ class Login extends BaseController
 
         if ($cek != "" && $cek->getNumRows() > 0) {
             $row = $cek->getRow();
+
+            // Cegah session fixation: naik level privilese (anonim -> terautentikasi)
+            // harus memakai session ID baru, dan record sesi pra-login dihancurkan
+            // supaya ID yang mungkin sudah ditanam penyerang tidak lagi berlaku.
+            session()->regenerate(true);
+
             $sessionData = [
                 SESSION_NAME . 'userpk' => $row->userpk,
                 SESSION_NAME . 'userid' => $row->userid,
@@ -114,6 +120,10 @@ class Login extends BaseController
             // Rebuild session if it was expired
             if (!session()->has(SESSION_NAME . 'logged_in')) {
                 $row = $cek->getRow();
+
+                // Sesi dibangun ulang dari kondisi anonim -> perlakukan seperti login baru.
+                session()->regenerate(true);
+
                 $sessionData = [
                     SESSION_NAME . 'userpk' => $row->userpk,
                     SESSION_NAME . 'userid' => $row->userid,

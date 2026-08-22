@@ -312,6 +312,12 @@ class Webauthn extends BaseController
                     return $this->response->setJSON(['error' => true, 'message' => 'Data pengguna tidak ditemukan. Harus Login Terlebih Dahulu menggunakan password.'])->setStatusCode(400);
                 }
 
+                // Cegah session fixation: login biometrik dari halaman login juga
+                // menaikkan level privilese, jadi butuh session ID baru seperti
+                // login password. Isi $_SESSION (termasuk webauthn_challenge)
+                // ikut pindah ke ID baru, record lama dihancurkan.
+                session()->regenerate(true);
+
                 // Create session
                 $sessionData = [
                     SESSION_NAME . 'userpk' => $user['userpk'],
