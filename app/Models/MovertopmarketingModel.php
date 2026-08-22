@@ -20,20 +20,20 @@ class MovertopmarketingModel extends Model
     }
     public function count($where,$cabang){
         if ($cabang == 'SMG') $cabang = 'SMR';
-		$sql = $this->dbtruck->query("SELECT FNTrans FROM LapEMKL_OverDue WHERE FKCABANG='".$cabang."' ". $where);
+		$sql = $this->dbtruck->query("SELECT FNTrans FROM LapEMKL_OverDue WHERE FKCABANG = ? ". $where, [$cabang]);
 
         return $sql;
 
 	}
     public function get_where1($where){
 		$sql = $this->dbtruck->query("SELECT FNTrans , FNInvoice , FNominal , FSisa , FTgl , FTglJT , FSelisih , FTglHariIni , FNShipper , FTOP , FJnsRemind, FNoJob, FBlnJob, FThnJob, FJnsJob,(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob)))) as FNTgl, FJnsPiutang FROM LapEMKL_OverDue
-			WHERE FKCABANG ='".$where."' ORDER BY FSelisih desc");
+			WHERE FKCABANG = ? ORDER BY FSelisih desc", [$where]);
 
 		return $sql;
 	}
     public function get_where2($where){
 		$sql = $this->dbtruck->query("SELECT FNTrans , FNInvoice , FNominal , FSisa , FTgl , FTglJT , FSelisih , FTglHariIni , FNShipper , FTOP , FJnsRemind, FNoJob, FBlnJob, FThnJob, FJnsJob,(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob)))) as FNTgl, FJnsPiutang FROM LapEMKL_Piutang
-			WHERE FKCABANG ='".$where."' ORDER BY FSelisih desc");
+			WHERE FKCABANG = ? ORDER BY FSelisih desc", [$where]);
 
 		return $sql;
 	}
@@ -74,8 +74,8 @@ class MovertopmarketingModel extends Model
             (ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob)))) as FNTgl,
             ROW_NUMBER() OVER (ORDER BY $surut $sord) AS RowNum 
             FROM LapEMKL_OverDue
-            WHERE FKCABANG = '$cabang' $where
-        ) AS GD WHERE RowNum BETWEEN $start AND $sampai ORDER BY RowNum");
+            WHERE FKCABANG = ? $where
+        ) AS GD WHERE RowNum BETWEEN $start AND $sampai ORDER BY RowNum", [$cabang]);
 
         return $sql;
     }
@@ -89,7 +89,7 @@ class MovertopmarketingModel extends Model
         if ($cabang == 'SMG') $cabang = 'SMR';
         $sql = $this->dbtruck->query("SELECT SUM(FNominal) as TotalNominal, SUM(FSisa) as TotalSisa 
                                      FROM LapEMKL_OverDue 
-                                     WHERE FKCABANG = '$cabang' $where");
+                                     WHERE FKCABANG = ? $where", [$cabang]);
         return $sql->getRow();
     }
 
@@ -100,7 +100,7 @@ class MovertopmarketingModel extends Model
 	}
 
     public function get_marketing($where){
-		$sql = $this->dbtruck->query("SELECT DISTINCT FNMarketing FROM LapEMKL_OverDue WHERE FKCABANG ='".$where."'");
+		$sql = $this->dbtruck->query("SELECT DISTINCT FNMarketing FROM LapEMKL_OverDue WHERE FKCABANG = ?", [$where]);
 		$hasil = '<option value="">ALL</option>';
 		foreach ($sql->getResult() as $key) {
 		 	$hasil = $hasil.'<option value="'.$key->FNMarketing.'">'.$key->FNMarketing.'</option>';
@@ -108,7 +108,7 @@ class MovertopmarketingModel extends Model
 		return $hasil;
 	}
     public function get_tglupdate($cabangid) {
-		$sql = $this->dbtruck->query("SELECT max(FlastUpdate) as FlastUpdate FROM LapEMKL_OverDue WHERE FKCABANG='" . $cabangid."'");
+		$sql = $this->dbtruck->query("SELECT max(FlastUpdate) as FlastUpdate FROM LapEMKL_OverDue WHERE FKCABANG = ?", [$cabangid]);
 
 		return $sql->getResult();
 	}

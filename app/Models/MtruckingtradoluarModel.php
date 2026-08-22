@@ -14,6 +14,30 @@ class MtruckingtradoluarModel extends Model
         $this->dbtruck = \Config\Database::connect('dbtruck');
     }
 
+    /**
+     * Whitelist kode cabang -> sufiks nama tabel.
+     * Nama tabel tidak bisa dibinding sebagai parameter, jadi nilainya
+     * wajib berasal dari daftar tetap ini, bukan dari input POST.
+     */
+    private const CABANG_SUFFIX = [
+        'MDN' => 'Mdn',
+        'JKT' => 'Jkt',
+        'SBY' => 'Sby',
+        'MKS' => 'Mks',
+    ];
+
+    private function getTableName($cabang, string $prefix = 'TradoLuar'): string
+    {
+        $kode = is_string($cabang) ? strtoupper(trim($cabang)) : '';
+
+        if (! isset(self::CABANG_SUFFIX[$kode])) {
+            log_message('warning', '[Trado Luar] Kode cabang tidak dikenal ditolak: ' . $kode);
+            $kode = 'MDN';
+        }
+
+        return $prefix . self::CABANG_SUFFIX[$kode];
+    }
+
     public function get_whereMDN($where = "")
     {
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
@@ -43,14 +67,14 @@ class MtruckingtradoluarModel extends Model
     }
     public function count($where, $cabang)
     {
-        $tableName = 'TradoLuar' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
         return $this->dbtruck->query("SELECT FTgl FROM $tableName $whereClause");
     }
 
     public function get($where, $sidx, $sord, $limit, $start, $cabang)
     {
-        $tableName = 'TradoLuar' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $start = $start + 1;
         $sampai = $limit + $start - 1;
         $surut = $sidx . " " . $sord;
@@ -65,7 +89,7 @@ class MtruckingtradoluarModel extends Model
 
     public function getGrandTotal($where, $cabang)
     {
-        $tableName = 'TradoLuar' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
         $sql = $this->dbtruck->query("SELECT 
             SUM(ISNULL(TRY_CAST(REPLACE(FUkuran20Muatan, ',', '') AS FLOAT), 0)) as Total20Muatan,
@@ -86,21 +110,21 @@ class MtruckingtradoluarModel extends Model
 
     public function get_tglupdate($cabang)
     {
-        $tableName = 'TradoLuar' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $sql = $this->dbtruck->query("SELECT FTglUpdate FROM $tableName ORDER BY FTglUpdate DESC OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY");
         return $sql->getResult();
     }
 
     public function countDetail($where, $cabang)
     {
-        $tableName = 'TradoLuarDetail' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang, 'TradoLuarDetail');
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
         return $this->dbtruck->query("SELECT FNTrans FROM $tableName $whereClause");
     }
 
     public function getDetail($where, $sidx, $sord, $limit, $start, $cabang)
     {
-        $tableName = 'TradoLuarDetail' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang, 'TradoLuarDetail');
         $start = $start + 1;
         $sampai = $limit + $start - 1;
         $surut = $sidx . " " . $sord;
@@ -115,7 +139,7 @@ class MtruckingtradoluarModel extends Model
 
     public function getGrandTotalDetail($where, $cabang)
     {
-        $tableName = 'TradoLuarDetail' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang, 'TradoLuarDetail');
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
         $sql = $this->dbtruck->query("SELECT 
             SUM(ISNULL(TRY_CAST(REPLACE(FNominalHargaTrucking, ',', '') AS FLOAT), 0)) as TotalHargaTrucking,

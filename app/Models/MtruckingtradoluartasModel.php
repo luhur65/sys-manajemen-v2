@@ -19,6 +19,18 @@ class MtruckingtradoluartasModel extends Model
         'ftglupdate',
     ];
 
+    /**
+     * Whitelist kode cabang -> sufiks nama tabel.
+     * Nama tabel tidak bisa dibinding sebagai parameter, jadi nilainya
+     * wajib berasal dari daftar tetap ini, bukan dari input pemanggil.
+     */
+    private const CABANG_SUFFIX = [
+        'MDN' => 'Mdn',
+        'JKT' => 'Jkt',
+        'SBY' => 'Sby',
+        'MKS' => 'Mks',
+    ];
+
     protected $db;
 
     public function __construct()
@@ -27,11 +39,23 @@ class MtruckingtradoluartasModel extends Model
         $this->db = \Config\Database::connect('dbtruck');
     }
 
+    private function getTableName($cabang): string
+    {
+        $kode = is_string($cabang) ? strtoupper(trim($cabang)) : '';
+
+        if (! isset(self::CABANG_SUFFIX[$kode])) {
+            log_message('warning', '[Trucking Trado Luar TAS] Kode cabang tidak dikenal ditolak: ' . $kode);
+            $kode = 'MDN';
+        }
+
+        return 'LaporanTradoLuarTas' . self::CABANG_SUFFIX[$kode];
+    }
+
     public function getGridData($cabang = 'MDN', $params = [])
     {
         // For Trucking Luar Tas Medan, we query LaporanTradoLuarTasMdn
         // If needed to support other branches, we can dynamically change the table
-        $tableName = 'LaporanTradoLuarTas' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         
         $builder = $this->db->table($tableName);
 
@@ -160,7 +184,7 @@ class MtruckingtradoluartasModel extends Model
 
     public function getComboBulan($cabang = 'MDN')
     {
-        $tableName = 'LaporanTradoLuarTas' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $sql = "SELECT FBulan FROM (SELECT DISTINCT FBulan FROM $tableName) A ORDER BY substring(A.FBulan,4,4) DESC, A.FBulan DESC";
         $query = $this->db->query($sql);
         return $query ? $query->getResultArray() : [];
@@ -168,7 +192,7 @@ class MtruckingtradoluartasModel extends Model
 
     public function getComboJenisTrado($cabang = 'MDN')
     {
-        $tableName = 'LaporanTradoLuarTas' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $sql = "SELECT DISTINCT FJenisTrado FROM $tableName";
         $query = $this->db->query($sql);
         return $query ? $query->getResultArray() : [];
@@ -176,7 +200,7 @@ class MtruckingtradoluartasModel extends Model
     
     public function getLastUpdate($cabang = 'MDN')
     {
-        $tableName = 'LaporanTradoLuarTas' . ucfirst(strtolower($cabang));
+        $tableName = $this->getTableName($cabang);
         $builder = $this->db->table($tableName);
         $builder->select('FTglUpdate');
         $builder->orderBy('FTglUpdate', 'DESC');
