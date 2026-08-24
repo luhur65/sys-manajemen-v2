@@ -104,9 +104,39 @@ $(document).ready(function () {
                     handleFailedUnlock(res.message);
                 }
             },
-            error: function () {
+            error: function (xhr) {
                 $btn.prop('disabled', false).text('Buka Kunci');
-                handleFailedUnlock('Terjadi kesalahan koneksi.');
+
+                var payload = (xhr && xhr.responseJSON) ? xhr.responseJSON : null;
+
+                // 429 = server yang membatasi (H-04). Sengaja TIDAK lewat
+                // handleFailedUnlock: pembatasannya sudah ditegakkan server, dan
+                // menambah penghitung klien hanya membuat pesannya menyesatkan
+                // ("sisa percobaan") lalu memaksa logout tanpa alasan.
+                if (xhr && xhr.status === 429) {
+                    $('#lockscreen-error')
+                        .text(payload && payload.message ? payload.message : 'Terlalu banyak percobaan. Silakan tunggu sebentar.')
+                        .show();
+                    $('#lockscreen-password').val('');
+                    return;
+                }
+
+                // 403 + ssoOnly = login lokal sedang dimatikan, bukan password
+                // salah. Sama seperti 429 di atas, ini TIDAK boleh lewat
+                // handleFailedUnlock: menghitungnya sebagai percobaan gagal akan
+                // memaksa logout atas sesuatu yang bukan kesalahan pengguna.
+                // Antar langsung ke SSO.
+                if (xhr && xhr.status === 403 && payload && payload.ssoOnly) {
+                    $('#lockscreen-error')
+                        .text(payload.message ? payload.message : 'Membuka kunci lewat SSO...')
+                        .show();
+                    window.location.href = payload.redirect ? payload.redirect : (appUrl + 'sso/login');
+                    return;
+                }
+
+                // Status lain yang membawa pesan sendiri (mis. 401 sesi habis)
+                // ditampilkan apa adanya, bukan jadi "kesalahan koneksi".
+                handleFailedUnlock(payload && payload.message ? payload.message : 'Terjadi kesalahan koneksi.');
             }
         });
     });

@@ -216,9 +216,23 @@ class App extends BaseConfig
             $host = $_SERVER['HTTP_HOST'];
 
             // ambil dari env
-            $folder = getenv('app.folder') ?: 'sys-modern';
+            //
+            // getenv() mengembalikan false kalau app.folder tidak diset sama
+            // sekali, dan '' kalau sengaja dikosongkan. Keduanya HARUS
+            // dibedakan: string kosong berarti aplikasi berada di root domain
+            // (production: https://sys.transporindo.com), sedangkan `?:` dulu
+            // memperlakukan keduanya sama dan memaksa segmen 'sys-modern' ke
+            // dalam setiap url — memakai `?:` di sini membuat deployment root
+            // domain mustahil dikonfigurasi.
+            $folder = getenv('app.folder');
 
-            $this->baseURL = $scheme . '://' . $host . '/' . trim($folder, '/') . '/';
+            if ($folder === false || $folder === null) {
+                $folder = 'sys-modern';
+            }
+
+            $folder = trim((string) $folder, '/');
+
+            $this->baseURL = $scheme . '://' . $host . '/' . ($folder === '' ? '' : $folder . '/');
         }
     }
 }

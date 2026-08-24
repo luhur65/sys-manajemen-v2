@@ -75,12 +75,22 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            // CSRF diverifikasi lebih dulu dari 'auth' supaya POST tanpa token
+            // ditolak sebelum menyentuh logika apa pun. CI4 hanya memeriksa
+            // POST/PUT/DELETE/PATCH — request GET (termasuk seluruh grid) lewat
+            // tanpa terpengaruh. Token dikirim ke browser lewat
+            // <meta name="csrf-token"> dan dipasang ke semua AJAX jQuery oleh
+            // $.ajaxSetup di partials/header.php serta login.php.
+            'csrf',
             // 'invalidchars',
-            'auth' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password', 'reset/*']],
+            // 'sso/login' dan 'auth/sso-callback' ikut dikecualikan karena
+            // keduanya adalah jalur MENUJU login: pengguna belum punya sesi
+            // sys-modern saat menyentuhnya. Yang menjaga callback bukan sesi,
+            // melainkan tanda tangan RS256 pada tiket (lihat App\Libraries\SsoTicket).
+            'auth' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password', 'reset/*', 'sso/login', 'auth/sso-callback']],
             // Menegakkan ACL database (tblacos/tblacl/tbluseracl/tbluserroles) pada
             // pasangan class/method hasil routing. Harus berada setelah 'auth'.
-            'acl' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password', 'reset/*']],
+            'acl' => ['except' => ['login', 'login/*', 'logout', '/', '', 'webauthn/getLoginArgs', 'webauthn/processLogin', 'forgot-password', 'reset-password', 'reset/*', 'sso/login', 'auth/sso-callback']],
         ],
         'after' => [
             // 'honeypot',

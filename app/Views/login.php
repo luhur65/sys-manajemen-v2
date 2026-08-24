@@ -7,6 +7,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<?= csrf_hash() ?>">
+  <meta name="csrf-token-name" content="<?= csrf_token() ?>">
   <title><?= $siteConfig->siteTitle; ?> | Log in</title>
 
   <!-- Meta Tags -->
@@ -316,6 +318,16 @@
     @media (max-width: 991.98px) {
       #btnWebAuthnLogin { display: flex !important; }
     }
+
+    /* Tombol SSO memakai gaya garis-tepi, jadi ia butuh warna teksnya sendiri.
+       .verdant-btn mewarnai teks untuk latar yang TERISI — krem di light mode,
+       gelap di dark mode — dan pada tombol berlatar transparan kedua warna itu
+       justru sewarna dengan kartunya, sehingga tulisannya hilang di kedua tema.
+       border-color sengaja tidak diatur: inline `border: 2px solid` pada
+       elemennya membuat garis tepi mengikuti currentColor, dan gaya inline
+       selalu mengalahkan aturan di sini. */
+    #btnSsoLogin { color: var(--ink-light); }
+    body.dark-mode #btnSsoLogin { color: var(--ink-dark); }
   </style>
 </head>
 
@@ -387,12 +399,21 @@
 
         <p class="verdant-seal">— PT. Transporindo Agung Sejahtera —</p>
         <h1 class="verdant-heading">Selamat datang,</h1>
-        <p class="verdant-subheading">Management Information System. Pusat kendali terpadu untuk mengelola data operasional secara efisien dan akurat.</p>
+        <p class="verdant-subheading">Management Information System.</p>
 
         <form action="<?= base_url(); ?>login/proses" method="POST">
           <?= csrf_field() ?>
           <input type="text" readonly hidden name="info" id="info" value="<?= $info ?? '' ?>">
-          
+
+          <?php
+          // Saat sso.passwordLoginEnabled = false, seluruh form lokal disembunyikan
+          // dan hanya tombol SSO yang tersisa. Ini murni kosmetik — yang benar-benar
+          // menutup jalurnya adalah penolakan di Login::proses(), Login::unlock(),
+          // forgot/reset password, dan Webauthn::processLogin().
+          $localLogin = ! isset($sso) || $sso->passwordLoginEnabled;
+          ?>
+
+          <?php if ($localLogin): ?>
           <div class="verdant-form-group">
             <div class="verdant-label-row">
               <label class="verdant-label" for="user">Username</label>
@@ -426,11 +447,13 @@
           <input type="text" readonly hidden name="latitude" id="latitude">
           <input type="text" readonly hidden name="longitude" id="longitude">
           <input type="text" readonly hidden name="clientippublic" id="clientippublic">
-          
+          <?php endif; ?>
+
           <div id="error" class="text-danger mt-2 text-center" style="font-size: 0.85rem; color: var(--terracotta-light) !important;">
             <?= $error ?? '' ?>
           </div>
 
+          <?php if ($localLogin): ?>
           <button type="submit" class="verdant-btn" onclick="signInFunction(this)">
             Masuk ke ruang kerja
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -441,6 +464,28 @@
           <button type="button" class="verdant-btn" style="background-color: transparent; border: 2px solid; margin-top: 0.5rem;" id="btnWebAuthnLogin">
             <i class="fas fa-fingerprint" style="margin-right: 0.25rem; font-size: 1.2rem;"></i> Quick Login
           </button>
+          <?php endif; ?>
+
+          <?php $ssoLogin = ! empty($sso) && $sso->enabled && trim($sso->dashboardUrl) !== ''; ?>
+
+          <?php if ($ssoLogin): ?>
+            <!-- Tautan (bukan tombol submit) supaya form login lokal tidak ikut
+                 terkirim. Tujuannya dashboard auth-sso; dari sana pengguna
+                 menekan kartu SYS dan kembali ke auth/sso-callback. -->
+            <a id="btnSsoLogin" href="<?= base_url('sso/login') ?>" class="verdant-btn" style="background-color: transparent; border: 2px solid; margin-top: <?= $localLogin ? '0.5rem' : '1rem' ?>; text-decoration: none;">
+              <i class="fas fa-id-badge" style="margin-right: 0.25rem; font-size: 1.2rem;"></i> Masuk dengan SSO
+            </a>
+          <?php endif; ?>
+
+          <?php if (! $localLogin && ! $ssoLogin): ?>
+            <!-- Login lokal dimatikan sekaligus SSO belum dikonfigurasi: tidak
+                 ada satu pun jalan masuk. Salah konfigurasi, dan lebih baik
+                 dikatakan terang-terangan daripada menyisakan kartu login kosong
+                 yang membuat orang mengira sistemnya rusak. -->
+            <div class="text-danger mt-3 text-center" style="font-size: 0.85rem; color: var(--terracotta-light) !important;">
+              Tidak ada metode login yang aktif. Hubungi administrator sistem.
+            </div>
+          <?php endif; ?>
 
           <div class="verdant-footer">
             <p style="margin-bottom: 0.25rem;">Halaman dimuat dalam <span class="verdant-footer-bold"><?= number_format(timer()->getElapsedTime('total_execution'), 2) ?></span> detik</p>
@@ -459,6 +504,20 @@
   <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
   <!-- jQuery UI -->
   <script src="<?= asset('libraries/jquery-ui/1.13.1/jquery-ui.min.js') ?>"></script>
+
+  <!-- CSRF (C-03): halaman login berdiri sendiri (tidak memakai partials/header.php),
+       jadi token dipasang di sini. Menutup POST webauthn/processLogin dari webauthn.js. -->
+  <script>
+    (function () {
+      var token = document.querySelector('meta[name="csrf-token"]');
+      if (!token || !window.jQuery) return;
+
+      window.csrfTokenName = document.querySelector('meta[name="csrf-token-name"]').getAttribute('content');
+      window.csrfTokenValue = token.getAttribute('content');
+
+      $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': window.csrfTokenValue } });
+    })();
+  </script>
   <!-- Bootstrap 4 -->
   <script src="<?= asset('libraries/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
   <!-- AdminLTE App -->

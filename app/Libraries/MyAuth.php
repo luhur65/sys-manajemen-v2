@@ -43,7 +43,12 @@ class MyAuth {
 	private $exceptAuth = [
 		'class'=>[
 			// alur autentikasi & halaman milik sendiri
-			'login','logout','home','profil','extension',
+			// 'ssoauth' adalah jalur MENUJU login (redirect ke dashboard SSO dan
+			// callback tiket), sekelas dengan 'login' dan 'webauthn': ia dipanggil
+			// justru saat user belum punya sesi, jadi ACL — yang berbicara tentang
+			// hak setelah login — tidak berlaku untuknya. Penjaganya tanda tangan
+			// RS256 pada tiket, lihat App\Libraries\SsoTicket.
+			'login','logout','ssoauth','home','profil','extension',
 			// endpoint infrastruktur (tidak membaca data bisnis)
 			'errors','webauthn','gridpreference','harilibur',
 			// class warisan CI3 yang controllernya sudah tidak ada

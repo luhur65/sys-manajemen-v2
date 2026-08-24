@@ -20,11 +20,25 @@
 # APP
 #--------------------------------------------------------------------
 
+# CATATAN: app.baseURL TIDAK dibaca aplikasi ini. Config\App::__construct()
+# menyusun sendiri baseURL dari HTTP_HOST + app.folder, jadi app.folder-lah
+# yang menentukan url — termasuk url callback SSO.
+#
+#   lokal       app.folder = '/sys-modern/'  -> http://localhost/sys-modern/
+#   staging     app.folder = 'sys'           -> https://staging.transporindo.com/sys/
+#   production  app.folder = ''              -> https://sys.transporindo.com/
+#
+# Untuk production di root domain, app.folder WAJIB ada dan bernilai kosong.
+# Menghapus barisnya sama sekali membuatnya jatuh ke default lama 'sys-modern'.
 # app.baseURL = ''
 # If you have trouble with `.`, you could also use `_`.
 # app_baseURL = ''
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
+
+# Cookie sesi hanya dikirim lewat HTTPS. WAJIB true di staging dan production
+# (keduanya HTTPS); biarkan false untuk pengembangan lokal di http://localhost.
+# cookie.secure = true
 
 #--------------------------------------------------------------------
 # DATABASE
@@ -78,3 +92,44 @@
 #           request tetap diteruskan. Pakai ini saat transisi untuk
 #           menemukan baris tblacos yang masih kurang.
 # security.aclEnforce = true
+
+#--------------------------------------------------------------------
+# SSO (auth-sso / auth-sso-api)
+#--------------------------------------------------------------------
+# Dibaca app/Config/Sso.php. sys-modern berperan sebagai aplikasi anggota:
+# auth-sso-api yang menerbitkan tiket, sys-modern hanya memverifikasinya.
+# Lihat dokumentasi_sso.md untuk alur lengkap dan cara mendaftarkan aplikasi.
+
+# sso.enabled = false
+
+# Kode aplikasi ini di sisi SSO. Harus sama dengan key di TICKET_RELAY_APPS
+# (auth-sso-api) dan `code` kartu SYS di constants/apps.ts (auth-sso).
+# sso.appCode = sys
+# sso.issuer = auth-sso
+
+# PUBLIC key RS256 milik SSO — pasangan dari SSO_TICKET_PRIVATE_KEY di
+# auth-sso-api. Boleh PEM utuh, boleh badan base64 satu baris dengan newline
+# ditulis \n. Tulis TANPA tanda kutip. JANGAN pernah menaruh private key di sini.
+# sso.ticketPublicKey =
+
+# Toleransi selisih jam (detik) dan umur simpan nonce jti. nonceTtl harus lebih
+# panjang dari TICKET_TTL_SECONDS di auth-sso-api + leeway.
+# sso.leeway = 60
+# sso.nonceTtl = 300
+
+# Dashboard auth-sso dan base URL auth-sso-api.
+# sso.dashboardUrl =
+# sso.apiBaseUrl =
+
+# Secret bersama endpoint Single Logout (header x-slo-secret). WAJIB sama persis
+# dengan SLO_INTROSPECT_SECRET di auth-sso-api.
+# sso.sloSecret =
+# sso.sloPollSeconds = 60
+
+# Identitas pada tiket yang dicocokkan ke tbluser.
+# sso.matchClaim = email
+# sso.matchColumn = email
+
+# Saklar login lokal (userid/password + reset password). Set false hanya setelah
+# SSO terbukti jalan: false berarti SSO satu-satunya jalan masuk ke sys.
+# sso.passwordLoginEnabled = true

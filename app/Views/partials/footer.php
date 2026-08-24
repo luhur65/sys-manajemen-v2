@@ -5,6 +5,17 @@
     <!-- ./wrapper -->
 
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
+    <?php
+    // Lock screen meminta password tbluser. Pengguna yang masuk lewat SSO tidak
+    // pernah mengetahui password itu — tanpa jalan keluar di bawah ia terkurung
+    // di layar terkunci sampai percobaannya habis dan dipaksa logout. Karena itu
+    // sesi berasal-SSO selalu mendapat tombol buka-kunci lewat SSO, dan form
+    // passwordnya hilang saat login lokal memang sedang dimatikan.
+    $lockSso      = config(\Config\Sso::class);
+    $lockFromSso  = (bool) session()->get(SESSION_NAME . 'sso_login');
+    $lockPassword = $lockSso->passwordLoginEnabled;
+    $lockSsoExit  = $lockSso->enabled && trim($lockSso->dashboardUrl) !== '' && ($lockFromSso || ! $lockPassword);
+    ?>
     <!-- Lockscreen Overlay -->
     <div id="lockscreen-overlay" style="display:none; position:fixed; inset:0; z-index:10050; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); align-items:center; justify-content:center;">
         <div class="card shadow-lg" style="width: 95%; max-width: 400px;">
@@ -12,7 +23,10 @@
                 <h3 class="card-title"><i class="fas fa-lock"></i> LOCK SCREEN</h3>
             </div>
             <div class="card-body">
-                <p class="text-sm">Layar dikunci karena tidak ada aktivitas selama 15 menit. Masukkan password untuk melanjutkan.</p>
+                <p class="text-sm">
+                    Layar dikunci karena tidak ada aktivitas selama 15 menit.
+                    <?= $lockPassword ? 'Masukkan password untuk melanjutkan.' : 'Buka kunci lewat SSO untuk melanjutkan.' ?>
+                </p>
                 <form id="lockscreen-form">
                     <div class="form-group">
                         <label>Username</label>
@@ -23,6 +37,7 @@
                             </div>
                         </div>
                     </div>
+                    <?php if ($lockPassword): ?>
                     <div class="form-group">
                         <label>Password</label>
                         <div class="input-group">
@@ -31,12 +46,27 @@
                                 <div class="input-group-text"><span id="lockscreen-eye" class="fas fa-eye"></span></div>
                             </div>
                         </div>
-                        <p id="lockscreen-error" class="text-danger text-sm font-weight-bold mt-2" style="display:none;"></p>
                     </div>
+                    <?php endif; ?>
+
+                    <!-- Sengaja di luar grup password: lockscreen.js menulis pesan
+                         ke sini juga untuk jalur biometrik dan rate limit, jadi
+                         elemennya harus tetap ada walau form passwordnya hilang. -->
+                    <p id="lockscreen-error" class="text-danger text-sm font-weight-bold mt-2" style="display:none;"></p>
+
+                    <?php if ($lockPassword): ?>
                     <button type="submit" id="lockscreen-btn" class="btn btn-primary btn-block mt-2">BUKA KUNCI</button>
+                    <?php endif; ?>
+
                     <button type="button" id="lockscreen-biometric-btn" class="btn btn-outline-dark btn-block mt-2" style="display:none;" onclick="triggerLockscreenBiometric()">
                         <i class="fas fa-fingerprint"></i> Quick Login
                     </button>
+
+                    <?php if ($lockSsoExit): ?>
+                    <a href="<?= base_url('sso/login') ?>" class="btn btn-outline-primary btn-block mt-2">
+                        <i class="fas fa-id-badge"></i> Buka Kunci lewat SSO
+                    </a>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>

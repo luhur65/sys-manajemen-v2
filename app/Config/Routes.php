@@ -23,6 +23,12 @@ $routes->post('reset-password', 'Login::resetPasswordSubmit');
 $routes->get('reset/(:segment)', 'Login::resetPasswordCustom/$1', ['as' => 'reset.custom']);
 
 
+// SSO Routes (auth-sso / auth-sso-api) — lihat app/Config/Sso.php.
+// 'auth/sso-callback' harus sama persis dengan href kartu SYS di
+// constants/apps.ts milik auth-sso, karena di situlah ?ticket= ditempelkan.
+$routes->get('sso/login', 'SsoAuth::start');
+$routes->get('auth/sso-callback', 'SsoAuth::callback');
+
 // Webauthn Routes
 $routes->get('webauthn/getRegisterArgs', 'Webauthn::getRegisterArgs');
 $routes->post('webauthn/processRegister', 'Webauthn::processRegister');

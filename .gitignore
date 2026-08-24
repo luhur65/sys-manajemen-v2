@@ -63,6 +63,9 @@ Vagrantfile
 /writable/debugbar/*
 !/writable/debugbar/index.html
 
+# Nonce tiket SSO (App\Libraries\SsoNonceStore) — dibuat saat runtime.
+/writable/sso_nonce/
+
 php_errors.log
 
 #-------------------------
@@ -146,3 +149,8 @@ catatan_*.md
 dokumentasi_*.md
 simulate.php
 temp_*.js
+test_*.php
+
+
+# Claude
+.claude/

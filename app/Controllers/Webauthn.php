@@ -303,6 +303,22 @@ class Webauthn extends BaseController
             
             // Jika belum login (login dari halaman utama), buat sesi baru
             if (!session()->has(SESSION_NAME . 'logged_in')) {
+                // Quick Login dari halaman login adalah jalur login LOKAL —
+                // kredensialnya WebAuthn milik sys, bukan SSO — jadi ia ikut
+                // mati bersama sso.passwordLoginEnabled. Gerbangnya sengaja di
+                // dalam cabang ini: cabang inilah satu-satunya yang membuat
+                // sesi. Pemakaian processLogin yang lain (buka kunci lock screen
+                // saat sesi masih hidup) tetap jalan, supaya pengguna SSO yang
+                // sudah mendaftarkan biometrik tidak terkurung di layar terkunci.
+                if (! config(\Config\Sso::class)->passwordLoginEnabled) {
+                    return $this->response->setJSON([
+                        'error'    => true,
+                        'ssoOnly'  => true,
+                        'redirect' => base_url('sso/login'),
+                        'message'  => 'Login userid/password sudah dinonaktifkan. Silakan masuk lewat SSO.',
+                    ])->setStatusCode(403);
+                }
+
                 // Load user data using userpk
                 $loginModel = new MloginModel();
                 $db = \Config\Database::connect();

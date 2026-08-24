@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\LoginThrottle;
 use App\Models\MlogModel;
 use App\Models\MloginModel;
 use App\Controllers\BaseController;
@@ -15,12 +16,37 @@ class Login extends BaseController
 {
     protected MlogModel $mlogModel;
     protected MloginModel $mloginModel;
+    protected LoginThrottle $throttle;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
         $this->mloginModel = new MloginModel();
         $this->mlogModel = new MlogModel();
+        $this->throttle = new LoginThrottle();
+    }
+
+    /**
+     * H-04: satu tempat untuk mencatat penolakan karena rate limit, supaya
+     * lonjakan percobaan terlihat di writable/logs.
+     */
+    private function logThrottled(string $action, string $account, int $wait): void
+    {
+        log_message('warning', sprintf(
+            'Rate limit %s: account=%s ip=%s tunggu=%dd',
+            $action,
+            $account !== '' ? $account : '-',
+            $this->request->getIPAddress(),
+            $wait
+        ));
+    }
+
+    /** Ubah detik menjadi keterangan tunggu yang enak dibaca. */
+    private function waitText(int $seconds): string
+    {
+        return $seconds >= 60
+            ? 'sekitar ' . (int) ceil($seconds / 60) . ' menit'
+            : $seconds . ' detik';
     }
 
     public function index()
@@ -35,13 +61,62 @@ class Login extends BaseController
 
         $data['start'] = $time;
         $data['versi'] = CONS_VERSI;
-        $data['error'] = session()->getFlashdata(SESSION_NAME . 'message');
+        $data['error'] = session()->getFlashdata(SESSION_NAME . 'message') ?: $this->ssoMessage();
+        $data['sso']   = config(\Config\Sso::class);
 
         return view('login', $data);
     }
 
+    /**
+     * Pesan untuk kegagalan SSO, dipilih dari kode pada ?sso=.
+     *
+     * Alur SSO berakhir dengan redirect ke halaman ini, dan sesi lokal saat itu
+     * belum tentu ada (sesi lama baru saja dihancurkan), jadi flashdata bukan
+     * jalur yang bisa diandalkan — penandanya ikut di URL. Karena view login
+     * merender $error tanpa escaping, yang lewat URL hanya KODE; teksnya
+     * diambil dari daftar tertutup di bawah, tidak pernah dari input.
+     */
+    private function ssoMessage(): ?string
+    {
+        $messages = [
+            'disabled' => 'Login SSO belum diaktifkan pada aplikasi ini.',
+            'invalid'  => 'Tiket SSO tidak valid atau sudah kedaluwarsa. Silakan buka kembali dari dashboard SSO.',
+            'replay'   => 'Tiket SSO sudah pernah dipakai. Silakan buka kembali dari dashboard SSO.',
+            'unknown'  => 'Akun Anda belum terdaftar di SYS. Harap hubungi admin SYS untuk dibuatkan akun.',
+            'expired'  => 'Sesi SSO Anda telah berakhir. Silakan login kembali.',
+            'server'   => 'Terjadi kesalahan saat memproses login SSO. Coba lagi nanti.',
+            'onlysso'  => 'Login userid/password sudah dinonaktifkan. Silakan masuk lewat SSO.',
+        ];
+
+        $code = (string) ($this->request->getGet('sso') ?? '');
+
+        return $messages[$code] ?? null;
+    }
+
+    /**
+     * Apakah login lokal (userid/password + reset password) sedang dimatikan?
+     *
+     * Dipanggil di SETIAP endpoint jalur itu, bukan hanya di view. Menyembunyikan
+     * form di halaman login tidak menutup apa pun — POST langsung ke
+     * login/proses tetap akan diproses kalau endpointnya sendiri tidak menolak.
+     */
+    private function passwordLoginDisabled(): bool
+    {
+        return ! config(\Config\Sso::class)->passwordLoginEnabled;
+    }
+
     public function proses()
     {
+        if ($this->passwordLoginDisabled()) {
+            log_message('warning', sprintf(
+                'Login lokal ditolak (sso.passwordLoginEnabled=false): userid=%s ip=%s',
+                (string) $this->request->getPost('userid'),
+                $this->request->getIPAddress()
+            ));
+
+            return redirect()->to(base_url('login?sso=onlysso'));
+        }
+
         // Validate input fields first
         if (!$this->validate([
             'userid'   => 'required',
@@ -63,10 +138,29 @@ class Login extends BaseController
         $userid = $this->request->getPost('userid');
         $password = (string)$this->request->getPost('password');
 
+        // H-04: tolak lebih dulu kalau jatah percobaan sudah habis. Pemeriksaan
+        // ini tidak mengurangi jatah — yang mengurangi hanya kegagalan di bawah,
+        // sehingga user yang selalu berhasil login tidak pernah kena batas.
+        $wait = $this->throttle->retryAfter('login', $this->request->getIPAddress(), (string) $userid);
+
+        if ($wait !== null) {
+            $this->logThrottled('login', (string) $userid, $wait);
+
+            return redirect()->to(base_url('login'))->with(
+                SESSION_NAME . 'message',
+                'Terlalu banyak percobaan login gagal. Silakan coba lagi dalam ' . $this->waitText($wait) . '.'
+            );
+        }
+
         $cek = $this->mloginModel->login($userid, $password);
 
         if ($cek != "" && $cek->getNumRows() > 0) {
             $row = $cek->getRow();
+
+            // Login berhasil: hapus hukuman pada akun ini. Ember per-IP sengaja
+            // dibiarkan, supaya satu tebakan yang kebetulan benar tidak menghapus
+            // jejak percobaan lain dari IP yang sama.
+            $this->throttle->clear('login', (string) $userid);
 
             // Cegah session fixation: naik level privilese (anonim -> terautentikasi)
             // harus memakai session ID baru, dan record sesi pra-login dihancurkan
@@ -89,6 +183,8 @@ class Login extends BaseController
             return redirect()->to(base_url("home"));
         }
         
+        $this->throttle->hit('login', $this->request->getIPAddress(), (string) $userid);
+
         return redirect()->to(base_url('login'))
             ->with(SESSION_NAME . 'message', 'Kombinasi userid Atau Password Salah');
     }
@@ -96,14 +192,47 @@ class Login extends BaseController
     public function logout()
     {
         $this->response->setHeader("Cache-Control", "no-cache, must-revalidate");
+
+        // Yang diakhiri di sini HANYA sesi sys-modern. Mencabut sesi SSO-nya
+        // (POST /auth/session/revoke ke auth-sso-api) akan melogout pengguna
+        // dari HR dan CRM sekaligus — itu wewenang dashboard SSO, bukan satu
+        // aplikasi anggota.
+        $sso     = config(\Config\Sso::class);
+        $fromSso = (bool) session()->get(SESSION_NAME . 'sso_login');
+        $sid     = (string) (session()->get(SESSION_NAME . 'sso_sid') ?? '');
+
+        if ($sid !== '') {
+            (new \App\Libraries\SsoSlo($sso))->forget($sid);
+        }
+
         session()->destroy();
+
+        // Pengguna SSO dikembalikan ke dashboard SSO, bukan ke halaman login
+        // lokal yang tidak pernah ia pakai.
+        if ($fromSso && $sso->enabled && trim($sso->dashboardUrl) !== '') {
+            return redirect()->to(rtrim($sso->dashboardUrl, '/'));
+        }
+
         return redirect()->to(base_url("login"));
     }
 
     public function unlock()
     {
+        // Lock screen memverifikasi password tbluser yang sama dengan halaman
+        // login, jadi ia ikut mati bersama login lokal. Dijawab dengan penanda
+        // `ssoOnly` supaya lockscreen.js mengantar pengguna ke SSO alih-alih
+        // menghitungnya sebagai percobaan gagal lalu memaksa logout.
+        if ($this->passwordLoginDisabled()) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success'  => false,
+                'ssoOnly'  => true,
+                'redirect' => base_url('sso/login'),
+                'message'  => 'Login userid/password sudah dinonaktifkan. Membuka kunci lewat SSO...',
+            ]);
+        }
+
         $userid = session()->get(SESSION_NAME . 'userid');
-        
+
         // Auto-relogin: Gunakan userid dari localStorage browser jika sesi server expired
         if (!$userid) {
             $userid = $this->request->getPost('userid');
@@ -113,10 +242,26 @@ class Login extends BaseController
             return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'Sesi telah berakhir permanen. Silakan muat ulang halaman.']);
         }
         
+        // H-04: unlock memverifikasi password yang sama dengan halaman login,
+        // jadi sengaja memakai ember yang sama ('login'). Percobaan lewat lock
+        // screen dan lewat halaman login dihitung bersama-sama.
+        $wait = $this->throttle->retryAfter('login', $this->request->getIPAddress(), (string) $userid);
+
+        if ($wait !== null) {
+            $this->logThrottled('unlock', (string) $userid, $wait);
+
+            return $this->response->setStatusCode(429)->setJSON([
+                'success' => false,
+                'message' => 'Terlalu banyak percobaan. Silakan coba lagi dalam ' . $this->waitText($wait) . '.',
+            ]);
+        }
+
         $password = (string)$this->request->getPost('password');
         $cek = $this->mloginModel->login($userid, $password);
         
         if ($cek != "" && $cek->getNumRows() > 0) {
+            $this->throttle->clear('login', (string) $userid);
+
             // Rebuild session if it was expired
             if (!session()->has(SESSION_NAME . 'logged_in')) {
                 $row = $cek->getRow();
@@ -143,14 +288,46 @@ class Login extends BaseController
             return $this->response->setJSON(['success' => true]);
         }
         
+        $this->throttle->hit('login', $this->request->getIPAddress(), (string) $userid);
+
         return $this->response->setJSON(['success' => false, 'message' => 'Password salah']);
     }
 
     public function forgotPassword()
     {
+        // Reset password lokal tidak ada gunanya kalau password lokal tidak bisa
+        // dipakai masuk — dan membiarkannya hidup berarti endpoint yang mengirim
+        // email tetap terbuka untuk disalahgunakan.
+        if ($this->passwordLoginDisabled()) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'errors'    => ['user' => 'Reset password dinonaktifkan. Silakan masuk lewat SSO.'],
+                'error'     => 'Reset password dinonaktifkan. Silakan masuk lewat SSO.',
+                'csrfToken' => csrf_hash(),
+            ]);
+        }
+
         $username = $this->request->getPost('user');
         $check = $this->request->getPost('check');
-        
+
+        // H-04: setiap link reset yang terkirim memakai kuota SMTP Brevo
+        // perusahaan, jadi endpoint ini dibatasi walaupun requestnya "berhasil".
+        // Pemeriksaan menutup kedua mode (validasi maupun kirim) supaya setelah
+        // batas tercapai endpoint ini benar-benar diam; yang mengurangi jatah
+        // hanya pengiriman yang sesungguhnya (lihat hit() di bawah).
+        $wait = $this->throttle->retryAfter('forgot', $this->request->getIPAddress(), (string) $username);
+
+        if ($wait !== null) {
+            $this->logThrottled('forgot-password', (string) $username, $wait);
+
+            $message = 'Terlalu banyak permintaan reset password. Silakan coba lagi dalam ' . $this->waitText($wait) . '.';
+
+            return $this->response->setStatusCode(429)->setJSON([
+                'errors'    => ['user' => $message],
+                'error'     => $message,
+                'csrfToken' => csrf_hash(),
+            ]);
+        }
+
         $muserModel = new \App\Models\MuserModel();
         // Use asArray to handle potential SQL Server column case sensitivity
         $userRow = $muserModel->asArray()->where('userid', $username)->first();
@@ -182,6 +359,11 @@ class Login extends BaseController
                 'csrfToken' => csrf_hash()
             ]);
         }
+
+        // Mulai dari sini email benar-benar dikirim, jadi jatahnya dipotong.
+        // Sengaja dipotong SEBELUM pengiriman: kalau SMTP gagal pun percobaannya
+        // tetap dihitung, supaya tidak bisa dipakai memukul server SMTP berulang.
+        $this->throttle->hit('forgot', $this->request->getIPAddress(), (string) $username);
 
         $resetModel = new \App\Models\PasswordResetModel();
         $resetModel->where('username', $username)->delete();
@@ -256,6 +438,10 @@ class Login extends BaseController
 
     public function resetPasswordForm()
     {
+        if ($this->passwordLoginDisabled()) {
+            return redirect()->to(base_url('login?sso=onlysso'));
+        }
+
         $token = $this->request->getGet('token');
         $user = $this->request->getGet('user');
 
@@ -285,6 +471,10 @@ class Login extends BaseController
 
     public function resetPasswordSubmit()
     {
+        if ($this->passwordLoginDisabled()) {
+            return redirect()->to(base_url('login?sso=onlysso'));
+        }
+
         $token = $this->request->getPost('token');
         $user = $this->request->getPost('user');
         $password = $this->request->getPost('password');
@@ -321,6 +511,10 @@ class Login extends BaseController
 
     public function resetPasswordCustom($param)
     {
+        if ($this->passwordLoginDisabled()) {
+            return redirect()->to(base_url('login?sso=onlysso'));
+        }
+
         $param = urldecode($param);
 
         if (preg_match('/^(.*)-(\d{2}-\d{2}-\d{4}-\d{2}-\d{2}-\d{2})-([a-f0-9]+)$/i', $param, $matches)) {
