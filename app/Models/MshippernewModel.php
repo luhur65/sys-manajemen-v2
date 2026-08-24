@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class MshippernewModel extends Model
 {
+    /** Kolom yang boleh diurutkan; sama dengan daftar select() di getList(). */
+    private const SORTABLE = ['FNCabang', 'FNShipper', 'FTgl', 'FNMarketing'];
+
     protected $DBGroup          = 'dbtruck';
     protected $table            = 'MShipperCabang';
     protected $primaryKey       = 'FNShipper'; // Assuming FNShipper is the closest thing to PK, or we can just omit if no PK operations are needed
@@ -34,6 +38,15 @@ class MshippernewModel extends Model
         }
 
         // Column Sorting
+        //
+        // H-03: Query Builder TIDAK mengamankan ORDER BY. protectIdentifiers
+        // meloloskan subquery dan ekspresi apa adanya — `(SELECT TOP 1 password
+        // FROM tbluser)` keluar utuh sebagai klausa ORDER BY. Jadi nama kolom
+        // tetap harus divalidasi sendiri, sama seperti model yang memakai query
+        // string mentah.
+        $sortName  = GridSort::column($sortName, 'FTgl', self::SORTABLE);
+        $sortOrder = GridSort::direction($sortOrder);
+
         if (!empty($sortName)) {
             $builder->orderBy($sortName, $sortOrder);
         }

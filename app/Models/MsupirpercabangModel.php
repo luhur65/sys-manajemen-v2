@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class MsupirpercabangModel extends Model
@@ -16,6 +17,14 @@ class MsupirpercabangModel extends Model
 
     public function get_supir($start, $limit, $sidx, $sord, $where, $cabang)
     {
+        // H-03: sidx/sord dari client divalidasi sebelum masuk ke ORDER BY.
+        // sidx yang tidak lolos menjadi string kosong sehingga jatuh ke default
+        // yang sudah ada di bawah.
+        $sidx  = GridSort::column($sidx, '');
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $start = $start + 1;
         $sampai = $limit + $start - 1;
 

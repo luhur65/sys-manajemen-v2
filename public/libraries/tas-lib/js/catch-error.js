@@ -20,6 +20,18 @@
         localStorage.setItem(config.localKey, JSON.stringify(errors));
     }
 
+    // fetch() tidak lewat $.ajaxSetup, jadi token CSRF dipasang manual (C-03).
+    function csrfHeaders() {
+        var headers = { 'Content-Type': 'application/json' };
+        var meta = document.querySelector('meta[name="csrf-token"]');
+
+        if (meta) {
+            headers['X-CSRF-TOKEN'] = meta.getAttribute('content');
+        }
+
+        return headers;
+    }
+
     function trySendPendingErrors() {
         const errors = getPendingErrors();
         if (errors.length === 0) return;
@@ -29,7 +41,7 @@
         errors.forEach(error => {
             fetch(config.reportUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify(error)
             }).catch(() => {
                 remaining.push(error); // gagal lagi, simpan
@@ -43,7 +55,7 @@
         if (navigator.onLine) {
             fetch(config.reportUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify(data)
             }).catch(() => {
                 // gagal kirim, simpan ke localStorage

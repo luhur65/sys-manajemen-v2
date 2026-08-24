@@ -2,12 +2,19 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 // Migrated from CI3: application/models/Muser.php
 
 class MuserModel extends Model
 {
+    /** Kolom yang boleh diurutkan; sesuai colModel di app/Views/user/index.php. */
+    private const SORTABLE = [
+        'userpk', 'userid', 'username', 'email', 'nowhatsapp', 'dashboard',
+        'modifiedby', 'modifiedonview', 'tbluser.userid',
+    ];
+
     protected $table = 'tbluser';
     protected $primaryKey = 'userpk';
     protected $useAutoIncrement = true;
@@ -158,6 +165,15 @@ class MuserModel extends Model
         if ($sidx == 'rolename') {
             $sidx = 'tbluser.userid'; // Mencegah error sort pada kolom rolename
         }
+
+        // H-03: tbluser dipilih dengan SELECT tbluser.* sehingga kolom password
+        // ikut ada di baris hasil. Tanpa whitelist, ORDER BY password memungkinkan
+        // isinya ditebak dari urutan baris — jadi di sini whitelist wajib, bukan
+        // sekadar validasi bentuk identifier.
+        $sidx  = GridSort::column($sidx, 'tbluser.userid', self::SORTABLE);
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
 
         $sort = " tbluser.userid asc ";
         if ($sidx != "1") {

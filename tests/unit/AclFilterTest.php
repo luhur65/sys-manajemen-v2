@@ -48,5 +48,15 @@ final class AclFilterTest extends CIUnitTestCase
 
         $result->assertStatus(403);
         $result->assertJSONFragment(['status' => 'error']);
+
+        // Kontrak yang dipakai handler ajaxError di partials/header.php untuk
+        // membedakan "403 karena tidak punya hak" (JSON, jangan reload) dari
+        // "403 karena token CSRF basi" (HTML, reload sekali). Jangan diubah
+        // tanpa menyesuaikan handler tersebut.
+        $this->assertStringContainsString(
+            'application/json',
+            $result->response()->getHeaderLine('Content-Type'),
+            'Penolakan ACL harus berbadan JSON; handler reload CSRF memakai ini sebagai pembeda.'
+        );
     }
 }

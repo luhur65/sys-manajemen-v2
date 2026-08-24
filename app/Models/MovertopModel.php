@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 // Migrated from CI3: application/models/movertop.php
@@ -40,18 +41,27 @@ class MovertopModel extends Model
     public function get($where, $sidx, $sord, $limit, $start, $cabang)
     {
         if ($cabang == 'SMG') $cabang = 'SMR';
+
+        // H-03: paging dan arah pengurutan disterilkan SEBELUM dipakai berhitung,
+        // supaya $sampai ikut terhitung dari nilai yang sudah integer.
+        $sord  = GridSort::direction($sord);
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $start = $start + 1;
         $sampai = $limit + $start - 1;
-        
-        $surut = $sidx; 
+
+        // $surut divalidasi di tiap cabang di bawah, setelah kemungkinan diisi
+        // dari stored procedure.
+        $surut = GridSort::column($sidx, '');
         
         // If sidx is numeric, try to get the column name from the stored procedure
         if (is_numeric($sidx)) {
             try {
-                $orderby = $this->fquery("usp_posisikolom 'LapEMKL_OverDue'," . $sidx);
+                $orderby = $this->fquery("usp_posisikolom 'LapEMKL_OverDue'," . (int) $sidx);
                 $result = $orderby->getResult();
                 if (!empty($result)) {
-                    $surut = $result[0]->kolom;
+                    $surut = GridSort::column($result[0]->kolom, 'FSelisih');
                 }
             } catch (\Exception $e) {
                 $surut = "FSelisih";

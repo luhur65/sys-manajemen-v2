@@ -2,10 +2,22 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class MmenuModel extends Model
 {
+    /** Kolom yang boleh diurutkan; sesuai colModel di app/Views/menu/index.php. */
+    private const SORTABLE = [
+        'menuid', 'menuname', 'menuseq', 'menuparent', 'menuicon', 'acoid',
+        'link', 'menuexe', 'modifiedby', 'modifiedonview', 'routeid',
+    ];
+
+    /** Kolom yang boleh diurutkan pada grid katalog ACO. */
+    private const SORTABLE_ACOS = [
+        'acosid', 'class', 'method', 'displayname', 'modifiedby', 'modifiedonview',
+    ];
+
     protected $table = 'tblmenu';
     protected $primaryKey = 'menuid';
     protected $useAutoIncrement = false;
@@ -16,6 +28,13 @@ class MmenuModel extends Model
 
     public function get($where, $sidx, $sord, $limit, $start)
     {
+        // H-03: sidx/sord dari client divalidasi terhadap whitelist kolom grid.
+        // sidx yang tidak lolos menjadi string kosong sehingga jatuh ke default.
+        $sidx  = GridSort::column($sidx, '', self::SORTABLE);
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $sort = " menuname asc ";
         if ($sidx != "1" && $sidx != "") {
             $sort = " $sidx $sord ";
@@ -37,6 +56,13 @@ class MmenuModel extends Model
     
     public function getAcos($where, $sidx, $sord, $limit, $start)
     {
+        // H-03: "class, method" adalah default majemuk tulisan developer, jadi
+        // divalidasi dulu sebelum cabang di bawah menggantinya.
+        $sidx  = GridSort::column($sidx, 'class, method', self::SORTABLE_ACOS);
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         if($sidx == "class" || $sidx == "1" || $sidx == "") {
             $sidx = "class, method";
         }

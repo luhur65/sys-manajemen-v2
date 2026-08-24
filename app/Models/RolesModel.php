@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class RolesModel extends Model
 {
+    /** Kolom yang boleh diurutkan; sesuai colModel di app/Views/roles/index.php. */
+    private const SORTABLE = ['roleid', 'rolename', 'modifiedby', 'modifiedonview'];
+
     protected $table = 'tblroles';
     protected $primaryKey = 'roleid';
     protected $useAutoIncrement = false;
@@ -34,6 +38,12 @@ class RolesModel extends Model
                 $cond = " WHERE (rolename <> 'GUEST' AND rolename <> 'SUPERADMIN') ";
             }
         }
+        // H-03: sidx/sord dari client divalidasi terhadap whitelist kolom grid.
+        $sidx  = GridSort::column($sidx, 'rolename', self::SORTABLE);
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $sort = " rolename asc ";
         if ($sidx != "1") {
             $sort = " $sidx $sord ";

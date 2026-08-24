@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class TracingModel extends Model
@@ -13,6 +14,14 @@ class TracingModel extends Model
 
     public function get_tracing($start, $limit, $sidx, $sord, $where)
     {
+        // H-03: sidx/sord dari client divalidasi sebelum masuk ke ORDER BY.
+        // sidx yang tidak lolos menjadi string kosong sehingga jatuh ke default
+        // yang sudah ada di bawah.
+        $sidx  = GridSort::column($sidx, '');
+        $sord  = GridSort::direction($sord, 'DESC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $start = $start + 1;
         $sampai = $limit + $start - 1;
 

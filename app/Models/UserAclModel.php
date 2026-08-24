@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class UserAclModel extends Model
 {
+    /** Kolom yang boleh diurutkan; sesuai colModel di app/Views/useracl/index.php. */
+    private const SORTABLE = ['useraclid', 'acoid', 'modifiedby', 'modifiedon'];
+
     protected $table = 'tbluseracl';
     protected $primaryKey = 'useraclid';
     protected $useAutoIncrement = true;
@@ -158,6 +162,12 @@ class UserAclModel extends Model
 
     public function get($where, $sidx, $sord, $limit, $start)
     {
+        // H-03: sidx/sord dari client divalidasi terhadap whitelist kolom grid.
+        $sidx  = GridSort::column($sidx, 'useraclid', self::SORTABLE);
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $query = "SELECT * ,FORMAT(modifiedon,'dd-MM-yyyy hh:mm:ss') as modifiedonview 
                   FROM tbluseracl " . $where . " 
                   ORDER BY $sidx $sord 

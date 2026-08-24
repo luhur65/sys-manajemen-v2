@@ -1,10 +1,17 @@
 <?php
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class MparameterModel extends Model
 {
+    /** Kolom yang boleh diurutkan; sesuai colModel di app/Views/parameter/index.php. */
+    private const SORTABLE = [
+        'parameterid', 'parametergrpid', 'parameter_key', 'parametertext',
+        'parametermemo', 'modifiedby', 'modifiedonview',
+    ];
+
     protected $table      = 'tblparameter';
     protected $primaryKey = 'parameter_key';
     protected $returnType = 'object';
@@ -28,6 +35,12 @@ class MparameterModel extends Model
 
     public function get($where, $sidx, $sord, $limit, $start)
     {
+        // H-03: sidx/sord dari client divalidasi terhadap whitelist kolom grid.
+        $sidx  = GridSort::column($sidx, 'parameter_key', self::SORTABLE);
+        $sord  = GridSort::direction($sord, 'ASC');
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $sql = $this->db->query("SELECT *,
         FORMAT(modifiedon,'dd-MM-yyyy HH:mm:ss') as modifiedonview
         FROM tblparameter " . $where . " ORDER BY $sidx $sord OFFSET $start ROWS FETCH NEXT $limit ROWS ONLY");

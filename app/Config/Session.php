@@ -89,6 +89,17 @@ class Session extends BaseConfig
      * Whether to destroy session data associated with the old session ID
      * when auto-regenerating the session ID. When set to FALSE, the data
      * will be later deleted by the garbage collector.
+     *
+     * CATATAN KEAMANAN (H-01):
+     * Setelan ini HANYA berlaku untuk rotasi berkala setiap $timeToUpdate detik,
+     * bukan untuk saat login. Perlindungan session fixation ditegakkan secara
+     * eksplisit di setiap jalur login lewat session()->regenerate(true) —
+     * lihat Login::proses(), Login::unlock(), dan Webauthn::processLogin().
+     *
+     * Sengaja dibiarkan FALSE: kalau TRUE, request AJAX yang masih in-flight
+     * dari halaman sebelumnya (grid/excel yang lama) bisa kehilangan sesinya
+     * ketika sebuah page load merotasi ID, lalu terlempar ke halaman login.
+     * Record sesi lama tetap kedaluwarsa lewat $expiration + garbage collector.
      */
     public bool $regenerateDestroy = false;
 

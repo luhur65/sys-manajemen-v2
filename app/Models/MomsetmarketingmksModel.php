@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class MomsetmarketingmksModel extends Model
@@ -27,6 +28,14 @@ class MomsetmarketingmksModel extends Model
 
     public function get($where, $sidx, $sord, $limit, $start)
     {
+        // H-03: sidx/sord dari client tidak bisa dijadikan bind parameter, jadi
+        // divalidasi dulu. sidx yang tidak lolos menjadi string kosong sehingga
+        // jatuh ke default yang sudah ada di bawah.
+        $sidx  = GridSort::column($sidx, '');
+        $sord  = GridSort::direction($sord);
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $start = $start + 1;
         $sampai = $limit + $start - 1;
         

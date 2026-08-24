@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 // Migrated from CI3: application/models/mtracing.php
@@ -18,6 +19,14 @@ class MtracingModel extends Model
         return $sql;
 	}
     public function get($where, $sidx, $sord, $limit, $start){
+        // H-03: sidx/sord dari client divalidasi terhadap kolom yang benar-benar
+        // dipilih query ini. Perhatikan ORDER BY di bawah diawali "3 desc",
+        // sehingga sidx berperan sebagai kunci pengurutan kedua.
+        $sidx  = GridSort::column($sidx, 'UserId', ['UserId', 'shipper', 'waktulogin', 'cabang']);
+        $sord  = GridSort::direction($sord);
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
 		$sql = $this->db->query("SELECT UserId , shipper ,
 		FORMAT(waktulogin,'dd-MM-yyyy hh:mm:ss') waktulogin, cabang
 		FROM tbltracing " . $where . " ORDER BY 3 desc, $sidx $sord

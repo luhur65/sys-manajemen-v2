@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
 class MtruckingtradoluarModel extends Model
@@ -75,9 +76,16 @@ class MtruckingtradoluarModel extends Model
     public function get($where, $sidx, $sord, $limit, $start, $cabang)
     {
         $tableName = $this->getTableName($cabang);
+
+        // H-03: query ini memakai SELECT *, jadi tidak ada daftar kolom eksplisit
+        // untuk dijadikan whitelist; validasi bentuk identifier sudah cukup untuk
+        // menutup injeksi. Paging disterilkan sebelum dipakai berhitung.
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $start = $start + 1;
         $sampai = $limit + $start - 1;
-        $surut = $sidx . " " . $sord;
+        $surut = GridSort::column($sidx, 'FTgl') . " " . GridSort::direction($sord);
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
 
         return $this->dbtruck->query("SELECT * FROM (
@@ -125,9 +133,16 @@ class MtruckingtradoluarModel extends Model
     public function getDetail($where, $sidx, $sord, $limit, $start, $cabang)
     {
         $tableName = $this->getTableName($cabang, 'TradoLuarDetail');
+
+        // H-03: query ini memakai SELECT *, jadi tidak ada daftar kolom eksplisit
+        // untuk dijadikan whitelist; validasi bentuk identifier sudah cukup untuk
+        // menutup injeksi. Paging disterilkan sebelum dipakai berhitung.
+        $limit = GridSort::limit($limit);
+        $start = GridSort::offset($start);
+
         $start = $start + 1;
         $sampai = $limit + $start - 1;
-        $surut = $sidx . " " . $sord;
+        $surut = GridSort::column($sidx, 'FNTrans') . " " . GridSort::direction($sord);
         $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
 
         return $this->dbtruck->query("SELECT * FROM (

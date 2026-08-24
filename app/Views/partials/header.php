@@ -5,6 +5,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<?= csrf_hash() ?>">
+    <meta name="csrf-token-name" content="<?= csrf_token() ?>">
     <title><?= (isset($title) ? ucwords(strtolower($title)) . ' | ' : '') . $siteConfig->siteTitle; ?></title>
 
     <!-- Google Font: Source Sans Pro -->
@@ -17,7 +19,7 @@
     <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') ?>">
     
     <!-- JQGrid 570 Bootstrap 4 (From Trucking) --> 
-    <link rel="stylesheet" href="<?= asset('libraries/jqgrid/570/css/ui.jqgrid-bootstrap4.css') ?>" />
+    <link rel="stylesheet" href="<?= asset('libraries/jqgrid/590/css/ui.jqgrid-bootstrap4.css') ?>" />
 
     <!-- Select2 -->
     <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/select2/css/select2.min.css') ?>">
@@ -53,6 +55,42 @@
     <!-- Scripts - Moved to header to support legacy inline scripts in views (Matching Trucking placement) -->
     <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
     <script src="<?= asset('libraries/jquery-ui/1.13.1/jquery-ui.min.js') ?>"></script>
+
+    <!-- CSRF: satu titik pemasangan token untuk SELURUH request jQuery (C-03).
+         Harus tepat setelah jQuery dimuat dan sebelum skrip apa pun yang ber-AJAX.
+         'headers' pada $.ajaxSetup di-deep-merge oleh jQuery, jadi call site yang
+         punya headers sendiri (mis. Authorization) tetap ikut membawa token ini. -->
+    <script>
+        (function () {
+            var token = document.querySelector('meta[name="csrf-token"]');
+            if (!token || !window.jQuery) return;
+
+            window.csrfTokenName = document.querySelector('meta[name="csrf-token-name"]').getAttribute('content');
+            window.csrfTokenValue = token.getAttribute('content');
+
+            $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': window.csrfTokenValue } });
+
+            // Jaring pengaman: token bisa basi kalau cookie sesi browser hilang
+            // sementara halaman lama masih terbuka (mis. browser di-restart).
+            // Muat ulang SEKALI supaya dapat token baru; kalau sesinya juga sudah
+            // habis, AuthFilter yang akan mengarahkan ke halaman login.
+            //
+            // Penolakan ACL (AclFilter) juga berstatus 403 tapi selalu berbadan
+            // JSON, jadi dibedakan lewat responseJSON — jangan sampai user yang
+            // memang tidak punya hak akses malah terjebak reload berulang.
+            var RELOAD_FLAG = 'csrfReloadedAt';
+
+            $(document).ajaxError(function (event, xhr) {
+                if (xhr.status !== 403 || xhr.responseJSON) return;
+
+                var last = parseInt(sessionStorage.getItem(RELOAD_FLAG) || '0', 10);
+                if (Date.now() - last < 30000) return;
+
+                sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+                window.location.reload();
+            });
+        })();
+    </script>
 
     <script>
         const appUrl = '<?= base_url() ?>';
