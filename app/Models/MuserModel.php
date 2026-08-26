@@ -19,7 +19,7 @@ class MuserModel extends Model
     protected $primaryKey = 'userpk';
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
-    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp'];
+    protected $allowedFields = ['userpk', 'userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp', 'karyawanid'];
     protected $useTimestamps = false;
 
     protected $alias = 'u';
@@ -36,7 +36,7 @@ class MuserModel extends Model
         $table = $this->table;
         $alias = $this->alias;
         $builder = $this->db->table($table . ' as ' . $alias);
-        $select = "$alias.userpk, $alias.username, $alias.userid, $alias.password, $alias.email, $alias.nowhatsapp, $alias.dashboard, '' as roles,'' as roles_name";
+        $select = "$alias.userpk, $alias.username, $alias.userid, $alias.password, $alias.email, $alias.nowhatsapp, $alias.dashboard, $alias.karyawanid, '' as roles,'' as roles_name";
         if (!empty($conditions)) {
             $builder->where($conditions);
         }
@@ -139,7 +139,7 @@ class MuserModel extends Model
 
     private function _preFormat($data)
     {
-        $fields = ['userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp'];
+        $fields = ['userid', 'username', 'password', 'dashboard', 'modifiedon', 'modifiedby', 'aktif', 'email', 'nowhatsapp', 'karyawanid'];
         $save = [];
         foreach ($fields as $val) {
             if (isset($data[$val])) {

@@ -122,6 +122,46 @@ class Database extends Config
         ],
     ];
 
+    /**
+     * Database HR/SSO (hrsso) — master karyawan perusahaan.
+     *
+     * Dipakai HANYA untuk membaca `karyawan` (plus `cabang`, `jabatan`, dan
+     * `parameter` untuk label dan status aktif) saat memetakan `tbluser.karyawanid`
+     * lewat lookup di halaman User. `karyawan.id` di sini adalah identitas yang
+     * sama dengan klaim `karyawanId` pada tiket SSO — itulah yang membuat
+     * pemetaan ini bermakna untuk login SSO.
+     *
+     * Ini instance SQL Server yang BERBEDA dari grup `default`, jadi tidak ada
+     * JOIN lintas database yang mungkin: baris tbluser dan baris karyawan harus
+     * digabung di PHP (lihat App\Controllers\User::attachKaryawan()).
+     *
+     * Kredensialnya sebaiknya login khusus yang hanya boleh SELECT pada keempat
+     * tabel di atas. sys-modern tidak pernah menulis ke database ini.
+     *
+     * @var array<string, mixed>
+     */
+    public array $hrsso = [
+        'DSN'          => '',
+        'hostname'     => 'localhost',
+        'username'     => '',
+        'password'     => '',
+        'database'     => 'hrsso',
+        'DBDriver'     => 'SQLSRV',
+        'DBPrefix'     => '',
+        'pConnect'     => false,
+        'DBDebug'      => true,
+        'charset'      => 'utf8',
+        'swapPre'      => '',
+        'encrypt'      => false,
+        'failover'     => [],
+        'port'         => 1433,
+        'dateFormat'   => [
+            'date'     => 'Y-m-d',
+            'datetime' => 'Y-m-d H:i:s',
+            'time'     => 'H:i:s',
+        ],
+    ];
+
     //    /**
     //     * Sample database connection for SQLite3.
     //     *

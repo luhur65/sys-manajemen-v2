@@ -4,18 +4,29 @@
     </div>
     <!-- ./wrapper -->
 
-    <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
     <?php
-    // Lock screen meminta password tbluser. Pengguna yang masuk lewat SSO tidak
-    // pernah mengetahui password itu — tanpa jalan keluar di bawah ia terkurung
-    // di layar terkunci sampai percobaannya habis dan dipaksa logout. Karena itu
-    // sesi berasal-SSO selalu mendapat tombol buka-kunci lewat SSO, dan form
-    // passwordnya hilang saat login lokal memang sedang dimatikan.
+    // ── Lock screen ────────────────────────────────────────────────────────
+    // DIMATIKAN untuk sesi yang lahir dari SSO. Lock screen membuka kuncinya
+    // dengan password `tbluser`, sementara pengguna SSO tidak pernah memakai —
+    // dan umumnya tidak tahu — password itu: yang ia pakai masuk adalah
+    // kredensial di dashboard SSO. Layar terkunci karena itu bukan pengaman
+    // baginya melainkan jalan buntu, sampai jatah percobaannya habis dan ia
+    // dipaksa logout.
+    //
+    // Cukup dengan tidak merender overlay-nya: lockscreen.js berhenti di awal
+    // saat #lockscreen-overlay tidak ada, jadi timer idle, BroadcastChannel,
+    // dan seluruh mekanismenya ikut mati — tidak ada sisa yang berjalan.
+    //
+    // Sesi login lokal tidak terpengaruh sama sekali dan tetap terkunci
+    // seperti biasa.
     $lockSso      = config(\Config\Sso::class);
     $lockFromSso  = (bool) session()->get(SESSION_NAME . 'sso_login');
     $lockPassword = $lockSso->passwordLoginEnabled;
-    $lockSsoExit  = $lockSso->enabled && trim($lockSso->dashboardUrl) !== '' && ($lockFromSso || ! $lockPassword);
+    $lockSsoExit  = $lockSso->enabled && trim($lockSso->dashboardUrl) !== '' && ! $lockPassword;
+    $lockEnabled  = session()->has(SESSION_NAME . 'logged_in') && ! $lockFromSso;
     ?>
+
+    <?php if ($lockEnabled): ?>
     <!-- Lockscreen Overlay -->
     <div id="lockscreen-overlay" style="display:none; position:fixed; inset:0; z-index:10050; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); align-items:center; justify-content:center;">
         <div class="card shadow-lg" style="width: 95%; max-width: 400px;">
@@ -118,6 +129,10 @@
     <script src="<?= asset('libraries/tas-lib/js/GridAutoInjector.js') ?>"></script>
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
+    <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
+    <?php endif; ?>
+
+    <?php if ($lockEnabled): ?>
     <script>
         // Simpan userid secara lokal untuk keperluan auto-relogin lockscreen jika sesi server expire.
         // Key diberi prefix 'sysmodern_' -- HARUS SAMA dengan APP_NS di lockscreen.js --
@@ -126,7 +141,6 @@
         // akan saling menimpa key ini.
         localStorage.setItem('sysmodern_lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
     </script>
-    <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>
     <?php endif; ?>
 

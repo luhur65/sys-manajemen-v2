@@ -183,14 +183,32 @@ final class SsoOnlyModeTest extends CIUnitTestCase
         $this->assertStringContainsString('passwordLoginEnabled', $view);
     }
 
-    public function testLockScreenPunyaJalanKeluarLewatSso(): void
+    /**
+     * Lock screen membuka kuncinya dengan password `tbluser`, sementara pengguna
+     * SSO tidak pernah memakai — dan umumnya tidak tahu — password itu. Bagi dia
+     * layar terkunci bukan pengaman melainkan jalan buntu, jadi sesi yang lahir
+     * dari SSO tidak dikunci sama sekali.
+     */
+    public function testLockScreenTidakDirenderUntukSesiSso(): void
     {
-        // Lock screen meminta password tbluser, yang tidak pernah diketahui
-        // pengguna SSO. Tanpa tombol ini ia terkurung sampai percobaannya habis.
-        $footer = (string) file_get_contents(APPPATH . 'Views/partials/footer.php');
+        $html = $this->renderFooter(true);
 
-        $this->assertStringContainsString('sso/login', $footer, 'Lock screen tidak punya jalan keluar lewat SSO.');
-        $this->assertStringContainsString('sso_login', $footer, 'Lock screen tidak membedakan sesi yang berasal dari SSO.');
+        $this->assertStringNotContainsString('id="lockscreen-overlay"', $html, 'Overlay lock screen masih dirender untuk sesi SSO.');
+
+        // Tanpa overlay, lockscreen.js berhenti di awal — tapi scriptnya pun
+        // tidak perlu ikut dimuat.
+        $this->assertStringNotContainsString('js/lockscreen.js', $html, 'lockscreen.js masih dimuat untuk sesi SSO.');
+        $this->assertStringNotContainsString('sysmodern_lockscreen_userid', $html, 'userid masih ditulis ke localStorage untuk sesi SSO.');
+    }
+
+    public function testLockScreenTetapAktifUntukSesiLoginLokal(): void
+    {
+        // Pembanding: mematikan lock screen hanya berlaku untuk sesi SSO. Kalau
+        // ia ikut mati untuk login lokal, satu kontrol keamanan hilang diam-diam.
+        $html = $this->renderFooter(false);
+
+        $this->assertStringContainsString('id="lockscreen-overlay"', $html, 'Lock screen ikut mati untuk sesi login lokal.');
+        $this->assertStringContainsString('js/lockscreen.js', $html);
     }
 
     public function testPesanErrorLockScreenTetapAdaSaatFormPasswordHilang(): void
@@ -249,6 +267,20 @@ final class SsoOnlyModeTest extends CIUnitTestCase
         $end   = strrpos($body, '}');
 
         return $start !== false && $end !== false ? substr($body, $start, $end - $start + 1) : $body;
+    }
+
+    /** Merender partial footer untuk sesi SSO atau sesi login lokal. */
+    private function renderFooter(bool $fromSso): string
+    {
+        helper(['url', 'asset_helper']);
+
+        session()->set([
+            SESSION_NAME . 'logged_in' => 1,
+            SESSION_NAME . 'userid'    => 'budi',
+            SESSION_NAME . 'sso_login' => $fromSso ? 1 : null,
+        ]);
+
+        return view('partials/footer', [], ['saveData' => false]);
     }
 
     /** Potongan sumber satu method, dari deklarasinya sampai method berikutnya. */

@@ -2,12 +2,43 @@
 
 namespace App\Controllers;
 
+use App\Libraries\GridSort;
 use App\Models\MuserModel;
 use App\Models\MuserrolesModel;
 use CodeIgniter\Controller;
+use CodeIgniter\Database\BaseConnection;
+use RuntimeException;
+use Throwable;
 
 class User extends BaseController
 {
+    /**
+     * Kolom `karyawan` (database hrsso) yang boleh dipakai memfilter grid lookup.
+     * Bentuknya sama dengan $filterFields: nama kolom di jqGrid => ekspresi SQL.
+     */
+    private const KARYAWAN_FILTER_FIELDS = [
+        'id'           => 'k.id',
+        'kodekaryawan' => 'k.kodekaryawan',
+        'namakaryawan' => 'k.namakaryawan',
+        'cabang'       => 'c.nama',
+        'jabatan'      => 'j.nama',
+    ];
+
+    /**
+     * Kolom yang boleh dipakai mengurutkan grid lookup karyawan.
+     *
+     * Sengaja peta tertutup, bukan validasi bentuk identifier: `sidx` masuk ke
+     * ORDER BY sebagai teks dan nama kolom tidak bisa jadi bind parameter, jadi
+     * hanya nilai yang ditulis di sini yang boleh sampai ke SQL.
+     */
+    private const KARYAWAN_SORTABLE = [
+        'id'           => 'k.id',
+        'kodekaryawan' => 'k.kodekaryawan',
+        'namakaryawan' => 'k.namakaryawan',
+        'cabang'       => 'c.nama',
+        'jabatan'      => 'j.nama',
+    ];
+
     /**
      * Whitelist kolom filter grid jqGrid (join tbluser + tblroles r).
      * Kolom di luar daftar ini ditolak oleh GridFilter.
@@ -46,6 +77,222 @@ class User extends BaseController
         $db = \Config\Database::connect();
         $roles = $db->table('tblroles')->orderBy('rolename', 'asc')->get()->getResult();
         return $this->response->setJSON($roles);
+    }
+
+    /**
+     * Grid lookup karyawan — sumbernya master karyawan di database HR (hrsso).
+     *
+     * `karyawan.id` di sana adalah identitas yang sama dengan klaim `karyawanId`
+     * pada tiket SSO, jadi nilai yang dipilih di sini persis yang dicari
+     * App\Controllers\SsoAuth::resolveUser() saat pengguna masuk lewat SSO.
+     * Karena itu id-nya diambil dari HR, tidak pernah diketik manual, dan tidak
+     * divalidasi terhadap `tblkaryawan` lokal — salinan lokal itu basi
+     * (berhenti di id 361) sedangkan id karyawan yang sah bisa jauh di atasnya.
+     */
+    public function lookupKaryawan()
+    {
+        $page = max(1, (int) ($this->request->getPost('page') ?: 1));
+
+        // GridSort::limit() hanya melakukan cast, jadi "abc" jadi 0 — dan 0
+        // memicu pembagian nol di bawah serta ditolak SQL Server pada FETCH NEXT.
+        // Batas atasnya menjaga lookup tetap satu halaman wajar meski client
+        // meminta seluruh 354 baris sekaligus.
+        $limit = min(200, max(1, GridSort::limit($this->request->getPost('rows') ?: 10)));
+
+        $sidx = (string) ($this->request->getPost('sidx') ?: 'namakaryawan');
+        $sort = self::KARYAWAN_SORTABLE[$sidx] ?? 'k.namakaryawan';
+        $sord = GridSort::direction($this->request->getPost('sord'), 'ASC');
+
+        $response          = new \stdClass();
+        $response->page    = $page;
+        $response->total   = 0;
+        $response->records = 0;
+        $response->rows    = [];
+
+        $db = $this->hrssoDb();
+
+        if ($db === null) {
+            return $this->response->setJSON($response);
+        }
+
+        try {
+            $where = ' WHERE k.statusaktif = ' . $this->karyawanAktifId($db);
+
+            $operation = $this->request->getPost('_search') === 'true'
+                ? $this->operationAll($this->request->getPost('filters'), self::KARYAWAN_FILTER_FIELDS, 'hrsso')
+                : '';
+
+            if ($operation !== '') {
+                $where .= ' AND (' . $operation . ')';
+            }
+
+            $from = ' FROM karyawan k
+                      LEFT JOIN cabang c ON c.id = k.cabang_id
+                      LEFT JOIN jabatan j ON j.id = k.jabatan_id ';
+
+            $count = (int) $db->query('SELECT COUNT(*) AS jml ' . $from . $where)->getRow()->jml;
+
+            $totalPages = $count > 0 ? (int) ceil($count / $limit) : 0;
+
+            if ($page > $totalPages) {
+                $page = $totalPages;
+            }
+
+            $start = GridSort::offset($limit * $page - $limit);
+
+            $rows = $db->query(
+                "SELECT k.id, k.kodekaryawan, k.namakaryawan,
+                        ISNULL(c.nama, '') AS cabang, ISNULL(j.nama, '') AS jabatan"
+                . $from . $where . "
+                 ORDER BY {$sort} {$sord}
+                 OFFSET {$start} ROWS FETCH NEXT {$limit} ROWS ONLY"
+            )->getResult();
+
+            $response->page    = $page;
+            $response->total   = $totalPages;
+            $response->records = $count;
+
+            foreach ($rows as $i => $row) {
+                $response->rows[$i]['id']   = $row->id;
+                $response->rows[$i]['cell'] = [
+                    $row->id,
+                    $row->kodekaryawan,
+                    $row->namakaryawan,
+                    $row->cabang,
+                    $row->jabatan,
+                ];
+            }
+        } catch (Throwable $e) {
+            // Database HR tidak terjangkau atau salah konfigurasi. Grid dibiarkan
+            // kosong — memilih karyawan jadi mustahil, tapi halaman User tetap
+            // bisa dipakai untuk hal lain. Alasannya hanya masuk log.
+            log_message('error', 'User::lookupKaryawan — gagal membaca database hrsso: ' . $e->getMessage());
+        }
+
+        return $this->response->setJSON($response);
+    }
+
+    /** Penanda cache bahwa database HR baru saja gagal dihubungi. */
+    private const HRSSO_DOWN_KEY = 'hrsso_unreachable';
+
+    /**
+     * Berapa lama kegagalan koneksi HR diingat sebelum dicoba lagi (detik).
+     */
+    private const HRSSO_RETRY_SECONDS = 60;
+
+    /**
+     * Koneksi ke database HR, atau null kalau tidak tersedia.
+     *
+     * Dua penjaga, keduanya soal waktu tunggu. Driver SQLSRV milik CI4 tidak
+     * meneruskan LoginTimeout, jadi koneksi ke host yang mati baru menyerah
+     * setelah ~15 detik — dan halaman User memanggil ini setiap kali grid dimuat.
+     *
+     *  1. Kredensial kosong berarti fitur ini memang belum dikonfigurasi. Tidak
+     *     ada gunanya membayar timeout untuk memastikannya.
+     *  2. Kegagalan diingat sebentar, jadi HR yang sedang mati hanya membuat satu
+     *     request membeku per rentang itu, bukan setiap request.
+     */
+    private function hrssoDb(): ?BaseConnection
+    {
+        $settings = config(\Config\Database::class)->hrsso ?? [];
+
+        if (trim((string) ($settings['username'] ?? '')) === '') {
+            return null;
+        }
+
+        if (cache()->get(self::HRSSO_DOWN_KEY)) {
+            return null;
+        }
+
+        try {
+            $db = \Config\Database::connect('hrsso');
+            // Koneksi SQLSRV dibuat malas; dipaksa sekarang supaya kegagalannya
+            // tertangkap di sini, bukan meledak di tengah query pemanggil.
+            $db->initialize();
+
+            return $db;
+        } catch (Throwable $e) {
+            cache()->save(self::HRSSO_DOWN_KEY, 1, self::HRSSO_RETRY_SECONDS);
+            log_message('error', 'User: database hrsso tidak terjangkau — ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Id parameter yang menandai karyawan AKTIF di database yang bersangkutan.
+     *
+     * Tidak di-hardcode (nilainya kebetulan 131 di hrsso) karena setiap database
+     * punya tabel `parameter` sendiri dan id-nya berbeda antar database — aturan
+     * yang sama dipakai auth-sso-api lewat resolveStatusAktifId(). Kalau barisnya
+     * tidak ketemu, lookup sengaja gagal alih-alih menampilkan seluruh karyawan:
+     * memetakan user ke karyawan yang sudah resign lebih buruk daripada lookup
+     * yang kosong.
+     */
+    private function karyawanAktifId(BaseConnection $db): int
+    {
+        $row = $db->table('parameter')
+            ->select('id')
+            ->where('grp', 'STATUS AKTIF')
+            ->where('text', 'AKTIF')
+            ->get()
+            ->getRow();
+
+        if ($row === null) {
+            throw new RuntimeException('Parameter grp="STATUS AKTIF" text="AKTIF" tidak ada di database hrsso.');
+        }
+
+        return (int) $row->id;
+    }
+
+    /**
+     * Nama karyawan untuk sekumpulan karyawanid, dibaca dari database HR.
+     *
+     * tbluser dan karyawan hidup di dua instance SQL Server yang berbeda, jadi
+     * keduanya tidak bisa di-JOIN; penggabungannya dilakukan di sini — pola yang
+     * sama dipakai grid() untuk roles. Satu query untuk seluruh halaman grid,
+     * bukan satu query per baris.
+     *
+     * Gagal-terbuka: database HR yang sedang mati tidak boleh membuat halaman
+     * User ikut mati. Kolom karyawannya cuma jadi kosong.
+     *
+     * @param list<int> $ids
+     *
+     * @return array<int, string> karyawanid => nama
+     */
+    private function karyawanNames(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter($ids, static fn ($id) => (int) $id > 0)));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $db = $this->hrssoDb();
+
+        if ($db === null) {
+            return [];
+        }
+
+        try {
+            $rows = $db->table('karyawan')
+                ->select('id, namakaryawan')
+                ->whereIn('id', $ids)
+                ->get()
+                ->getResult();
+
+            $map = [];
+
+            foreach ($rows as $row) {
+                $map[(int) $row->id] = (string) $row->namakaryawan;
+            }
+
+            return $map;
+        } catch (Throwable $e) {
+            log_message('error', 'User::karyawanNames — gagal membaca database hrsso: ' . $e->getMessage());
+
+            return [];
+        }
     }
 
     public function grid()
@@ -103,6 +350,14 @@ class User extends BaseController
             }
         }
 
+        // Nama karyawan hidup di instance SQL Server lain (hrsso), jadi tidak
+        // bisa ikut JOIN di query grid. Diambil sekali untuk seluruh halaman —
+        // pola yang sama dengan $userRolesMap di atas.
+        $karyawanMap = $this->karyawanNames(array_map(
+            static fn ($row) => (int) ($row->karyawanid ?? 0),
+            $data
+        ));
+
         $response = new \stdClass();
         $response->page = $page;
         $response->total = $total_pages;
@@ -123,11 +378,14 @@ class User extends BaseController
 
             // We let frontend handle the buttons rendering (as requested in modern grid approaches)
             // But we pass the data needed
+            $karyawanid = (int) ($row->karyawanid ?? 0);
+
             $response->rows[$i]['id'] = $row->userpk;
             $response->rows[$i]['cell'] = [
                 $row->userpk, // placeholder for aksi in frontend
                 $row->userid,
                 $row->username,
+                $karyawanMap[$karyawanid] ?? '',
                 $row->dashboard,
                 $row->email,
                 $row->nowhatsapp,
@@ -146,6 +404,10 @@ class User extends BaseController
         $action = $this->request->getPost('oper');
         $id = $this->request->getPost('id');
 
+        // 0 = belum dipetakan ke karyawan. Itu keadaan yang sah: akun sistem
+        // seperti ADMIN atau ITMKS tidak punya padanan di master karyawan.
+        $karyawanid = (int) ($this->request->getPost('karyawanid') ?: 0);
+
         $data = [
             'userid'     => $this->request->getPost('userid'),
             'username'   => $this->request->getPost('username'),
@@ -153,8 +415,30 @@ class User extends BaseController
             'nowhatsapp' => $this->request->getPost('nowhatsapp'),
             'password'   => $this->request->getPost('password'),
             'dashboard'  => $this->request->getPost('dashboard'),
+            'karyawanid' => $karyawanid,
             'user_roles' => $this->request->getPost('user_roles')
         ];
+
+        // Satu karyawan hanya boleh menempel pada satu user. SsoAuth::resolveUser()
+        // menolak tiket yang cocok ke lebih dari satu baris tbluser, jadi dua user
+        // dengan karyawanid sama membuat KEDUANYA tidak bisa login lewat SSO —
+        // dengan pesan yang tidak menjelaskan sebabnya. Ditolak di sini selagi
+        // penyebabnya masih terlihat. (tbluser tidak punya unique index selain
+        // PK userpk, jadi pemeriksaan ini satu-satunya penjaga.)
+        if ($karyawanid > 0 && in_array($action, ['add', 'edit'], true)) {
+            $bentrok = \Config\Database::connect()
+                ->table('tbluser')
+                ->where('karyawanid', $karyawanid)
+                ->where('userpk !=', (int) $id) // 0 saat add — tidak pernah cocok
+                ->countAllResults();
+
+            if ($bentrok > 0) {
+                return $this->response->setJSON([
+                    'status'  => 'gagal',
+                    'message' => 'Karyawan ini sudah dipakai user lain. Satu karyawan hanya boleh dipetakan ke satu user.'
+                ]);
+            }
+        }
 
         try {
             if ($action == 'add') {
@@ -191,6 +475,12 @@ class User extends BaseController
             $muserroles = new MuserrolesModel();
             $roles = $muserroles->getByUserID($id);
             $user->user_roles = array_column($roles, 'roleid');
+
+            // Namanya ikut dikirim supaya form bisa menampilkan siapa yang
+            // terpetakan tanpa membuka lookup. Kosong berarti belum dipetakan —
+            // atau karyawannya sudah tidak ada lagi di master HR.
+            $karyawanid          = (int) ($user->karyawanid ?? 0);
+            $user->namakaryawan  = $this->karyawanNames([$karyawanid])[$karyawanid] ?? '';
         }
 
         return $this->response->setJSON($user);

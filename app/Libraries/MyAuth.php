@@ -59,7 +59,7 @@ class MyAuth {
 			'gridtab','grid','griddetail','gridasuransi','getgriddata','getgriddatamks','operation','excel','crud'
 			// lookup & combo
 			,'carishippersama','listmarketingcabang','combotradoluar','combomarketing','datacabang','datamarketing'
-			,'getbyid','getroles','getacos','lookupaco','get_marketing','getlastupdate','detail','reseq','userroles'
+			,'getbyid','getroles','getacos','lookupaco','lookupkaryawan','get_marketing','getlastupdate','detail','reseq','userroles'
 			// varian per cabang
 			,'pesanmdn','pesansby','pesanmks','pesanjkt','pesantnl','pesanbtg','mks'
 		],

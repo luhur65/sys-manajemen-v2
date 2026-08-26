@@ -35,7 +35,32 @@
                             <input type="text" class="form-control text-uppercase" name="username" id="username" required>
                         </div>
                     </div>
-                    
+
+                    <!--
+                        Karyawan (master HR). Nilai yang tersimpan adalah karyawanid —
+                        identitas yang sama dengan klaim `karyawanId` pada tiket SSO,
+                        jadi inilah yang dicocokkan saat pengguna masuk lewat SSO.
+                        Sengaja hanya bisa diisi lewat lookup: id-nya harus datang
+                        dari master HR, bukan diketik.
+                        Boleh kosong — akun sistem seperti ADMIN tidak punya karyawan.
+                    -->
+                    <div class="row form-group">
+                        <div class="col-12 col-sm-3 col-md-2">
+                            <label class="col-form-label">Karyawan (HR)</label>
+                        </div>
+                        <div class="col-12 col-sm-9 col-md-10">
+                            <div class="input-group">
+                                <input type="hidden" name="karyawanid" id="karyawanid">
+                                <input type="text" class="form-control" id="namakaryawan" readonly placeholder="(belum dipetakan)">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnLookupKaryawan" title="Cari karyawan">...</button>
+                                    <button class="btn btn-outline-secondary" type="button" id="btnHapusKaryawan" title="Kosongkan"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <small class="text-muted">Dipakai untuk mencocokkan akun saat login lewat SSO.</small>
+                        </div>
+                    </div>
+
                     <div class="row form-group" id="password-container">
                         <div class="col-12 col-sm-3 col-md-2">
                             <label class="col-form-label">Password <span class="text-danger">*</span></label>
@@ -101,12 +126,31 @@
     </div>
 </div>
 
+<!-- Modal Lookup Karyawan (master HR) -->
+<div class="modal fade" id="lookupKaryawanModal" tabindex="-1" aria-labelledby="lookupKaryawanModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lookupKaryawanModalLabel">Lookup Karyawan</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <table id="jqGridKaryawan"></table>
+                <div id="jqGridKaryawanPager"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const apiUrl = `<?= base_url('User/grid') ?>`;
     const crudUrl = `<?= base_url('User/crud') ?>`;
     const getUrl = `<?= base_url('User/getById') ?>`;
+    const lookupKaryawanUrl = `<?= base_url('User/lookupKaryawan') ?>`;
     let $grid = $("#jqGrid");
-    
+    let $gridKaryawan = $("#jqGridKaryawan");
+    let karyawanGridLoaded = false;
+
     let indexRow = 0;
     let triggerClick = true;
     let limit;
@@ -186,11 +230,21 @@
                     
                 },
                 {
-                    label: 'Username', 
-                    name: 'username', 
-                    index: 'username', 
-                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_2), 
-                    
+                    label: 'Username',
+                    name: 'username',
+                    index: 'username',
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_2),
+
+                },
+                {
+                    // Dibaca dari database HR, bukan dari tbluser — jadi tidak
+                    // bisa ikut difilter atau diurutkan lewat query grid ini.
+                    label: 'Karyawan (HR)',
+                    name: 'namakaryawan',
+                    index: 'namakaryawan',
+                    width: (isDesktop ? sm_dekstop_3 : sm_mobile_2),
+                    search: false,
+                    sortable: false,
                 },
                 {
                     label: 'Dashboard', 
@@ -431,7 +485,77 @@
         $(document).on('click', '.clearsearchclass', function() {
             $(this).attr('style', 'display: none !important');
         });
+
+        // --- Lookup Karyawan (master HR) ---------------------------------
+        // datatype 'local' saat init supaya membuka halaman User tidak ikut
+        // memanggil database HR; baru dialihkan ke 'json' ketika lookup-nya
+        // benar-benar dibuka pertama kali.
+        $gridKaryawan.jqGrid({
+            url: lookupKaryawanUrl,
+            mtype: "POST",
+            datatype: "local",
+            styleUI: 'Bootstrap4',
+            iconSet: 'fontAwesome',
+            colModel: [
+                { label: 'ID', name: 'id', index: 'id', key: true, hidden: true, search: false },
+                { label: 'Kode', name: 'kodekaryawan', index: 'kodekaryawan', width: 110 },
+                { label: 'Nama Karyawan', name: 'namakaryawan', index: 'namakaryawan', width: 220 },
+                { label: 'Cabang', name: 'cabang', index: 'cabang', width: 130 },
+                { label: 'Jabatan', name: 'jabatan', index: 'jabatan', width: 150 }
+            ],
+            autowidth: true,
+            shrinkToFit: true,
+            height: 400,
+            rowNum: 10,
+            rowList: [10, 20, 50],
+            pager: '#jqGridKaryawanPager',
+            viewrecords: true,
+            rownumbers: true,
+            gridview: true,
+            altRows: true,
+            altclass: 'myAltRowClass',
+            sortable: true,
+            sortname: 'namakaryawan',
+            sortorder: 'asc',
+            onSelectRow: function(rowid) {
+                let rowData = $(this).getRowData(rowid);
+                setKaryawan(rowData.id, rowData.namakaryawan);
+                $('#lookupKaryawanModal').modal('hide');
+            }
+        }).jqGrid('filterToolbar', {
+            stringResult: true,
+            searchOnEnter: false,
+            defaultSearch: 'cn'
+        });
+
+        $('#btnLookupKaryawan').on('click', function() {
+            $('#lookupKaryawanModal').modal('show');
+            setTimeout(function() {
+                $gridKaryawan.jqGrid('setGridWidth', $('#lookupKaryawanModal .modal-body').width());
+                if (!karyawanGridLoaded) {
+                    karyawanGridLoaded = true;
+                    $gridKaryawan.jqGrid('setGridParam', { datatype: 'json' }).trigger('reloadGrid');
+                }
+            }, 300);
+        });
+
+        $('#btnHapusKaryawan').on('click', function() {
+            setKaryawan('', '');
+        });
     });
+
+    // Kosong = user tidak dipetakan ke karyawan mana pun. Itu sah: akun sistem
+    // seperti ADMIN atau ITMKS memang tidak punya padanan di master HR.
+    function setKaryawan(id, nama) {
+        $('#karyawanid').val(id || '');
+        $('#namakaryawan').val(nama || '');
+    }
+
+    // Tombol lookup bukan <input>, jadi tidak ikut terkena selector disable
+    // massal di newData/editData/viewData/deleteData — diatur terpisah di sini.
+    function setKaryawanEnabled(enabled) {
+        $('#btnLookupKaryawan, #btnHapusKaryawan').prop('disabled', !enabled);
+    }
 
     function newData() {
         $('.modal-loader').addClass('d-none');
@@ -446,7 +570,10 @@
         $('#btnSave').show();
         $('#btnSave').removeClass('btn-danger').addClass('btn-primary');
         $('#btnSave').html('<i class="fa fa-save"></i> Save');
-        
+
+        setKaryawan('', '');
+        setKaryawanEnabled(true);
+
         loadRoles();
         $('#crudModal').modal('show');
         setTimeout(() => $('#userid').focus(), 500);
@@ -472,6 +599,8 @@
             $('#email').val(res.email);
             $('#nowhatsapp').val(res.nowhatsapp);
             $('#dashboard').val(res.dashboard);
+            setKaryawan(res.karyawanid > 0 ? res.karyawanid : '', res.namakaryawan);
+            setKaryawanEnabled(true);
             loadRoles(res.user_roles);
             $('#crudModal').modal('show');
             setTimeout(() => $('#userid').focus(), 500);
@@ -494,8 +623,10 @@
             $('#userid').val(res.userid);
             $('#username').val(res.username);
             $('#dashboard').val(res.dashboard);
+            setKaryawan(res.karyawanid > 0 ? res.karyawanid : '', res.namakaryawan);
+            setKaryawanEnabled(false);
             loadRoles(res.user_roles);
-            
+
             $('#fm input:not([type="hidden"]), #fm select').prop('disabled', true);
             
             $('#btnSave').show();
@@ -519,8 +650,10 @@
             $('#userid').val(res.userid);
             $('#username').val(res.username);
             $('#dashboard').val(res.dashboard);
+            setKaryawan(res.karyawanid > 0 ? res.karyawanid : '', res.namakaryawan);
+            setKaryawanEnabled(false);
             loadRoles(res.user_roles);
-            
+
             $('#fm input, #fm select').prop('disabled', true);
             $('#btnSave').hide();
             $('#crudModal').modal('show');

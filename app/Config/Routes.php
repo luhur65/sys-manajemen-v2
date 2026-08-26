@@ -718,6 +718,9 @@ $routes->match(['GET', 'POST'], 'user/getroles', 'User::getRoles');
 $routes->match(['GET', 'POST'], 'user/getRoles', 'User::getRoles');
 $routes->match(['GET', 'POST'], 'User/getById/(:any)', 'User::getById/$1');
 $routes->match(['GET', 'POST'], 'user/getById/(:any)', 'User::getById/$1');
+$routes->match(['GET', 'POST'], 'User/lookupKaryawan', 'User::lookupKaryawan');
+$routes->match(['GET', 'POST'], 'user/lookupkaryawan', 'User::lookupKaryawan');
+$routes->match(['GET', 'POST'], 'user/lookupKaryawan', 'User::lookupKaryawan');
 
 // Routes for App\Controllers\User.old (User.old)
 $routes->match(['GET', 'POST'], 'UserAcl/view/(:any)', 'UserAcl::view/$1');
