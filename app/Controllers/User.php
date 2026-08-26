@@ -197,6 +197,18 @@ class User extends BaseController
         $settings = config(\Config\Database::class)->hrsso ?? [];
 
         if (trim((string) ($settings['username'] ?? '')) === '') {
+            // Dicatat, tidak didiamkan: dari luar, "belum dikonfigurasi" dan
+            // "HR sedang mati" sama-sama terlihat sebagai lookup kosong. Tanpa
+            // baris ini satu-satunya penyebab yang paling mungkin justru jadi
+            // satu-satunya yang tak meninggalkan jejak di log.
+            log_message('error', sprintf(
+                'User: database.hrsso.username kosong — lookup karyawan dimatikan. '
+                . 'Terbaca dari .env: hostname=%s database=%s port=%s.',
+                (string) ($settings['hostname'] ?? '-'),
+                (string) ($settings['database'] ?? '-'),
+                (string) ($settings['port'] ?? '-')
+            ));
+
             return null;
         }
 

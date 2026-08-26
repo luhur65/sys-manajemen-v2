@@ -154,7 +154,10 @@ class Database extends Config
         'swapPre'      => '',
         'encrypt'      => false,
         'failover'     => [],
-        'port'         => 1433,
+        // 1450, bukan 1433: hrsso tidak berjalan di port SQL Server default,
+        // berbeda dari grup lain di berkas ini. Nilainya harus sama dengan
+        // SSMS_PORT milik auth-sso-api.
+        'port'         => 1450,
         'dateFormat'   => [
             'date'     => 'Y-m-d',
             'datetime' => 'Y-m-d H:i:s',
