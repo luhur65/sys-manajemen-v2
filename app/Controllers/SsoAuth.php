@@ -173,6 +173,18 @@ class SsoAuth extends BaseController
             return null;
         }
 
+        // Nilai numerik non-positif bukan identitas. Di master karyawan, 0 (juga
+        // 9999/99999) adalah penanda "tidak punya karyawan"; auth-sso-api sudah
+        // menyaringnya dengan `karyawanId > 0` sebelum menandatangani tiket, jadi
+        // ini lapis kedua — tapi lapis yang justru dibutuhkan saat pemetaan
+        // dikerjakan bertahap: selama proses itu akan tiba saat hanya TERSISA SATU
+        // baris tbluser yang karyawanid-nya masih 0, dan pada saat itu tiket
+        // tanpa karyawan akan cocok tepat satu baris — lalu mendarat di akun
+        // orang lain. Email tidak pernah numerik, jadi jalur email tak tersentuh.
+        if (is_numeric($value) && (float) $value <= 0) {
+            return null;
+        }
+
         $db = \Config\Database::connect();
 
         // Salah ketik pada sso.matchColumn akan jadi SQL error yang membingungkan;
