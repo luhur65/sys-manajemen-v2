@@ -104,6 +104,27 @@ class SsoAuth extends BaseController
             ));
         }
 
+        // Tiket tanpa klaim `sid` menghasilkan sesi yang TIDAK bisa dijangkau
+        // Single Logout: AuthFilter melewatinya begitu saja, dan logout di
+        // dashboard SSO tidak akan mengakhiri sesi ini. Itu kegagalan yang
+        // diam-diam — pengguna tetap masuk dengan normal dan tidak ada yang
+        // terlihat salah sampai berjam-jam kemudian seseorang bertanya kenapa
+        // logout di dashboard tidak berpengaruh. Dicatat di sini supaya
+        // penyebabnya ada hitam di atas putih sejak menit pertama.
+        $sid = isset($claims['sid']) && is_string($claims['sid']) ? trim($claims['sid']) : '';
+
+        if ($sid === '') {
+            // Level `error`, bukan `warning`: Config\Logger memakai ambang 4 di
+            // production, dan warning (level 5) dibuang diam-diam di sana —
+            // justru di environment tempat diagnosis paling dibutuhkan.
+            log_message('error', sprintf(
+                'SSO callback: tiket untuk userid=%s tidak membawa klaim sid — '
+                . 'sesi ini TIDAK akan ikut berakhir saat logout di dashboard SSO. '
+                . 'Periksa apakah auth-sso-api berhasil menulis baris sso_sessions saat login.',
+                (string) $user['userid']
+            ));
+        }
+
         // Cegah session fixation: naik level privilese (anonim -> terautentikasi)
         // harus memakai session ID baru, sama seperti jalur login password dan
         // biometrik. Lihat tests/unit/SessionFixationTest.php.
@@ -123,7 +144,7 @@ class SsoAuth extends BaseController
             // untuk mengembalikan pengguna ke dashboard SSO, bukan ke halaman
             // login lokal yang tidak ia pakai.
             SESSION_NAME . 'sso_login' => 1,
-            SESSION_NAME . 'sso_sid'   => isset($claims['sid']) && is_string($claims['sid']) ? $claims['sid'] : null,
+            SESSION_NAME . 'sso_sid'   => $sid !== '' ? $sid : null,
         ];
         session()->set($sessionData);
 
@@ -216,7 +237,12 @@ class SsoAuth extends BaseController
     private function fail(string $code, ?string $logMessage): RedirectResponse
     {
         if ($logMessage !== null) {
-            log_message('warning', 'SSO ' . $logMessage . ' ip=' . $this->request->getIPAddress());
+            // Level `error`, bukan `warning`. Ambang log production adalah 4,
+            // sehingga warning (5) tidak pernah sampai ke berkas — artinya SETIAP
+            // alasan penolakan SSO tak terlihat persis di environment tempat ia
+            // paling perlu dilacak. Pesan ke pengguna tetap seragam; yang naik
+            // levelnya hanya catatan internal.
+            log_message('error', 'SSO ' . $logMessage . ' ip=' . $this->request->getIPAddress());
         }
 
         return redirect()->to(base_url('login?sso=' . $code));
