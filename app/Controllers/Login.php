@@ -83,6 +83,10 @@ class Login extends BaseController
             'invalid'  => 'Tiket SSO tidak valid atau sudah kedaluwarsa. Silakan buka kembali dari dashboard SSO.',
             'replay'   => 'Tiket SSO sudah pernah dipakai. Silakan buka kembali dari dashboard SSO.',
             'unknown'  => 'Akun Anda belum terdaftar di SYS. Harap hubungi admin SYS untuk dibuatkan akun.',
+            // Beda pemilik masalah dari 'unknown': tiketnya yang kurang, bukan
+            // akunnya yang belum ada. Mengarahkan ke admin SYS di kasus ini
+            // hanya membuang waktu semua pihak.
+            'noclaim'  => 'Tiket SSO tidak membawa identitas yang dibutuhkan aplikasi ini. Harap hubungi admin SSO.',
             'expired'  => 'Sesi SSO Anda telah berakhir. Silakan login kembali.',
             'server'   => 'Terjadi kesalahan saat memproses login SSO. Coba lagi nanti.',
             'onlysso'  => 'Login userid/password sudah dinonaktifkan. Silakan masuk lewat SSO.',

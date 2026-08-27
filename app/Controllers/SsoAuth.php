@@ -87,6 +87,28 @@ class SsoAuth extends BaseController
             return $this->fail('replay', 'callback: tiket dengan jti ' . substr($jti, 0, 6) . '… sudah pernah dipakai.');
         }
 
+        // Tiket yang tidak membawa klaim yang dikonfigurasi adalah masalah di
+        // sisi PENERBIT tiket, bukan di daftar akun SYS. Dulu keduanya jatuh ke
+        // kode `unknown` yang sama, sehingga layar menyuruh pengguna menghubungi
+        // admin SYS untuk persoalan yang hanya bisa diperbaiki admin SSO.
+        //
+        // Membedakannya di sini tidak membocorkan apa pun tentang akun yang
+        // terdaftar — yang dibedakan adalah bentuk tiketnya, bukan isi tbluser.
+        // Pembedaan "nol baris" vs "lebih dari satu baris" tetap TIDAK dilakukan,
+        // karena yang itu memang berbicara tentang isi tbluser.
+        $claimName = $this->sso->matchClaim;
+        $claimValue = $claims[$claimName] ?? null;
+
+        if (! is_string($claimValue) && ! is_int($claimValue)) {
+            return $this->fail('noclaim', sprintf(
+                'callback: tiket tidak membawa klaim "%s" yang diminta sso.matchClaim (sub=%s). '
+                . 'Klaim yang ada pada tiket: %s.',
+                $claimName,
+                (string) $claims['sub'],
+                implode(', ', array_keys($claims))
+            ));
+        }
+
         try {
             $user = $this->resolveUser($claims);
         } catch (Throwable $e) {
