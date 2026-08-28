@@ -132,6 +132,10 @@ class Login extends BaseController
             // akunnya yang belum ada. Mengarahkan ke admin SYS di kasus ini
             // hanya membuang waktu semua pihak.
             'noclaim'  => 'Tiket SSO tidak membawa identitas yang dibutuhkan aplikasi ini. Harap hubungi admin SSO.',
+            // Panel Casting: yang membaca pesan ini adalah admin, bukan pemilik
+            // akun. "Belum terdaftar" akan menyesatkan — barisnya memang dipilih
+            // dari daftar, jadi kalau hilang berarti daftarnya yang basi.
+            'casting'  => 'Target Panel Casting tidak ditemukan di SYS. Daftar user mungkin sudah berubah — muat ulang panel lalu coba lagi.',
             'expired'  => 'Sesi SSO Anda telah berakhir. Silakan login kembali.',
             'server'   => 'Terjadi kesalahan saat memproses login SSO. Coba lagi nanti.',
             'onlysso'  => 'Login userid/password sudah dinonaktifkan. Silakan masuk lewat SSO.',

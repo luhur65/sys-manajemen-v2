@@ -96,34 +96,67 @@ class SsoAuth extends BaseController
         // terdaftar — yang dibedakan adalah bentuk tiketnya, bukan isi tbluser.
         // Pembedaan "nol baris" vs "lebih dari satu baris" tetap TIDAK dilakukan,
         // karena yang itu memang berbicara tentang isi tbluser.
-        $claimName = $this->sso->matchClaim;
-        $claimValue = $claims[$claimName] ?? null;
+        // Tiket Panel Casting (login-as) diselesaikan lewat jalur yang BERBEDA.
+        //
+        // Pada tiket biasa, identitas dicari lewat sso.matchClaim. Pada tiket
+        // casting itu justru berbahaya: admin memilih SATU BARIS tertentu di
+        // panel, dan `sub` adalah id baris itu — sedangkan `email` maupun
+        // `karyawanId` adalah data yang bisa bertabrakan antar akun. Mencocokkan
+        // lewat klaim itu bisa mendaratkan admin di akun ORANG LAIN, tanpa error
+        // apa pun. auth-sso-api menuliskan aturan yang sama di impersonateTicket():
+        // `sub` satu-satunya yang otoritatif di sini.
+        //
+        // Perbandingannya `=== true`, bukan sekadar truthy: nilainya datang dari
+        // tiket bertanda tangan, jadi bentuknya sudah pasti — tapi menerima "1"
+        // atau "false" sebagai true akan mengubah jalur resolusi identitas, dan
+        // itu bukan tempat untuk longgar.
+        $impersonated = ($claims['impersonated'] ?? null) === true;
 
-        if (! is_string($claimValue) && ! is_int($claimValue)) {
-            return $this->fail('noclaim', sprintf(
-                'callback: tiket tidak membawa klaim "%s" yang diminta sso.matchClaim (sub=%s). '
-                . 'Klaim yang ada pada tiket: %s.',
-                $claimName,
-                (string) $claims['sub'],
-                implode(', ', array_keys($claims))
-            ));
-        }
+        if ($impersonated) {
+            try {
+                $user = $this->resolveImpersonationTarget($claims);
+            } catch (Throwable $e) {
+                log_message('error', 'SSO callback: gagal mencari target casting — ' . $e->getMessage());
 
-        try {
-            $user = $this->resolveUser($claims);
-        } catch (Throwable $e) {
-            log_message('error', 'SSO callback: gagal mencari pengguna — ' . $e->getMessage());
+                return $this->fail('server', null);
+            }
 
-            return $this->fail('server', null);
-        }
+            if ($user === null) {
+                return $this->fail('casting', sprintf(
+                    'callback: target Panel Casting userpk=%s tidak ada di tbluser.',
+                    (string) $claims['sub']
+                ));
+            }
+        } else {
+            $claimName  = $this->sso->matchClaim;
+            $claimValue = $claims[$claimName] ?? null;
 
-        if ($user === null) {
-            return $this->fail('unknown', sprintf(
-                'callback: tidak ada akun tbluser tunggal untuk %s=%s (sub=%s).',
-                $this->sso->matchColumn,
-                (string) ($claims[$this->sso->matchClaim] ?? '-'),
-                (string) $claims['sub']
-            ));
+            if (! is_string($claimValue) && ! is_int($claimValue)) {
+                return $this->fail('noclaim', sprintf(
+                    'callback: tiket tidak membawa klaim "%s" yang diminta sso.matchClaim (sub=%s). '
+                    . 'Klaim yang ada pada tiket: %s.',
+                    $claimName,
+                    (string) $claims['sub'],
+                    implode(', ', array_keys($claims))
+                ));
+            }
+
+            try {
+                $user = $this->resolveUser($claims);
+            } catch (Throwable $e) {
+                log_message('error', 'SSO callback: gagal mencari pengguna — ' . $e->getMessage());
+
+                return $this->fail('server', null);
+            }
+
+            if ($user === null) {
+                return $this->fail('unknown', sprintf(
+                    'callback: tidak ada akun tbluser tunggal untuk %s=%s (sub=%s).',
+                    $this->sso->matchColumn,
+                    (string) ($claims[$this->sso->matchClaim] ?? '-'),
+                    (string) $claims['sub']
+                ));
+            }
         }
 
         // Tiket tanpa klaim `sid` menghasilkan sesi yang TIDAK bisa dijangkau
@@ -168,10 +201,49 @@ class SsoAuth extends BaseController
             SESSION_NAME . 'sso_login' => 1,
             SESSION_NAME . 'sso_sid'   => $sid !== '' ? $sid : null,
         ];
+
+        $aktivitas = 'Login via SSO';
+
+        if ($impersonated) {
+            // `actor*` = yang menekan tombol; `approver*` = admin IT yang
+            // menyetujui lewat OTP. auth-sso-api sengaja memisahkan keduanya,
+            // dan aplikasi tujuan mencatat APPROVER sebagai pelaku perubahan
+            // data — jejak "siapa yang benar-benar menekan" tetap disimpan
+            // supaya tidak hilang dari audit.
+            $aktor    = $this->klaimTeks($claims, 'actorUsername');
+            $penyetuju = $this->klaimTeks($claims, 'approverUsername');
+
+            $sessionData[SESSION_NAME . 'sso_impersonated'] = 1;
+            $sessionData[SESSION_NAME . 'sso_actor']        = $aktor;
+            $sessionData[SESSION_NAME . 'sso_approver']     = $penyetuju;
+
+            $aktivitas = sprintf(
+                'Login via SSO (Panel Casting: dijalankan %s, disetujui %s)',
+                $aktor !== '' ? $aktor : '-',
+                $penyetuju !== '' ? $penyetuju : '-'
+            );
+
+            // Sesi atas nama orang lain adalah peristiwa yang harus bisa
+            // ditelusuri belakangan. Level `error` dipilih bukan karena ini
+            // kesalahan, melainkan karena ambang log production adalah 4:
+            // level di bawahnya tidak akan pernah sampai ke berkas. Jejak
+            // utamanya tetap di tabel log aktivitas, yang tidak terpengaruh
+            // ambang ini.
+            log_message('error', sprintf(
+                'SSO Panel Casting: sesi dibuka atas nama userid=%s (userpk=%s) '
+                . 'oleh %s, disetujui %s. ip=%s',
+                (string) $user['userid'],
+                (string) $user['userpk'],
+                $aktor !== '' ? $aktor : '-',
+                $penyetuju !== '' ? $penyetuju : '-',
+                $this->request->getIPAddress()
+            ));
+        }
+
         session()->set($sessionData);
 
         try {
-            (new MlogModel())->saveLog($this, 'Login via SSO');
+            (new MlogModel())->saveLog($this, $aktivitas);
         } catch (Throwable $e) {
             // Log aktivitas tidak boleh menggagalkan login yang sudah sah.
             log_message('error', 'SSO callback: gagal menulis log aktivitas — ' . $e->getMessage());
@@ -246,6 +318,56 @@ class SsoAuth extends BaseController
             ->getResultArray();
 
         return count($rows) === 1 ? $rows[0] : null;
+    }
+
+    /**
+     * Mencari baris `tbluser` tujuan sebuah tiket Panel Casting.
+     *
+     * Dicocokkan pada `userpk` lewat klaim `sub` — id baris yang dipilih admin
+     * di panel, diresolve auth-sso-api dari direktori sys-modern sendiri
+     * (APP_DIRECTORY_DB.sys: table `tbluser`, kolom id `userpk`). Sengaja TIDAK
+     * memakai sso.matchColumn: email dan karyawanid bisa bertabrakan antar akun,
+     * dan pada casting itu berarti admin mendarat di akun yang salah.
+     *
+     * @param array<string, mixed> $claims
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveImpersonationTarget(array $claims): ?array
+    {
+        $sub = trim((string) $claims['sub']);
+
+        // `userpk` bertipe int. Nilai non-numerik berarti tiket ini diterbitkan
+        // untuk direktori dengan bentuk id lain (DISC memakai GUID) dan tidak
+        // pernah dimaksudkan untuk sys-modern — ditolak, bukan dipaksakan.
+        if ($sub === '' || ! ctype_digit($sub)) {
+            log_message('error', 'SSO Panel Casting: klaim sub "' . $sub . '" bukan userpk yang sah.');
+
+            return null;
+        }
+
+        $rows = \Config\Database::connect()
+            ->table('tbluser')
+            ->where('userpk', (int) $sub)
+            ->limit(2)
+            ->get()
+            ->getResultArray();
+
+        return count($rows) === 1 ? $rows[0] : null;
+    }
+
+    /**
+     * Membaca satu klaim sebagai teks, atau string kosong kalau bentuknya bukan
+     * teks/angka. Dipakai untuk klaim audit (actor/approver) yang hanya ikut
+     * dicatat, tidak pernah menentukan identitas.
+     *
+     * @param array<string, mixed> $claims
+     */
+    private function klaimTeks(array $claims, string $nama): string
+    {
+        $nilai = $claims[$nama] ?? null;
+
+        return is_string($nilai) || is_int($nilai) ? trim((string) $nilai) : '';
     }
 
     /**
