@@ -1,6 +1,8 @@
 <?php
 namespace App\Controllers;
 
+use App\Libraries\AuditUser;
+
 use App\Models\MmenuModel;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\RequestInterface;
@@ -184,7 +186,7 @@ class Menu extends BaseController
             'acoid'      => empty($this->request->getPost('acoid')) ? 0 : $this->request->getPost('acoid'),
             'link'       => empty($this->request->getPost('link')) ? '' : $this->request->getPost('link'),
             'menuexe'    => '',
-            'modifiedby' => session()->get('USERNAME') ?? 'SYSTEM',
+            'modifiedby' => AuditUser::modifiedBy(),
             'modifiedon' => date('Y-m-d H:i:s')
         ];
 

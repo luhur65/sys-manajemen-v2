@@ -25,6 +25,16 @@ class MlogModel extends Model
     public function saveLog($data,$message=null,$MessageError=null){
         $id_user = session()->get(SESSION_NAME.'userpk') ?: 0;
         $router = service('router');
+
+        // `user_id` di atas adalah pemilik akun — dan pada sesi Panel Casting
+        // itu justru orang yang TIDAK melakukan apa-apa. Tanpa jejak berikut,
+        // baris log ini terbaca seolah-olah dia sendiri yang mengerjakannya,
+        // dan tidak ada apa pun di tabel ini yang bisa membantahnya.
+        if (\App\Libraries\AuditUser::isImpersonating()) {
+            $jejak   = '[' . \App\Libraries\AuditUser::describe() . ']';
+            $message = ! empty($message) ? $message . ' ' . $jejak : $jejak;
+        }
+
         $dataActivity=[
             'user_id'       => $id_user,
             'module'        => !empty($data) ? basename(FCPATH) : null,

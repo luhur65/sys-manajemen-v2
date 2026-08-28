@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Libraries\AuditUser;
+
 use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
@@ -103,7 +105,7 @@ class RolesModel extends Model
         $this->db->transStart();
         $save = [
             'rolename' => strtoupper($data['rolename'] ?? ''),
-            'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
+            'modifiedby' => strtoupper(AuditUser::modifiedBy()),
             'modifiedon' => date("Y-m-d H:i:s")
         ];
 
@@ -214,7 +216,7 @@ class RolesModel extends Model
                             'aclid' => $maxId,
                             'roleid' => $data['roleid'],
                             'acoid' => $aco,
-                            'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
+                            'modifiedby' => strtoupper(AuditUser::modifiedBy()),
                             'modifiedon' => date("Y-m-d H:i:s")
                         ]);
                     } catch (\Exception $e) {
@@ -239,7 +241,7 @@ class RolesModel extends Model
                                 'aclid' => $maxId,
                                 'roleid' => $data['roleid'],
                                 'acoid' => $val,
-                                'modifiedby' => strtoupper(session()->get('USERNAME') ?? 'SYSTEM'),
+                                'modifiedby' => strtoupper(AuditUser::modifiedBy()),
                                 'modifiedon' => date("Y-m-d H:i:s")
                             ]);
                         } catch (\Exception $e) {

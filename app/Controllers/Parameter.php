@@ -1,6 +1,8 @@
 <?php
 namespace App\Controllers;
 
+use App\Libraries\AuditUser;
+
 use App\Models\MparameterModel;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\RequestInterface;
@@ -106,7 +108,7 @@ class Parameter extends BaseController
             'parameterid'    => strtoupper($this->request->getPost('parameterid')),
             'parametertext'  => strtoupper($this->request->getPost('parametertext')),
             'parametermemo'  => strtoupper($this->request->getPost('parametermemo')),
-            'modifiedby'     => session()->get('USERNAME') ?? 'SYSTEM',
+            'modifiedby'     => AuditUser::modifiedBy(),
             'modifiedon'     => date('Y-m-d H:i:s')
         ];
 

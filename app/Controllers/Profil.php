@@ -76,7 +76,11 @@ use App\Controllers\BaseController;
 			$insert = [
                 'userpk' => $userpk,
                 'password' => $newHash,
-                'modifiedby' => session()->get(SESSION_NAME.'username'),
+                // Riwayat ganti password harus mencatat siapa yang BENAR-BENAR
+                // mengubahnya. Pada sesi Panel Casting, membaca username sesi
+                // akan mencatat nama orang yang sedang ditiru — persis orang
+                // yang tidak melakukannya.
+                'modifiedby' => \App\Libraries\AuditUser::modifiedBy(),
                 'modifiedon' => date('Y-m-d H:i:s')
             ];
 

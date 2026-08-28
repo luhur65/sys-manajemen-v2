@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Libraries\AuditUser;
+
 use App\Libraries\GridSort;
 use CodeIgniter\Model;
 
@@ -84,7 +86,7 @@ class MuserModel extends Model
     {
         $this->db->transStart();
         $data['modifiedon'] = date("Y-m-d H:i:s");
-        $data['modifiedby'] = strtoupper(session()->get('USERNAME') ?? 'SYSTEM');
+        $data['modifiedby'] = strtoupper(AuditUser::modifiedBy());
 
         // encrypt the password
         if (isset($data['password']) && !empty($data['password'])) {

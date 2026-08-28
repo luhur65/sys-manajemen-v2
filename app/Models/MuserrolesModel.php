@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Libraries\AuditUser;
+
 use CodeIgniter\Model;
 
 class MuserrolesModel extends Model
@@ -45,7 +47,7 @@ class MuserrolesModel extends Model
 
             if (!empty($toInsert)) {
                 $insertData = [];
-                $modifiedby = strtoupper(session()->get('USERNAME') ?? 'SYSTEM');
+                $modifiedby = strtoupper(AuditUser::modifiedBy());
                 $modifiedon = date("Y-m-d H:i:s");
                 
                 foreach ($toInsert as $role) {
