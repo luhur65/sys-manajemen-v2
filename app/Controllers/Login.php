@@ -55,16 +55,61 @@ class Login extends BaseController
             return redirect()->to(base_url('home'));
         }
         
+        $message = session()->getFlashdata(SESSION_NAME . 'message') ?: $this->ssoMessage();
+        $ssoOnly = $this->ssoOnlyEntryPoint();
+
+        // Mode SSO-only: halaman ini tidak punya apa pun untuk ditawarkan —
+        // form lokalnya disembunyikan dan yang tersisa hanya satu tombol menuju
+        // dashboard SSO. Jadi antar langsung ke sana, tanpa perantara.
+        //
+        // KECUALI kalau ada pesan yang perlu dibaca. Halaman ini satu-satunya
+        // tempat kegagalan SSO bisa muncul ("akun belum terdaftar di SYS",
+        // "tiket sudah dipakai", "sesi SSO berakhir"). Kalau ia dilewati juga
+        // saat membawa pesan, pengguna yang gagal akan terlempar kembali ke
+        // dashboard, menekan kartu SYS lagi, gagal lagi — berputar tanpa pernah
+        // tahu apa yang salah. Pesannya dibiarkan tampil, dengan tombol SSO
+        // tetap ada sebagai jalan lanjutnya.
+        if ($message === null && $ssoOnly !== null) {
+            return redirect()->to($ssoOnly);
+        }
+
         $time = microtime();
         $time = explode(' ', $time);
         $time = $time[1] + $time[0];
 
         $data['start'] = $time;
         $data['versi'] = CONS_VERSI;
-        $data['error'] = session()->getFlashdata(SESSION_NAME . 'message') ?: $this->ssoMessage();
+        $data['error'] = $message;
         $data['sso']   = config(\Config\Sso::class);
 
         return view('login', $data);
+    }
+
+    /**
+     * Alamat dashboard SSO bila halaman login lokal sudah tidak berguna, atau
+     * null bila halaman ini masih perlu ditampilkan.
+     *
+     * Mengembalikan null saat login lokal masih hidup, dan juga saat SSO belum
+     * dikonfigurasi. Yang kedua penting: kalau login lokal dimatikan sementara
+     * SSO belum siap, tidak ada satu pun jalan masuk — dan pengguna harus
+     * melihat halaman ini beserta pesan "tidak ada metode login yang aktif",
+     * bukan diarahkan ke alamat kosong.
+     */
+    private function ssoOnlyEntryPoint(): ?string
+    {
+        if (! $this->passwordLoginDisabled()) {
+            return null;
+        }
+
+        $sso = config(\Config\Sso::class);
+
+        if (! $sso->enabled) {
+            return null;
+        }
+
+        $url = rtrim(trim($sso->dashboardUrl), '/');
+
+        return $url !== '' ? $url : null;
     }
 
     /**

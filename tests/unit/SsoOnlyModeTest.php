@@ -25,6 +25,9 @@ final class SsoOnlyModeTest extends CIUnitTestCase
 {
     use FeatureTestTrait;
 
+    /** Alamat dashboard SSO yang dipakai selama pengujian. */
+    private const DASHBOARD_URL = 'https://testsso.transporindo.com/dashboard';
+
     /** Setiap endpoint di Login.php yang menerima kredensial lokal. */
     private const GATED_LOGIN_METHODS = [
         'proses',
@@ -36,6 +39,57 @@ final class SsoOnlyModeTest extends CIUnitTestCase
     ];
 
     // ── Perilaku sesungguhnya lewat HTTP ────────────────────────────────────
+
+    public function testHalamanLoginDiarahkanKeDashboardSsoSaatModeSsoOnly(): void
+    {
+        $this->bootHttp(false);
+
+        $result = $this->get('login');
+
+        $result->assertRedirect();
+        $this->assertSame(self::DASHBOARD_URL, (string) $result->getRedirectUrl());
+    }
+
+    public function testHalamanLoginTetapTampilSaatMembawaPesanKegagalan(): void
+    {
+        $this->bootHttp(false);
+
+        // Ini yang menjaga pengguna dari lingkaran tak berujung: gagal login SSO
+        // -> dilempar ke halaman ini -> kalau ikut dialihkan, ia kembali ke
+        // dashboard, menekan kartu SYS lagi, gagal lagi, tanpa pernah tahu
+        // sebabnya. Halaman ini satu-satunya tempat pesan itu bisa muncul.
+        $result = $this->get('login?sso=unknown');
+
+        $result->assertOK();
+        $result->assertSee('belum terdaftar di SYS');
+    }
+
+    public function testHalamanLoginTidakDialihkanSaatSsoBelumDikonfigurasi(): void
+    {
+        $this->bootHttp(false);
+
+        // Login lokal mati DAN SSO belum siap: tidak ada satu pun jalan masuk.
+        // Mengalihkan ke alamat kosong hanya menyembunyikan salah konfigurasi;
+        // pengguna harus melihat halamannya beserta keterangannya.
+        $sso               = config(SsoConfig::class);
+        $sso->dashboardUrl = '';
+        Factories::injectMock('config', 'Sso', $sso);
+
+        $result = $this->get('login');
+
+        $result->assertOK();
+        $result->assertSee('Tidak ada metode login yang aktif');
+    }
+
+    public function testHalamanLoginTampilSepertiBiasaSaatLoginLokalHidup(): void
+    {
+        $this->bootHttp(true);
+
+        $result = $this->get('login');
+
+        $result->assertOK();
+        $this->assertStringContainsString('name="userid"', (string) $result->getBody());
+    }
 
     public function testPostKeLoginProsesDitolakSaatModeSsoOnly(): void
     {
@@ -253,6 +307,11 @@ final class SsoOnlyModeTest extends CIUnitTestCase
 
         $sso                       = config(SsoConfig::class);
         $sso->passwordLoginEnabled = $passwordLoginEnabled;
+        // Dipatok, tidak diambil dari .env: tujuan pengalihan mode SSO-only
+        // adalah yang sedang diuji, jadi ia tidak boleh ikut berubah kalau
+        // seseorang mengganti alamat dashboard di .env.
+        $sso->enabled      = true;
+        $sso->dashboardUrl = self::DASHBOARD_URL;
         Factories::injectMock('config', 'Sso', $sso);
     }
 

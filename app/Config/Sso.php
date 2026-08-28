@@ -75,13 +75,31 @@ class Sso extends BaseConfig
     public int $sloPollSeconds = 60;
 
     /**
-     * Klaim tiket yang dipakai mencocokkan pengguna: 'email' atau 'karyawanId'.
-     * Default 'email' karena `tbluser` sys-modern punya kolom email dan tidak
-     * punya kolom karyawan.
+     * Klaim tiket yang dipakai mencocokkan pengguna: 'karyawanId' atau 'email'.
+     *
+     * 'karyawanId' adalah pilihan yang benar: id master karyawan yang sama yang
+     * dipakai HR dan CRM, dan satu-satunya identitas yang benar-benar diisi
+     * konsisten di semua direktori. auth-sso-api mengambil kesimpulan yang sama
+     * lebih dulu (lihat assertAppAccountExists()): orang yang sama rutin punya
+     * alamat email berbeda, placeholder, atau tidak punya sama sekali.
+     *
+     * Defaultnya tetap 'email' supaya instalasi yang `tbluser`-nya belum
+     * dipetakan tidak langsung menolak seluruh pengguna SSO begitu SSO dinyalakan.
+     * Tukar ke 'karyawanId' setelah kolomnya terisi — periksa kesiapannya dengan
+     * `php spark sso:match <karyawanid>`.
+     *
+     * Perhatikan besar-kecil hurufnya: klaimnya `karyawanId` (huruf I besar),
+     * kolomnya `karyawanid` (semua kecil).
      */
     public string $matchClaim = 'email';
 
-    /** Kolom `tbluser` yang dicocokkan dengan klaim di atas. */
+    /**
+     * Kolom `tbluser` yang dicocokkan dengan klaim di atas.
+     *
+     * Nilainya harus 'karyawanid' saat matchClaim = 'karyawanId'. Kolomnya
+     * `int NULL DEFAULT 0`; 0 berarti "belum dipetakan" dan sengaja ditolak
+     * sebagai identitas oleh SsoAuth::resolveUser().
+     */
     public string $matchColumn = 'email';
 
     /**
