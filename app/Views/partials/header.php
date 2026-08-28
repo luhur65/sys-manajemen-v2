@@ -80,7 +80,52 @@
             // memang tidak punya hak akses malah terjebak reload berulang.
             var RELOAD_FLAG = 'csrfReloadedAt';
 
+            // Sesi berakhir di tengah jalan (habis sendiri, atau dicabut lewat
+            // Single Logout dari dashboard SSO) sementara halaman masih terbuka.
+            // Kalau pengguna sedang menekan tombol dan bukan memuat ulang
+            // halaman, yang sampai ke layar hanyalah 401 — dan tiap grid serta
+            // grafik punya handler `error:` sendiri yang menerjemahkannya jadi
+            // "terjadi kesalahan saat mengambil data". Pesan itu keliru: datanya
+            // tidak gagal diambil, sesinyalah yang sudah tidak ada. Pengguna
+            // menatap dialog error tanpa pernah tahu ia sudah logout.
+            //
+            // Ditangani sekali di sini, bukan di puluhan call site: layar baru
+            // yang dibuat nanti ikut terlindungi tanpa perlu diingat.
+            var sessionEnded = false;
+
+            function showSessionEndedNotice() {
+                // jQuery menjalankan handler `error:` milik call site LEBIH DULU
+                // daripada ajaxError global, jadi dialog "gagal mengambil data"
+                // sudah sempat terender saat kita sampai di sini. Lapisan ini
+                // menutupinya dengan keterangan yang benar selama browser
+                // berpindah halaman.
+                var el = document.createElement('div');
+                el.setAttribute('style',
+                    'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;'
+                    + 'display:flex;align-items:center;justify-content:center;padding:1.5rem;'
+                    + 'background:rgba(0,0,0,.72);color:#fff;text-align:center;'
+                    + 'font:600 16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;');
+                el.textContent = 'Sesi Anda telah berakhir. Mengalihkan ke halaman login…';
+                document.body.appendChild(el);
+            }
+
             $(document).ajaxError(function (event, xhr) {
+                // Dikenali lewat penanda, bukan status 401 saja: Webauthn dan
+                // lock screen juga menjawab 401 untuk keadaan lain dan sudah
+                // punya penanganannya sendiri (lihat AuthFilter::sessionEndedJson).
+                if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.sessionExpired) {
+                    // Satu halaman bisa punya beberapa AJAX berjalan bersamaan,
+                    // dan semuanya gagal berbarengan. Tanpa penjaga ini,
+                    // pengalihan dipanggil berkali-kali.
+                    if (sessionEnded) return;
+                    sessionEnded = true;
+
+                    showSessionEndedNotice();
+                    window.location.href = xhr.responseJSON.redirect || ((window.apiUrl || '') + 'login');
+
+                    return;
+                }
+
                 if (xhr.status !== 403 || xhr.responseJSON) return;
 
                 var last = parseInt(sessionStorage.getItem(RELOAD_FLAG) || '0', 10);

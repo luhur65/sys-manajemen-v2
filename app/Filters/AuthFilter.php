@@ -22,15 +22,43 @@ class AuthFilter implements FilterInterface
         // SESSION_NAME is defined in Constants.php
         if (! session()->get(SESSION_NAME . 'logged_in')) {
             if ($request->isAJAX()) {
-                return service('response')
-                    ->setStatusCode(401)
-                    ->setJSON(['error' => 'Session expired']);
+                return $this->sessionEndedJson(base_url('login'));
             }
 
             return redirect()->to(base_url('login'));
         }
 
         return $this->enforceSingleLogout($request);
+    }
+
+    /**
+     * Jawaban untuk request AJAX yang sesinya sudah tidak ada.
+     *
+     * Tanpa penanda, 401 ini sampai ke layar sebagai kegagalan biasa: tiap grid
+     * dan grafik punya handler `error:` sendiri yang memunculkan dialog
+     * "terjadi kesalahan saat mengambil data" — pesan yang salah, karena yang
+     * terjadi bukan data yang gagal diambil melainkan sesi yang sudah berakhir.
+     * Pengguna tinggal menatap dialog itu tanpa tahu ia sebenarnya sudah logout.
+     *
+     * `sessionExpired` sengaja dipakai sebagai kunci, BUKAN status 401 saja:
+     * Webauthn dan lock screen juga menjawab 401 untuk keadaan lain dan sudah
+     * punya penanganannya masing-masing. Penanda ini membuat penangan global di
+     * partials/header.php hanya mengambil alih yang memang miliknya.
+     *
+     * `redirect` ikut dikirim supaya klien tidak perlu menebak tujuan — untuk
+     * sesi SSO yang dicabut, alamatnya membawa ?sso=expired sehingga halaman
+     * login menjelaskan sebabnya, bukan sekadar meminta login lagi.
+     */
+    private function sessionEndedJson(string $redirect)
+    {
+        return service('response')
+            ->setStatusCode(401)
+            ->setJSON([
+                // Dipertahankan apa adanya: sudah ada call site yang membacanya.
+                'error'          => 'Session expired',
+                'sessionExpired' => true,
+                'redirect'       => $redirect,
+            ]);
     }
 
     /**
@@ -68,10 +96,11 @@ class AuthFilter implements FilterInterface
         $slo->forget($sid);
         session()->destroy();
 
+        // Tujuan yang sama dengan cabang non-AJAX di bawah, supaya pengguna yang
+        // sesinya berakhir saat menekan tombol mendapat penjelasan yang sama
+        // dengan yang sesinya berakhir saat memuat halaman.
         if ($request->isAJAX()) {
-            return service('response')
-                ->setStatusCode(401)
-                ->setJSON(['error' => 'Session expired']);
+            return $this->sessionEndedJson(base_url('login?sso=expired'));
         }
 
         // Alasannya dititipkan lewat query string, bukan flashdata: sesi baru
