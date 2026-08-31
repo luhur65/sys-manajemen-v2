@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Libraries\AuditUser;
 
+use App\Models\MlogModel;
 use App\Models\MparameterModel;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\RequestInterface;
@@ -117,10 +118,37 @@ class Parameter extends BaseController
             $data['parameter_key'] = $maxQuery->getRow()->max_id + 1;
             $status = $this->mparameterModel->insert($data);
             $id = $data['parameter_key'];
+
+            if ($status) {
+                $this->auditLog(MlogModel::DATA_CREATE, 'Tambah parameter', [
+                    'tabel'         => 'tblparameter',
+                    'parameter_key' => $id,
+                    'data'          => $data,
+                ]);
+            }
         } elseif ($action == 'edit') {
-            $status = $this->mparameterModel->update($id, $data);
+            // Dibaca sebelum update; sesudahnya nilai lamanya sudah tertimpa.
+            $sebelum = $this->mparameterModel->getById($id);
+            $status  = $this->mparameterModel->update($id, $data);
+
+            if ($status) {
+                $this->auditLog(MlogModel::DATA_UPDATE, 'Ubah parameter', [
+                    'tabel'         => 'tblparameter',
+                    'parameter_key' => $id,
+                    'perubahan'     => MlogModel::changes($sebelum, $data),
+                ]);
+            }
         } elseif ($action == 'delete') {
-            $status = $this->mparameterModel->delete($id);
+            $sebelum = $this->mparameterModel->getById($id);
+            $status  = $this->mparameterModel->delete($id);
+
+            if ($status) {
+                $this->auditLog(MlogModel::DATA_DELETE, 'Hapus parameter', [
+                    'tabel'         => 'tblparameter',
+                    'parameter_key' => $id,
+                    'sebelum'       => $sebelum,
+                ]);
+            }
         }
 
         return $this->response->setJSON([

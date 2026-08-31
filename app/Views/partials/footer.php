@@ -42,7 +42,7 @@
                     <div class="form-group">
                         <label>Username</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" value="<?= session()->get(SESSION_NAME . 'userid') ?>" readonly>
+                            <input type="text" class="form-control" value="<?= esc(session()->get(SESSION_NAME . 'userid'), 'attr') ?>" readonly>
                             <div class="input-group-append">
                                 <div class="input-group-text"><span class="fas fa-user"></span></div>
                             </div>
@@ -139,7 +139,9 @@
         // karena localStorage di-scope per-origin browser, bukan per-folder/path. Tanpa prefix,
         // proyek CI4 lain (mis. emkl-approval-sby-ci4) yang kebetulan diakses dari origin sama
         // akan saling menimpa key ini.
-        localStorage.setItem('sysmodern_lockscreen_userid', '<?= session()->get(SESSION_NAME . 'userid') ?>');
+        // Konteks string JavaScript, bukan HTML: dipasang lewat json_encode supaya
+        // literalnya utuh tanpa penjepitan kutip manual.
+        localStorage.setItem('sysmodern_lockscreen_userid', <?= json_encode((string) session()->get(SESSION_NAME . 'userid'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>);
     </script>
     <script src="<?= asset('libraries/tas-lib/js/lockscreen.js') ?>"></script>
     <?php endif; ?>

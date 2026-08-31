@@ -66,7 +66,7 @@ class Grafikemklluar extends BaseController
                 $emklluar = $row['FUkuran20'] + $row['FUkuran2x20'] + $row['FUkuran40'];
 
                 if ($blndicari == $blnsebelumnya) {
-                    $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
+                    $bulan[$groupbln] = $txtbln[(int)$blndicari - 1] . " " . $thndicari;
                     $tahun[$groupbln] = $thndicari;
                     if ($nomor == 0) {
                         $TotalEmklluarPerBulan[$groupbln] = 0;
@@ -74,7 +74,7 @@ class Grafikemklluar extends BaseController
                     $TotalEmklluarPerBulan[$groupbln] += $emklluar;
                 } else {
                     $groupbln++;
-                    $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
+                    $bulan[$groupbln] = $txtbln[(int)$blndicari - 1] . " " . $thndicari;
                     $tahun[$groupbln] = $thndicari;
                     $TotalEmklluarPerBulan[$groupbln] = $emklluar;
                 }
@@ -83,7 +83,7 @@ class Grafikemklluar extends BaseController
                 $nomor++;
             }
 
-            $tahunRange = '[]';
+            $tahunRange = '';
             if (!empty($tahun)) {
                 if ($tahun[0] == end($tahun)) {
                     $tahunRange = $tahun[0];
@@ -102,10 +102,10 @@ class Grafikemklluar extends BaseController
         } else {
             return [
                 "cabang{$prefix}" => $cabangName,
-                "FTgl{$prefix}" => '[]',
-                "Tahun{$prefix}" => '[]',
+                "FTgl{$prefix}" => [],
+                "Tahun{$prefix}" => '',
                 "jlhbln{$prefix}" => 0,
-                "TotalEmklluar{$prefix}" => '[]'
+                "TotalEmklluar{$prefix}" => []
             ];
         }
     }

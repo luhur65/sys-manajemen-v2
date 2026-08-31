@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\MlogModel;
 use App\Models\RolesModel;
 
 class Roles extends BaseController
@@ -114,19 +115,50 @@ class Roles extends BaseController
                     ]);
                 }
 
+                $sebelum = null;
+
                 if ($action == 'edit') {
+                    // Nilai lama harus dibaca sebelum saveData menimpanya.
+                    $sebelum        = $this->rolesModel->getByIdRoles($id);
                     $data['roleid'] = $id;
                 }
-                
+
                 $status = $this->rolesModel->saveData($data);
                 $dbError = $this->rolesModel->db->error();
                 $lastErrorMsg = $this->rolesModel->lastErrorMsg ?? '';
+
+                if ($status) {
+                    // M-07: role menentukan siapa boleh membuka apa. Perubahan di
+                    // sini berdampak jauh lebih luas daripada satu baris data,
+                    // jadi wajib meninggalkan jejak.
+                    $this->auditLog(
+                        $action == 'edit' ? MlogModel::DATA_UPDATE : MlogModel::DATA_CREATE,
+                        $action == 'edit' ? 'Ubah role' : 'Tambah role',
+                        [
+                            'tabel'      => 'tblroles',
+                            'roleid'     => $id,
+                            'rolename'   => $data['rolename'] ?? null,
+                            'perubahan'  => $action == 'edit' ? MlogModel::changes($sebelum, $data) : $data,
+                        ]
+                    );
+                }
+
                 return $this->response->setJSON([
                     'status' => $status ? 'sukses' : 'gagal',
                     'message' => $status ? '' : ($lastErrorMsg ?: ($dbError['message'] ?? json_encode($this->rolesModel->errors())))
                 ]);
             } elseif ($action == 'del') {
-                $status = $this->rolesModel->deleteRole($id);
+                $sebelum = $this->rolesModel->getByIdRoles($id);
+                $status  = $this->rolesModel->deleteRole($id);
+
+                if ($status) {
+                    $this->auditLog(MlogModel::DATA_DELETE, 'Hapus role', [
+                        'tabel'   => 'tblroles',
+                        'roleid'  => $id,
+                        'sebelum' => $sebelum,
+                    ]);
+                }
+
                 return $this->response->setJSON([
                     'status' => $status ? 'sukses' : 'gagal'
                 ]);

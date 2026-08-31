@@ -68,7 +68,7 @@ class Grafiktradoluar extends BaseController
                 $bongkaran = $row['FUkuran20Bongkaran'] + $row['FUkuran2x20Bongkaran'] + $row['FUkuran40Bongkaran'];
 
                 if ($blndicari == $blnsebelumnya) {
-                    $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
+                    $bulan[$groupbln] = $txtbln[(int)$blndicari - 1] . " " . $thndicari;
                     $tahun[$groupbln] = $thndicari;
                     if ($nomor == 0) {
                         $TotalMuatanPerBulan[$groupbln] = 0;
@@ -78,7 +78,7 @@ class Grafiktradoluar extends BaseController
                     $TotalBongkaranPerBulan[$groupbln] += $bongkaran;
                 } else {
                     $groupbln++;
-                    $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
+                    $bulan[$groupbln] = $txtbln[(int)$blndicari - 1] . " " . $thndicari;
                     $tahun[$groupbln] = $thndicari;
                     $TotalMuatanPerBulan[$groupbln] = $muatan;
                     $TotalBongkaranPerBulan[$groupbln] = $bongkaran;
@@ -88,7 +88,7 @@ class Grafiktradoluar extends BaseController
                 $nomor++;
             }
 
-            $tahunRange = '[]';
+            $tahunRange = '';
             if (!empty($tahun)) {
                 if ($tahun[0] == end($tahun)) {
                     $tahunRange = $tahun[0];
@@ -108,11 +108,11 @@ class Grafiktradoluar extends BaseController
         } else {
             return [
                 "cabang{$prefix}" => $cabangName,
-                "FTgl{$prefix}" => '[]',
-                "Tahun{$prefix}" => '[]',
+                "FTgl{$prefix}" => [],
+                "Tahun{$prefix}" => '',
                 "jlhbln{$prefix}" => 0,
-                "TotalMuatan{$prefix}" => '[]',
-                "TotalBongkaran{$prefix}" => '[]'
+                "TotalMuatan{$prefix}" => [],
+                "TotalBongkaran{$prefix}" => []
             ];
         }
     }

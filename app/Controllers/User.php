@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\GridSort;
+use App\Models\MlogModel;
 use App\Models\MuserModel;
 use App\Models\MuserrolesModel;
 use CodeIgniter\Controller;
@@ -411,6 +412,24 @@ class User extends BaseController
         return $this->response->setJSON($response);
     }
 
+    /**
+     * Buang `user_roles` dari payload sebelum dibandingkan dengan baris tbluser.
+     *
+     * Roles tinggal di tbluserroles, bukan di tbluser, jadi memasukkannya ke
+     * perbandingan hanya menghasilkan satu baris palsu "dari: kosong" di setiap
+     * penyuntingan.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function tanpaRoles(array $data): array
+    {
+        unset($data['user_roles']);
+
+        return $data;
+    }
+
     public function crud()
     {
         $action = $this->request->getPost('oper');
@@ -457,14 +476,48 @@ class User extends BaseController
                 $status = $this->muserModel->saveUserData($data);
                 // We cannot easily return ID because saveUserData doesn't return ID.
                 // But wait, the grid will reload anyway.
+
+                if ($status) {
+                    // M-07: pembuatan akun adalah perubahan hak akses. Isi
+                    // password tidak ikut tercatat — lihat MlogModel::REDAKSI.
+                    $this->auditLog(MlogModel::DATA_CREATE, 'Tambah user', [
+                        'tabel' => 'tbluser',
+                        'data'  => $this->tanpaRoles($data),
+                        'roles' => $data['user_roles'],
+                    ]);
+                }
             } elseif ($action == 'edit') {
+                // Diambil sebelum disimpan; sesudahnya nilai lamanya sudah hilang.
+                $sebelum = $this->muserModel->getByIdUser($id);
+
                 $data['userpk'] = $id;
                 if ($data['password'] == '') {
                     unset($data['password']);
                 }
                 $status = $this->muserModel->saveUserData($data);
+
+                if ($status) {
+                    $this->auditLog(MlogModel::DATA_UPDATE, 'Ubah data user', [
+                        'tabel'     => 'tbluser',
+                        'userpk'    => $id,
+                        'perubahan' => MlogModel::changes($sebelum, $this->tanpaRoles($data)),
+                        // Roles disimpan di tabel lain dan tidak ada di $sebelum,
+                        // jadi dicatat sebagai keadaan akhir — bukan sebagai selisih
+                        // yang seolah-olah berangkat dari kosong.
+                        'roles'     => $data['user_roles'],
+                    ]);
+                }
             } elseif ($action == 'del') {
-                $status = $this->muserModel->delete($id);
+                $sebelum = $this->muserModel->getByIdUser($id);
+                $status  = $this->muserModel->delete($id);
+
+                if ($status) {
+                    $this->auditLog(MlogModel::DATA_DELETE, 'Hapus user', [
+                        'tabel'   => 'tbluser',
+                        'userpk'  => $id,
+                        'sebelum' => $sebelum,
+                    ]);
+                }
             }
 
             return $this->response->setJSON([

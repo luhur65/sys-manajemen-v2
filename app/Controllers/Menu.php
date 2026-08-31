@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Libraries\AuditUser;
 
+use App\Models\MlogModel;
 use App\Models\MmenuModel;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\RequestInterface;
@@ -196,10 +197,37 @@ class Menu extends BaseController
                 $data['menuid'] = $maxIdQuery->getRow()->new_id;
                 $status = $this->mmenuModel->insert($data);
                 $id = $data['menuid'];
+
+                if ($status) {
+                    $this->auditLog(MlogModel::DATA_CREATE, 'Tambah menu', [
+                        'tabel'  => 'tblmenu',
+                        'menuid' => $id,
+                        'data'   => $data,
+                    ]);
+                }
             } elseif ($action == 'edit') {
-                $status = $this->mmenuModel->update($id, $data);
+                // Dibaca sebelum update; sesudahnya nilai lamanya sudah tertimpa.
+                $sebelum = $this->mmenuModel->find($id);
+                $status  = $this->mmenuModel->update($id, $data);
+
+                if ($status) {
+                    $this->auditLog(MlogModel::DATA_UPDATE, 'Ubah menu', [
+                        'tabel'     => 'tblmenu',
+                        'menuid'    => $id,
+                        'perubahan' => MlogModel::changes($sebelum, $data),
+                    ]);
+                }
             } elseif ($action == 'delete') {
-                $status = $this->mmenuModel->delete($id);
+                $sebelum = $this->mmenuModel->find($id);
+                $status  = $this->mmenuModel->delete($id);
+
+                if ($status) {
+                    $this->auditLog(MlogModel::DATA_DELETE, 'Hapus menu', [
+                        'tabel'   => 'tblmenu',
+                        'menuid'  => $id,
+                        'sebelum' => $sebelum,
+                    ]);
+                }
             }
 
             return $this->response->setJSON([

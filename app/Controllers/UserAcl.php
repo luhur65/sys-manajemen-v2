@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\MlogModel;
 use App\Models\UserAclModel;
 
 class UserAcl extends BaseController
@@ -54,11 +55,27 @@ class UserAcl extends BaseController
         if ($this->request->getMethod() == 'post' || $this->request->getMethod() == 'POST') {
             $postData = $this->request->getPost();
             $postData['userpk'] = $userpk;
-            
+
+            // Daftar ACO lama dibaca lebih dulu: saveRolePermission menghapus
+            // seluruh baris milik user ini sebelum menulis yang baru, jadi
+            // sesudahnya tidak ada lagi cara mengetahui hak apa yang dicabut.
+            $sebelum = $this->userAclModel->getByIdUser($userpk);
+
             $save = $this->userAclModel->saveData($postData);
             $status = "batal";
             if ($save) {
                 $status = "sukses";
+
+                // M-07: ini perubahan hak akses per-user — persis jenis perubahan
+                // yang paling perlu bisa ditelusuri belakangan.
+                $this->auditLog(MlogModel::DATA_UPDATE, 'Ubah hak akses (ACL) user', [
+                    'tabel'  => 'tbluseracl',
+                    'userpk' => $userpk,
+                    'acos'   => [
+                        'dari' => is_object($sebelum) ? ($sebelum->acos ?? null) : null,
+                        'ke'   => $postData['role_permission']['acos'] ?? [],
+                    ],
+                ]);
             }
             return $this->response->setJSON(['status' => $status]);
         } else {

@@ -5,14 +5,14 @@
         <?php if (!empty($buttons)): ?>
             <?php foreach ($buttons as $btn): ?>
                 <div class="col-lg-3 col-6">
-                    <div class="small-box <?= $btn['color'] ?>">
+                    <div class="small-box <?= esc($btn['color'], 'attr') ?>">
                         <div class="inner">
-                            <p style="font-weight: bold; min-height: 50px;"><?= $btn['title'] ?></p>
+                            <p style="font-weight: bold; min-height: 50px;"><?= esc($btn['title']) ?></p>
                         </div>
                         <div class="icon">
-                            <i class="<?= $btn['icon'] ?>"></i>
+                            <i class="<?= esc($btn['icon'], 'attr') ?>"></i>
                         </div>
-                        <a href="<?= $btn['link'] ?>" class="small-box-footer">
+                        <a href="<?= esc($btn['link'], 'attr') ?>" class="small-box-footer">
                             Buka Laporan <i class="fas fa-arrow-circle-right"></i>
                         </a>
                     </div>
@@ -34,7 +34,9 @@
 $(document).ready(function() {
     if (!window.PublicKeyCredential) return;
 
-    let userId = '<?= session()->get(SESSION_NAME . "userid") ?>';
+    // Konteks string JavaScript: json_encode menghasilkan literal lengkap
+    // dengan kutipnya sendiri, sehingga userid tidak bisa keluar dari literal.
+    let userId = <?= json_encode((string) session()->get(SESSION_NAME . "userid"), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
     let regKey = 'webauthn_registered_' + userId;
 
     // Bersihkan kunci mekanisme lama (dismissed/opt-out/snooze) — penolakan

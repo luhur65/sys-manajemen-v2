@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <meta name="csrf-token-name" content="<?= csrf_token() ?>">
-    <title><?= (isset($title) ? ucwords(strtolower($title)) . ' | ' : '') . $siteConfig->siteTitle; ?></title>
+    <title><?= esc((isset($title) ? ucwords(strtolower($title)) . ' | ' : '') . $siteConfig->siteTitle) ?></title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">

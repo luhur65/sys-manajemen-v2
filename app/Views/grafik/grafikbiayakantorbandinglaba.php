@@ -89,7 +89,11 @@
 <script type="text/javascript">
     $(function () {
         <?php if (session()->getFlashdata('error_grafik')) : ?>
-        showDialog('<?= session()->getFlashdata('error_grafik') ?>');
+        // Konteks di sini adalah string JavaScript, bukan HTML: satu kutip tunggal
+        // saja sudah cukup untuk keluar dari literal. json_encode menghasilkan
+        // literal yang sudah lengkap dengan kutipnya sendiri, jadi tidak ada
+        // penjepitan manual yang bisa ditembus.
+        showDialog(<?= json_encode((string) session()->getFlashdata('error_grafik'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>);
         <?php endif; ?>
         
         // Inisialisasi Monthpicker jika fungsinya tersedia
@@ -151,8 +155,12 @@
         };
 
         // Format data awal secara dinamis agar yang lebih tinggi selalu di atas, dan lebih rendah di bawah
-        var initialDataBiaya = getArrayData([<?= isset($TotalBiayaCABANG) && is_array($TotalBiayaCABANG) ? implode(',', $TotalBiayaCABANG) : (isset($TotalBiayaCABANG) ? $TotalBiayaCABANG : '[]') ?>]).map(function(v) { return parseFloat(v) || 0; });
-        var initialDataLaba = getArrayData([<?= isset($TotalLabaCABANG) && is_array($TotalLabaCABANG) ? implode(',', $TotalLabaCABANG) : (isset($TotalLabaCABANG) ? $TotalLabaCABANG : '[]') ?>]).map(function(v) { return parseFloat(v) || 0; });
+        // Data dan kategori grafik ditulis sebagai literal JSON, bukan dirangkai
+        // lewat implode() ke dalam kurung siku. implode() menempelkan isi tabel
+        // apa adanya sebagai KODE JavaScript -- satu kutip di dalam data sudah
+        // cukup mengubah maknanya. json_encode() selalu menghasilkan literal.
+        var initialDataBiaya = getArrayData(<?= json_encode(array_values((array) ($TotalBiayaCABANG ?? []))) ?>).map(function(v) { return parseFloat(v) || 0; });
+        var initialDataLaba = getArrayData(<?= json_encode(array_values((array) ($TotalLabaCABANG ?? []))) ?>).map(function(v) { return parseFloat(v) || 0; });
         
         var formattedBiaya = [];
         var formattedLaba = [];
@@ -178,9 +186,9 @@
                     opacity: 0 // Menghilangkan overlay kotak putih bawaan scrollablePlotArea Highcharts
                 }
             },
-            title: { text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang <?= strtoupper($cabangCABANG ?? '') ?>' },
-            subtitle: { text: 'Per <?= $jlhblnCABANG ?? 0 ?> Bulan, Tahun <?= $TahunCABANG ?? "" ?>' },
-            xAxis: { categories: [<?= isset($FTglCABANG) && is_array($FTglCABANG) ? implode(',', $FTglCABANG) : (isset($FTglCABANG) ? $FTglCABANG : '[]') ?>] },
+            title: { text: 'Grafik Biaya Kantor vs Laba Bersih - Cabang <?= esc(strtoupper((string) ($cabangCABANG ?? '')), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnCABANG ?? 0) ?> Bulan, Tahun <?= esc((string) ($TahunCABANG ?? ''), 'js') ?>' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglCABANG ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Nominal (Rp)' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }],
@@ -230,9 +238,9 @@
 
         // Menyimpan status filter terakhir agar tidak ter-trigger ganda jika value belum berubah
         var lastFetchedData = {
-            cabang: '<?= esc($selectedCabang ?? '') ?>',
-            tgl_dari: '<?= esc($tgl_dari ?? '') ?>',
-            tgl_sampai: '<?= esc($tgl_sampai ?? '') ?>'
+            cabang: '<?= esc($selectedCabang ?? '', 'js') ?>',
+            tgl_dari: '<?= esc($tgl_dari ?? '', 'js') ?>',
+            tgl_sampai: '<?= esc($tgl_sampai ?? '', 'js') ?>'
         };
 
         var currentAjaxReq = null;

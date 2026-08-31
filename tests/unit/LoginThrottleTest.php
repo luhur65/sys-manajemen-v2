@@ -16,6 +16,7 @@ use CodeIgniter\Throttle\Throttler;
 final class LoginThrottleTest extends CIUnitTestCase
 {
     private Throttler $throttler;
+    private MockCache $cache;
     private LoginThrottle $throttle;
     private int $now = 1_700_000_000;
 
@@ -25,11 +26,12 @@ final class LoginThrottleTest extends CIUnitTestCase
 
         // MockCache = penyimpanan in-memory bawaan CI4; validateKey() tetap
         // dijalankan, jadi uji IPv6 di bawah tetap bermakna.
-        $cache = new MockCache();
-        $cache->initialize();
+        $this->cache = new MockCache();
+        $this->cache->initialize();
 
-        $this->throttler = (new Throttler($cache))->setTestTime($this->now);
-        $this->throttle  = new LoginThrottle($this->throttler);
+        $this->throttler = (new Throttler($this->cache))->setTestTime($this->now);
+        // Cache yang sama dipakai ember throttle DAN penanda announceOnce().
+        $this->throttle  = new LoginThrottle($this->throttler, $this->cache);
     }
 
     private function advance(int $seconds): void
@@ -205,5 +207,95 @@ final class LoginThrottleTest extends CIUnitTestCase
         $this->expectException(\InvalidArgumentException::class);
 
         $this->throttle->retryAfter('tidak-ada', '10.0.0.1', 'budi');
+    }
+
+    // ----------------------------------------------- announceOnce (M-07)
+
+    /**
+     * Catatan: MockCache menyimpan TTL tapi `get()` mengabaikannya, jadi
+     * berakhirnya penanda tidak bisa diuji di sini — yang diuji adalah
+     * perilaku dedup dan cakupan kuncinya. Nilai TTL-nya sendiri
+     * (`max($wait, 60)`) dijelaskan di LoginThrottle::announceOnce().
+     */
+    private function blockLoginFor(string $ip, string $account): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->throttle->hit('login', $ip, $account);
+        }
+
+        $this->assertNotNull($this->throttle->retryAfter('login', $ip, $account));
+    }
+
+    public function testAnnounceOnceIsSilentWhenNothingIsBlocked(): void
+    {
+        $this->assertFalse(
+            $this->throttle->announceOnce('login', '10.0.0.1', 'budi'),
+            'Tidak ada penolakan, jadi tidak ada yang perlu dicatat.'
+        );
+    }
+
+    public function testOnlyTheFirstRejectionInAWindowIsAnnounced(): void
+    {
+        $this->blockLoginFor('10.0.0.1', 'budi');
+
+        $this->assertTrue($this->throttle->announceOnce('login', '10.0.0.1', 'budi'));
+
+        // Penyerang menghantam endpoint yang sama 99 kali lagi. Tanpa gerbang
+        // ini, tiap request menulis satu baris ke log_activity.
+        for ($i = 0; $i < 99; $i++) {
+            $this->assertFalse(
+                $this->throttle->announceOnce('login', '10.0.0.1', 'budi'),
+                'Penolakan ke-' . ($i + 2) . ' dalam jendela yang sama tidak boleh dicatat lagi.'
+            );
+        }
+    }
+
+    /**
+     * Inti dari pemilihan kunci: saat yang menahan adalah ember IP, seribu akun
+     * berbeda tetap satu episode. Mengunci penanda pada pasangan ip+akun akan
+     * membuat gerbang ini tidak berguna persis pada serangan yang paling perlu
+     * ditahan.
+     */
+    public function testSprayingManyAccountsFromOneIpIsAnnouncedOnce(): void
+    {
+        for ($i = 0; $i < 20; $i++) {
+            $this->throttle->hit('login', '203.0.113.9', 'korban' . $i);
+        }
+
+        $this->assertTrue($this->throttle->announceOnce('login', '203.0.113.9', 'korban100'));
+
+        for ($i = 101; $i < 200; $i++) {
+            $this->assertFalse(
+                $this->throttle->announceOnce('login', '203.0.113.9', 'korban' . $i),
+                'Akun ke-' . $i . ' ditahan ember IP yang sama, jadi masih episode yang sama.'
+            );
+        }
+    }
+
+    public function testDifferentAccountsBlockedOnTheirOwnBucketsAreAnnouncedSeparately(): void
+    {
+        $this->blockLoginFor('10.0.0.1', 'budi');
+        $this->blockLoginFor('10.0.0.2', 'siti');
+
+        $this->assertTrue($this->throttle->announceOnce('login', '10.0.0.1', 'budi'));
+        $this->assertTrue(
+            $this->throttle->announceOnce('login', '10.0.0.2', 'siti'),
+            'Dua akun yang terkunci karena embernya masing-masing adalah dua episode.'
+        );
+    }
+
+    public function testLoginAndForgotEpisodesAreAnnouncedSeparately(): void
+    {
+        $this->blockLoginFor('10.0.0.1', 'budi');
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->throttle->hit('forgot', '10.0.0.1', 'budi');
+        }
+
+        $this->assertTrue($this->throttle->announceOnce('login', '10.0.0.1', 'budi'));
+        $this->assertTrue(
+            $this->throttle->announceOnce('forgot', '10.0.0.1', 'budi'),
+            'Ember forgot punya jendela sendiri, jadi punya catatan sendiri.'
+        );
     }
 }

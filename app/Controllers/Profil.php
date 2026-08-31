@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 
+use App\Models\MlogModel;
 use App\Models\MprofilModel;
 use App\Models\MuserModel;
 
@@ -41,9 +42,24 @@ use App\Controllers\BaseController;
 		$userid = $this->request->getGet('userid');
 		$username = $this->request->getGet('username');
 		$data = array('userid' => $userid,'username' => $username);
+
+		// Userid adalah identitas yang dipakai seluruh log lain. Mengubahnya
+		// tanpa jejak membuat baris log lama sulit dihubungkan ke orangnya.
+		$sebelum = [
+			'userid'   => session()->get(SESSION_NAME.'userid'),
+			'username' => session()->get(SESSION_NAME.'username'),
+		];
+
 		$data = $this->muserModel->edit("tbluser",$data,$userpk);
 		session()->set(SESSION_NAME.'userid', $userid);
 		session()->set(SESSION_NAME.'username', $username);
+
+		$this->auditLog(MlogModel::DATA_UPDATE, 'Ubah profil sendiri', [
+			'tabel'     => 'tbluser',
+			'userpk'    => $userpk,
+			'perubahan' => MlogModel::changes($sebelum, ['userid' => $userid, 'username' => $username]),
+		]);
+
 		echo "1";
 	}
 
@@ -86,6 +102,15 @@ use App\Controllers\BaseController;
 
             $db = \Config\Database::connect();
             $db->table('tblhistorypassword')->insert($insert);
+
+			// M-07: pergantian password adalah peristiwa keamanan. Nilainya
+			// tidak ikut tercatat — yang perlu diketahui hanya kapan, oleh
+			// siapa, dan dari IP mana.
+			$this->auditLog(MlogModel::DATA_UPDATE, 'Ganti password sendiri', [
+				'tabel'  => 'tbluser',
+				'userpk' => $userpk,
+			]);
+
 			echo"3";
 		}
 	}
@@ -105,6 +130,15 @@ use App\Controllers\BaseController;
         
         if ($device) {
             $mwebauthnModel->delete($id);
+
+            // M-07: perangkat biometrik adalah faktor otentikasi. Pencabutannya
+            // dicatat supaya "kenapa saya tidak bisa login lagi" punya jawaban.
+            $this->auditLog(MlogModel::DATA_DELETE, 'Hapus perangkat biometrik (WebAuthn)', [
+                'tabel'  => 'tbluser_webauthn',
+                'id'     => $id,
+                'userpk' => $userpk,
+            ]);
+
             return $this->response->setJSON(['success' => true]);
         }
 

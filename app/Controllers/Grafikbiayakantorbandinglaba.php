@@ -179,7 +179,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
                 $laba  = $row['FLaba'] ?? 0;
 
                 if ($blndicari == $blnsebelumnya) {
-                    $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
+                    $bulan[$groupbln] = $txtbln[(int)$blndicari - 1] . " " . $thndicari;
                     $tahun[$groupbln] = $thndicari;
                     if ($nomor == 0) {
                         $TotalBiayaPerBulan[$groupbln] = 0;
@@ -189,7 +189,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
                     $TotalLabaPerBulan[$groupbln] += (float)$laba;
                 } else {
                     $groupbln++;
-                    $bulan[$groupbln] = "'" . $txtbln[(int)$blndicari - 1] . " " . $thndicari . "'";
+                    $bulan[$groupbln] = $txtbln[(int)$blndicari - 1] . " " . $thndicari;
                     $tahun[$groupbln] = $thndicari;
                     $TotalBiayaPerBulan[$groupbln] = (float)$biaya;
                     $TotalLabaPerBulan[$groupbln] = (float)$laba;
@@ -199,7 +199,7 @@ class Grafikbiayakantorbandinglaba extends BaseController
                 $nomor++;
             }
 
-            $tahunRange = '[]';
+            $tahunRange = '';
             if (!empty($tahun)) {
                 if ($tahun[0] == end($tahun)) {
                     $tahunRange = $tahun[0];
@@ -222,11 +222,11 @@ class Grafikbiayakantorbandinglaba extends BaseController
         } else {
             return [
                 "cabang{$prefix}" => $cabangName,
-                "FTgl{$prefix}" => '[]',
-                "Tahun{$prefix}" => '[]',
+                "FTgl{$prefix}" => [],
+                "Tahun{$prefix}" => '',
                 "jlhbln{$prefix}" => 0,
-                "TotalBiaya{$prefix}" => '[]',
-                "TotalLaba{$prefix}" => '[]',
+                "TotalBiaya{$prefix}" => [],
+                "TotalLaba{$prefix}" => [],
                 "LastUpdate{$prefix}" => '-'
             ];
         }

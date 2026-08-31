@@ -22,12 +22,12 @@ class Truckingtradoluartasjkt extends BaseController
 
         $htmlComboBulan = '<option value="ALL">ALL</option>';
         foreach ($comboBulan as $row) {
-            $htmlComboBulan .= '<option value="' . $row['FBulan'] . '">' . $row['FBulan'] . '</option>';
+            $htmlComboBulan .= '<option value="' . esc($row['FBulan'], 'attr') . '">' . esc($row['FBulan']) . '</option>';
         }
 
         $htmlComboJenisTrado = '<option value="All">All</option>';
         foreach ($comboJenisTrado as $row) {
-            $htmlComboJenisTrado .= '<option value="' . $row['FJenisTrado'] . '">' . $row['FJenisTrado'] . '</option>';
+            $htmlComboJenisTrado .= '<option value="' . esc($row['FJenisTrado'], 'attr') . '">' . esc($row['FJenisTrado']) . '</option>';
         }
 
         $data = [

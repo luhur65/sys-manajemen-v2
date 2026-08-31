@@ -258,7 +258,7 @@
               </button>
             </div>
             <?php if (isset($validationErrors['password'])): ?>
-              <div class="text-danger"><?= $validationErrors['password'] ?></div>
+              <div class="text-danger"><?= esc($validationErrors['password']) ?></div>
             <?php endif; ?>
           </div>
 

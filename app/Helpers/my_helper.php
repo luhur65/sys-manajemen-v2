@@ -115,16 +115,22 @@ function print_sidebar_menu($data)
 
         $str .= '<li class="nav-item">';
 
+        // Seluruh nilai di bawah ini berasal dari tabel menu yang bisa disunting
+        // lewat CRUD Menu, dan hasilnya dirender di SETIAP halaman untuk SETIAP
+        // pengguna. Tanpa escaping, satu baris menu yang berisi markup cukup
+        // untuk menanam skrip di seluruh aplikasi, jadi tiap potongan disaring
+        // sesuai konteksnya: 'attr' untuk yang masuk ke dalam atribut, escaping
+        // HTML biasa untuk yang menjadi teks.
         $str .= '<a 
-                    id="link-' . strtolower($list['menuname']) . '" 
-                    href="' . $menuexe . '" 
+                    id="link-' . esc(strtolower((string) $list['menuname']), 'attr') . '" 
+                    href="' . esc($menuexe, 'attr') . '" 
                     class="nav-link">';
 
         // DENGAN ICON
         $iconClass = !empty($list['menuicon']) ? $list['menuicon'] : 'far fa-circle';
-        $str .= '<i class="nav-icon ' . $iconClass . '"></i>';
+        $str .= '<i class="nav-icon ' . esc($iconClass, 'attr') . '"></i>';
         $str .= '<p>';
-        $str .= strtoupper($list['menuname']);
+        $str .= esc(strtoupper((string) $list['menuname']));
 
         // icon panah submenu
         if ($hasChild) {

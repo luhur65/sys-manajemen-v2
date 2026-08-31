@@ -151,7 +151,7 @@
                   <tr>
                     <td align='center' style='padding:14px 24px 6px 24px;'>
                       <a
-                        href='<?= $resetLink ?>'
+                        href='<?= esc($resetLink, 'attr') ?>'
                         style='display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:900;font-size:14px;letter-spacing:0.3px;padding:12px 18px;border-radius:14px;border:1px solid #1d4ed8;'
                       >Reset Password</a>
                     </td>
@@ -165,9 +165,9 @@
                         berikut:</div>
                       <div style='margin-top:6px;word-break:break-all;'>
                         <a
-                          href='<?= $resetLink ?>'
+                          href='<?= esc($resetLink, 'attr') ?>'
                           style='color:#2563eb;text-decoration:underline;font-weight:700;'
-                        ><?= $resetLink ?></a>
+                        ><?= esc($resetLink) ?></a>
                       </div>
                       <div style='margin-top:12px;color:#374151;'>Link
                         kedaluwarsa dalam 30 menit, atau sesaat setelah password

@@ -34,18 +34,18 @@
 <div class="row">
     <div class="col-md-3 text-center mb-3">
         <h6>Foto Supir</h6>
-        <img src="<?= $FotoSupir ?>" alt="Foto Supir" class="img-thumbnail" style="max-height: 250px;">
+        <img src="<?= esc($FotoSupir, 'attr') ?>" alt="Foto Supir" class="img-thumbnail" style="max-height: 250px;">
     </div>
     <div class="col-md-3 text-center mb-3">
         <h6>Foto SIM</h6>
-        <img src="<?= $FotoSim ?>" alt="Foto SIM" class="img-thumbnail" style="max-height: 250px;">
+        <img src="<?= esc($FotoSim, 'attr') ?>" alt="Foto SIM" class="img-thumbnail" style="max-height: 250px;">
     </div>
     <div class="col-md-3 text-center mb-3">
         <h6>Foto KTP</h6>
-        <img src="<?= $FotoKtp ?>" alt="Foto KTP" class="img-thumbnail" style="max-height: 250px;">
+        <img src="<?= esc($FotoKtp, 'attr') ?>" alt="Foto KTP" class="img-thumbnail" style="max-height: 250px;">
     </div>
     <div class="col-md-3 text-center mb-3">
         <h6>Foto KK</h6>
-        <img src="<?= $FotoKK ?>" alt="Foto KK" class="img-thumbnail" style="max-height: 250px;">
+        <img src="<?= esc($FotoKK, 'attr') ?>" alt="Foto KK" class="img-thumbnail" style="max-height: 250px;">
     </div>
 </div>

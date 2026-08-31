@@ -243,7 +243,7 @@ class SsoAuth extends BaseController
         session()->set($sessionData);
 
         try {
-            (new MlogModel())->saveLog($this, $aktivitas);
+            (new MlogModel())->saveLog(MlogModel::LOGIN_SUCCESS, $aktivitas);
         } catch (Throwable $e) {
             // Log aktivitas tidak boleh menggagalkan login yang sudah sah.
             log_message('error', 'SSO callback: gagal menulis log aktivitas — ' . $e->getMessage());
@@ -388,6 +388,20 @@ class SsoAuth extends BaseController
             // levelnya hanya catatan internal.
             log_message('error', 'SSO ' . $logMessage . ' ip=' . $this->request->getIPAddress());
         }
+
+        // M-07: setiap penolakan SSO adalah percobaan otentikasi yang gagal,
+        // setara dengan salah password di jalur lokal. Dua di antaranya lebih
+        // dari sekadar kesalahan konfigurasi: `invalid` berarti ada tiket dengan
+        // tanda tangan yang tidak sah, dan `replay` berarti tiket yang sama
+        // dipakai dua kali. Keduanya harus bisa dihitung dan disandingkan dengan
+        // percobaan login lain, bukan hanya mengendap di berkas log yang
+        // dirotasi.
+        (new MlogModel())->saveLog(
+            MlogModel::LOGIN_FAILED,
+            'Login via SSO ditolak (kode: ' . $code . ')',
+            ['sso' => $code],
+            $logMessage
+        );
 
         return redirect()->to(base_url('login?sso=' . $code));
     }

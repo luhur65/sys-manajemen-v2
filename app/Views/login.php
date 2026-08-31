@@ -12,9 +12,9 @@
   <title><?= $siteConfig->siteTitle; ?> | Log in</title>
 
   <!-- Meta Tags -->
-  <meta name="description" content="<?= $siteConfig->metaDesc; ?>">
-  <meta name="author" content="<?= $siteConfig->metaAuthor; ?>">
-  <meta name="keywords" content="<?= $siteConfig->metaKeywords; ?>">
+  <meta name="description" content="<?= esc($siteConfig->metaDesc, 'attr') ?>">
+  <meta name="author" content="<?= esc($siteConfig->metaAuthor, 'attr') ?>">
+  <meta name="keywords" content="<?= esc($siteConfig->metaKeywords, 'attr') ?>">
   <meta http-equiv="refresh" content="<?= 60 * 60 ?>">
 
   <link rel="icon" href="<?= asset($siteConfig->siteIcon); ?>" type="image/x-icon">
@@ -403,7 +403,7 @@
 
         <form action="<?= base_url(); ?>login/proses" method="POST">
           <?= csrf_field() ?>
-          <input type="text" readonly hidden name="info" id="info" value="<?= $info ?? '' ?>">
+          <input type="text" readonly hidden name="info" id="info" value="<?= esc($info ?? '', 'attr') ?>">
 
           <?php
           // Saat sso.passwordLoginEnabled = false, seluruh form lokal disembunyikan
@@ -422,7 +422,7 @@
               <input type="text" name="userid" id="user" class="verdant-input <?= (isset($validationErrors['userid'])) ? 'is-invalid' : '' ?>" value="<?= old('userid') ?>" placeholder="USERNAME ANDA" autofocus autocomplete="off">
             </div>
             <?php if (isset($validationErrors['userid'])): ?>
-              <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= $validationErrors['userid'] ?></div>
+              <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= esc($validationErrors['userid']) ?></div>
             <?php endif; ?>
           </div>
 
@@ -440,7 +440,7 @@
               <a href="javascript:void(0)" id="resetPassword" class="verdant-forgot" style="text-decoration: none;">Reset password</a>
             </div>
             <?php if (isset($validationErrors['password'])): ?>
-              <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= $validationErrors['password'] ?></div>
+              <div class="text-danger mt-1" style="font-size: 0.8rem; color: var(--terracotta-light) !important;"><?= esc($validationErrors['password']) ?></div>
             <?php endif; ?>
           </div>
 
@@ -450,7 +450,7 @@
           <?php endif; ?>
 
           <div id="error" class="text-danger mt-2 text-center" style="font-size: 0.85rem; color: var(--terracotta-light) !important;">
-            <?= $error ?? '' ?>
+            <?= esc($error ?? '') ?>
           </div>
 
           <?php if ($localLogin): ?>
@@ -576,16 +576,28 @@
         }, extraOptions || {}));
     }
 
+    // Isi dialog dirakit sebagai string HTML lalu dipasang lewat .html(), jadi
+    // pesan yang datang dari respons server berada di konteks HTML. Pesannya
+    // memang berasal dari daftar teks tetap di Login::forgotPassword(), tapi
+    // jalur itu tidak dijamin oleh apa pun di sisi ini -- begitu ada pesan yang
+    // ikut membawa potongan input user, markupnya akan tereksekusi. Lebih murah
+    // menyaringnya di satu pintu masuk daripada mengandalkan setiap call site.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function (ch) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch];
+        });
+    }
+
     function showDialog(message) {
         buildDialog("#dialog-message", `
             <span class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:25px;"></span>
-            <br>${message}`);
+            <br>${escapeHtml(message)}`);
     }
 
     function showSuccessDialog(message) {
         buildDialog("#dialog-success-message", `
             <span class="fa fa-check" aria-hidden="true" style="font-size:25px;"></span>
-            <p>${message}</p>`, {
+            <p>${escapeHtml(message)}</p>`, {
             width: 'auto',
             height: 'auto'
         });

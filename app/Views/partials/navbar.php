@@ -7,12 +7,12 @@
     </ul>
 
     <img src="<?= asset('libraries/tas-lib/img/taslogo.png') ?>" alt="Logo" class="brand-image" style="width: 25px; margin-right: 5px;">
-    <strong><?= config('Site')->siteTitle ?> <?= session()->get(SESSION_NAME . 'cabangid') ?></strong>
+    <strong><?= esc(config('Site')->siteTitle) ?> <?= esc(session()->get(SESSION_NAME . 'cabangid')) ?></strong>
 
     <ul class="navbar-nav ml-auto">
         <li class="nav-item mr-3 d-none d-md-block">
             <div class="text-right">
-                your ip <span class="d-none d-lg-inline"> address : </span> (<?= $_SERVER['REMOTE_ADDR'] ?>)
+                your ip <span class="d-none d-lg-inline"> address : </span> (<?= esc($_SERVER['REMOTE_ADDR'] ?? '') ?>)
             </div>
         </li>
         <li class="nav-item">

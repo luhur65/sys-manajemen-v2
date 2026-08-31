@@ -26,7 +26,7 @@
                 <img src="<?= asset('libraries/adminlte/dist/img/user2-160x160.jpg') ?>" class="img-circle elevation-2" alt="User Image">
             </div>
             <div class="info">
-                <a href="#" class="d-block"><?= strtoupper(session()->get(SESSION_NAME . 'username')) ?></a>
+                <a href="#" class="d-block"><?= esc(strtoupper((string) session()->get(SESSION_NAME . 'username'))) ?></a>
             </div>
         </div>
 

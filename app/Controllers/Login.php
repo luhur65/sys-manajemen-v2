@@ -29,8 +29,16 @@ class Login extends BaseController
     /**
      * H-04: satu tempat untuk mencatat penolakan karena rate limit, supaya
      * lonjakan percobaan terlihat di writable/logs.
+     *
+     * M-07: penolakan ini juga masuk ke `log_activity`. Berkas log hanya
+     * bertahan sampai rotasi berikutnya dan tidak bisa disandingkan dengan
+     * riwayat login pengguna; tabel log bisa.
+     *
+     * `$bucket` adalah nama ember throttle, yang tidak selalu sama dengan
+     * `$action` yang muncul di pesan: `unlock` sengaja berbagi ember dengan
+     * `login`, dan `forgot-password` memakai ember `forgot`.
      */
-    private function logThrottled(string $action, string $account, int $wait): void
+    private function logThrottled(string $action, string $bucket, string $account, int $wait): void
     {
         log_message('warning', sprintf(
             'Rate limit %s: account=%s ip=%s tunggu=%dd',
@@ -39,6 +47,19 @@ class Login extends BaseController
             $this->request->getIPAddress(),
             $wait
         ));
+
+        // Satu baris per jendela hukuman, bukan satu per request — lihat
+        // LoginThrottle::announceOnce(). Berkas log di atas sengaja tetap
+        // ditulis tiap kali: berkas itu dirotasi, tabel log tidak.
+        if (! $this->throttle->announceOnce($bucket, $this->request->getIPAddress(), $account)) {
+            return;
+        }
+
+        $this->mlogModel->saveLog(
+            MlogModel::LOGIN_BLOCKED,
+            sprintf('Percobaan %s ditolak rate limit (tunggu %d detik)', $action, $wait),
+            ['userid' => $account !== '' ? $account : '-', 'aksi' => $action]
+        );
     }
 
     /** Ubah detik menjadi keterangan tunggu yang enak dibaca. */
@@ -197,7 +218,7 @@ class Login extends BaseController
         $wait = $this->throttle->retryAfter('login', $this->request->getIPAddress(), (string) $userid);
 
         if ($wait !== null) {
-            $this->logThrottled('login', (string) $userid, $wait);
+            $this->logThrottled('login', 'login', (string) $userid, $wait);
 
             return redirect()->to(base_url('login'))->with(
                 SESSION_NAME . 'message',
@@ -232,11 +253,20 @@ class Login extends BaseController
             ];
             session()->set($sessionData);
 
-            $this->mlogModel->saveLog($this);
+            $this->mlogModel->saveLog(MlogModel::LOGIN_SUCCESS, 'Login berhasil (userid & password)');
             return redirect()->to(base_url("home"));
         }
-        
+
         $this->throttle->hit('login', $this->request->getIPAddress(), (string) $userid);
+
+        // M-07: tanpa baris ini, serangan tebak-password tidak meninggalkan
+        // jejak apa pun di database — yang tercatat hanya percobaan yang
+        // kebetulan berhasil.
+        $this->mlogModel->saveLog(
+            MlogModel::LOGIN_FAILED,
+            'Kombinasi userid/password salah',
+            ['userid' => (string) $userid]
+        );
 
         return redirect()->to(base_url('login'))
             ->with(SESSION_NAME . 'message', 'Kombinasi userid Atau Password Salah');
@@ -257,6 +287,14 @@ class Login extends BaseController
         if ($sid !== '') {
             (new \App\Libraries\SsoSlo($sso))->forget($sid);
         }
+
+        // M-07: harus ditulis SEBELUM sesi dihancurkan — sesudahnya tidak ada
+        // lagi yang bisa menjawab siapa yang keluar. Akhir sesi adalah batas
+        // atas rentang waktu yang bisa dipertanggungjawabkan seorang pengguna.
+        $this->mlogModel->saveLog(
+            MlogModel::LOGOUT,
+            $fromSso ? 'Logout (sesi berasal dari SSO)' : 'Logout'
+        );
 
         session()->destroy();
 
@@ -301,7 +339,7 @@ class Login extends BaseController
         $wait = $this->throttle->retryAfter('login', $this->request->getIPAddress(), (string) $userid);
 
         if ($wait !== null) {
-            $this->logThrottled('unlock', (string) $userid, $wait);
+            $this->logThrottled('unlock', 'login', (string) $userid, $wait);
 
             return $this->response->setStatusCode(429)->setJSON([
                 'success' => false,
@@ -316,7 +354,9 @@ class Login extends BaseController
             $this->throttle->clear('login', (string) $userid);
 
             // Rebuild session if it was expired
-            if (!session()->has(SESSION_NAME . 'logged_in')) {
+            $sesiDibangunUlang = !session()->has(SESSION_NAME . 'logged_in');
+
+            if ($sesiDibangunUlang) {
                 $row = $cek->getRow();
 
                 // Sesi dibangun ulang dari kondisi anonim -> perlakukan seperti login baru.
@@ -333,15 +373,28 @@ class Login extends BaseController
                     'username' => $row->username
                 ];
                 session()->set($sessionData);
-                
-                try {
-                    $this->mlogModel->saveLog($this);
-                } catch (\Exception $e) {}
             }
+
+            // M-07: membuka lock screen adalah pembuktian identitas ulang, jadi
+            // dicatat seperti login. Termasuk saat sesi server masih hidup —
+            // jalur itu sebelumnya tidak meninggalkan jejak sama sekali.
+            $this->mlogModel->saveLog(
+                MlogModel::UNLOCK_SUCCESS,
+                $sesiDibangunUlang
+                    ? 'Lock screen dibuka; sesi server sudah kedaluwarsa dan dibangun ulang'
+                    : 'Lock screen dibuka'
+            );
+
             return $this->response->setJSON(['success' => true]);
         }
-        
+
         $this->throttle->hit('login', $this->request->getIPAddress(), (string) $userid);
+
+        $this->mlogModel->saveLog(
+            MlogModel::UNLOCK_FAILED,
+            'Password salah saat membuka lock screen',
+            ['userid' => (string) $userid]
+        );
 
         return $this->response->setJSON(['success' => false, 'message' => 'Password salah']);
     }
@@ -370,7 +423,7 @@ class Login extends BaseController
         $wait = $this->throttle->retryAfter('forgot', $this->request->getIPAddress(), (string) $username);
 
         if ($wait !== null) {
-            $this->logThrottled('forgot-password', (string) $username, $wait);
+            $this->logThrottled('forgot-password', 'forgot', (string) $username, $wait);
 
             $message = 'Terlalu banyak permintaan reset password. Silakan coba lagi dalam ' . $this->waitText($wait) . '.';
 

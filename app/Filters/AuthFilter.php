@@ -93,6 +93,18 @@ class AuthFilter implements FilterInterface
             session()->get(SESSION_NAME . 'userid') ?: '-'
         ));
 
+        // M-07: baris log_message di atas memakai level `info`, dan
+        // Config\Logger memakai ambang 4 di production — artinya di sanalah,
+        // justru tempat yang paling penting, pengakhiran sesi lewat Single
+        // Logout selama ini tidak meninggalkan jejak sama sekali. Ditulis ke
+        // `log_activity` SEBELUM destroy(), selagi masih ada yang bisa
+        // menjelaskan sesi siapa yang berakhir.
+        (new \App\Models\MlogModel())->saveLog(
+            \App\Models\MlogModel::LOGOUT,
+            'Single Logout: sesi SSO dicabut di dashboard, sesi lokal diakhiri',
+            ['sso_sid' => substr($sid, 0, 8) . '…']
+        );
+
         $slo->forget($sid);
         session()->destroy();
 

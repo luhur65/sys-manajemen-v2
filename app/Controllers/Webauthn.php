@@ -284,6 +284,15 @@ class Webauthn extends BaseController
             // [KEAMANAN LOCKSCREEN] Jika user sudah login, pastikan sidik jari milik user yang sedang aktif!
             if (session()->has(SESSION_NAME . 'logged_in')) {
                 if ($cred['userpk'] != session()->get(SESSION_NAME . 'userpk')) {
+                    // M-07: perangkat biometrik orang lain dipakai pada sesi yang
+                    // sedang hidup. Ini bukan salah ketik — dicatat agar terlihat
+                    // saat ditelusuri, bukan hanya ditolak lalu dilupakan.
+                    (new MlogModel())->saveLog(
+                        MlogModel::LOGIN_FAILED,
+                        'Biometrik ditolak: kredensial milik pengguna lain',
+                        ['userpk_kredensial' => $cred['userpk']]
+                    );
+
                     return $this->response->setJSON(['error' => true, 'message' => 'Akses ditolak: Sidik jari bukan milik pengguna sesi ini!'])->setStatusCode(403);
                 }
             }
@@ -349,13 +358,23 @@ class Webauthn extends BaseController
 
                 // Save login log
                 $logModel = new MlogModel();
-                $logModel->saveLog($this);
+                $logModel->saveLog(MlogModel::LOGIN_SUCCESS, 'Login berhasil (biometrik/WebAuthn)');
             }
 
             session()->remove('webauthn_challenge');
             return $this->response->setJSON(['success' => true]);
 
         } catch (\Exception $e) {
+            // M-07: kegagalan verifikasi biometrik adalah percobaan otentikasi
+            // yang gagal, setara dengan salah password — dan sama-sama harus
+            // terlihat kalau jumlahnya tiba-tiba melonjak.
+            (new MlogModel())->saveLog(
+                MlogModel::LOGIN_FAILED,
+                'Verifikasi biometrik gagal',
+                [],
+                $e->getMessage()
+            );
+
             return $this->errorResponse($e, 'processLogin', 'Verifikasi biometrik gagal. Silakan coba lagi atau login menggunakan password.', 400);
         }
     }

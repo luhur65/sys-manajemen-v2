@@ -10,7 +10,11 @@
 
 <script>
     $(document).ready(function() {
-        var userpk = "<?= $userpk ?>";
+        // $userpk berasal langsung dari query string (UserAcl::index), jadi nilainya
+        // dikendalikan penuh oleh pemanggil. Ditulis lewat json_encode, bukan dijepit
+        // kutip manual: outputnya sudah berupa literal JavaScript yang utuh sehingga
+        // tidak ada kutip maupun tag penutup skrip yang bisa keluar dari konteks ini.
+        var userpk = <?= json_encode((string) $userpk, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
         var gridAclUrl = "<?= base_url('useracl/grid/') ?>" + userpk;
         
         $gridAcl = $("#jqGridAcl");

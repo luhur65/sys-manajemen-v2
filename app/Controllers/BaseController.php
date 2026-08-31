@@ -6,6 +6,7 @@ use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Libraries\GridFilter;
+use App\Models\MlogModel;
 use App\Models\MmenutopModel;
 use Psr\Log\LoggerInterface;
 
@@ -31,6 +32,9 @@ abstract class BaseController extends Controller
     protected $helpers = ['url', 'form', 'my_helper', 'global_helper', 'asset_helper'];
     protected string $layout = 'home';
     protected $mmenutopModel;
+
+    /** Dibuat saat pertama kali auditLog() dipakai; lihat auditLog(). */
+    protected ?MlogModel $auditModel = null;
 
     /**
      * Whitelist kolom yang boleh dipakai pada filter grid jqGrid.
@@ -84,6 +88,28 @@ abstract class BaseController extends Controller
     protected function getLayout(): string
     {
         return 'partials/layouts/' . $this->layout;
+    }
+
+    /**
+     * M-07: satu pintu bagi controller untuk mencatat perubahan data.
+     *
+     * Sebelumnya `log_activity` hanya diisi dari halaman login, sehingga tidak
+     * ada satu pun baris yang bisa menjawab siapa mengubah apa. Diletakkan di
+     * BaseController supaya setiap controller CRUD tidak perlu menyalin
+     * instansiasi model dan penanganan galatnya sendiri-sendiri.
+     *
+     * Kegagalan menulis log tidak pernah dilempar ke atas — lihat
+     * MlogModel::saveLog().
+     *
+     * @param string               $event   Konstanta MlogModel::DATA_*.
+     * @param string|null          $message Deskripsi bisnis, mis. "Ubah data user".
+     * @param array<string, mixed> $context Pengenal baris dan nilai lama/baru.
+     */
+    protected function auditLog(string $event, ?string $message = null, array $context = []): void
+    {
+        $this->auditModel ??= new MlogModel();
+
+        $this->auditModel->saveLog($event, $message, $context);
     }
 
     /**

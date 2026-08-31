@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use CodeIgniter\Cache\CacheInterface;
 use CodeIgniter\Throttle\Throttler;
 
 /**
@@ -42,10 +43,12 @@ final class LoginThrottle
     ];
 
     private Throttler $throttler;
+    private CacheInterface $cache;
 
-    public function __construct(?Throttler $throttler = null)
+    public function __construct(?Throttler $throttler = null, ?CacheInterface $cache = null)
     {
         $this->throttler = $throttler ?? service('throttler');
+        $this->cache     = $cache ?? service('cache');
     }
 
     /**
@@ -55,9 +58,65 @@ final class LoginThrottle
      */
     public function retryAfter(string $action, string $ip, string $account): ?int
     {
+        $blocked = $this->blockedBucket($action, $ip, $account);
+
+        return $blocked === null ? null : $blocked[1];
+    }
+
+    /**
+     * Apakah penolakan ini perlu ditulis ke audit trail (M-07)?
+     *
+     * `true` hanya pada penolakan PERTAMA dalam satu jendela hukuman. Tanpa
+     * gerbang ini satu baris `log_activity` ditulis per request, sehingga
+     * penyerang yang menghantam endpoint login dapat menumbuhkan tabel itu
+     * sebanyak yang ia mau — tabel yang justru dipakai untuk melacak dirinya.
+     * Sinyalnya tidak hilang: yang dicatat adalah *episode* penolakan, dan
+     * frekuensi mentah percobaan tetap terbaca dari baris `LOGIN_FAILED`.
+     *
+     * Penandanya dikunci pada **ember yang menahan**, bukan pada pasangan
+     * ip+akun. Bedanya baru terasa saat password spraying: seribu akun berbeda
+     * dari satu IP sama-sama ditahan oleh ember IP yang sama, jadi menghasilkan
+     * satu baris — bukan seribu. Mengunci pada ip+akun akan membuat gerbang ini
+     * tidak berguna persis pada serangan yang paling perlu ditahan.
+     *
+     * Tidak atomik: dua request bersamaan bisa lolos berdua dan menulis dua
+     * baris. Untuk dedup catatan audit itu tidak merugikan, dan cache handler
+     * `file` yang dipakai aplikasi ini memang tidak menyediakan add-if-absent.
+     */
+    public function announceOnce(string $action, string $ip, string $account): bool
+    {
+        $blocked = $this->blockedBucket($action, $ip, $account);
+
+        if ($blocked === null) {
+            return false;
+        }
+
+        [$bucketKey, $wait] = $blocked;
+
+        $key = 'throttle-announced-' . md5($bucketKey);
+
+        if ($this->cache->get($key) !== null) {
+            return false;
+        }
+
+        // Sisa waktu tunggu menyusut tiap detik dan bisa tinggal 1 di ujung
+        // jendela. Lantai 60 detik menjaga agar detik-detik terakhir setiap
+        // siklus tidak berubah menjadi celah untuk menulis banyak baris lagi.
+        $this->cache->save($key, 1, max($wait, 60));
+
+        return true;
+    }
+
+    /**
+     * Ember mana yang sedang menahan pemanggil ini, dan berapa lama lagi.
+     *
+     * @return array{0: string, 1: int}|null [kunci ember, detik menunggu]
+     */
+    private function blockedBucket(string $action, string $ip, string $account): ?array
+    {
         foreach ($this->buckets($action, $ip, $account) as [$key, $capacity, $seconds]) {
             if (! $this->throttler->check($key, $capacity, $seconds, 0)) {
-                return max(1, $this->throttler->getTokenTime());
+                return [$key, max(1, $this->throttler->getTokenTime())];
             }
         }
 

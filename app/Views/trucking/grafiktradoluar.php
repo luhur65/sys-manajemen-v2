@@ -50,9 +50,9 @@
         // JAKARTA
         $('#tradoluarJKT').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan Trado Luar <?= $cabangJKT ?>' },
-            subtitle: { text: 'Per <?= $jlhblnJKT ?> Bulan (<?= $TahunJKT ?>)' },
-            xAxis: { categories: [<?= is_array($FTglJKT) ? implode(',', $FTglJKT) : $FTglJKT ?>] },
+            title: { text: 'GRAFIK Pengunaan Trado Luar <?= esc((string) ($cabangJKT ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnJKT ?? 0) ?> Bulan (<?= esc((string) ($TahunJKT ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglJKT ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -69,20 +69,20 @@
                 }]
             },
             series: [{
-                name: 'Muatan <?= $cabangJKT ?>',
-                data: [<?= is_array($TotalMuatanJKT) ? implode(',', $TotalMuatanJKT) : $TotalMuatanJKT ?>]
+                name: 'Muatan <?= esc((string) ($cabangJKT ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalMuatanJKT ?? []))) ?>
             }, {
-                name: 'Bongkaran <?= $cabangJKT ?>',
-                data: [<?= is_array($TotalBongkaranJKT) ? implode(',', $TotalBongkaranJKT) : $TotalBongkaranJKT ?>]  
+                name: 'Bongkaran <?= esc((string) ($cabangJKT ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalBongkaranJKT ?? []))) ?>  
             }]
         });
 
         // MEDAN
         $('#tradoluarMDN').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan Trado Luar <?= $cabangMDN ?>' },
-            subtitle: { text: 'Per <?= $jlhblnMDN ?> Bulan (<?= $TahunMDN ?>)' },
-            xAxis: { categories: [<?= is_array($FTglMDN) ? implode(',', $FTglMDN) : $FTglMDN ?>] },
+            title: { text: 'GRAFIK Pengunaan Trado Luar <?= esc((string) ($cabangMDN ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnMDN ?? 0) ?> Bulan (<?= esc((string) ($TahunMDN ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglMDN ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -99,20 +99,20 @@
                 }]
             },
             series: [{
-                name: 'Muatan <?= $cabangMDN ?>',
-                data: [<?= is_array($TotalMuatanMDN) ? implode(',', $TotalMuatanMDN) : $TotalMuatanMDN ?>]
+                name: 'Muatan <?= esc((string) ($cabangMDN ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalMuatanMDN ?? []))) ?>
             }, {
-                name: 'Bongkaran <?= $cabangMDN ?>',
-                data: [<?= is_array($TotalBongkaranMDN) ? implode(',', $TotalBongkaranMDN) : $TotalBongkaranMDN ?>]  
+                name: 'Bongkaran <?= esc((string) ($cabangMDN ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalBongkaranMDN ?? []))) ?>  
             }]
         });
 
         // SURABAYA
         $('#tradoluarSBY').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan Trado Luar <?= $cabangSBY ?>' },
-            subtitle: { text: 'Per <?= $jlhblnSBY ?> Bulan (<?= $TahunSBY ?>)' },
-            xAxis: { categories: [<?= is_array($FTglSBY) ? implode(',', $FTglSBY) : $FTglSBY ?>] },
+            title: { text: 'GRAFIK Pengunaan Trado Luar <?= esc((string) ($cabangSBY ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnSBY ?? 0) ?> Bulan (<?= esc((string) ($TahunSBY ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglSBY ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -129,20 +129,20 @@
                 }]
             },
             series: [{
-                name: 'Muatan <?= $cabangSBY ?>',
-                data: [<?= is_array($TotalMuatanSBY) ? implode(',', $TotalMuatanSBY) : $TotalMuatanSBY ?>]
+                name: 'Muatan <?= esc((string) ($cabangSBY ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalMuatanSBY ?? []))) ?>
             }, {
-                name: 'Bongkaran <?= $cabangSBY ?>',
-                data: [<?= is_array($TotalBongkaranSBY) ? implode(',', $TotalBongkaranSBY) : $TotalBongkaranSBY ?>]  
+                name: 'Bongkaran <?= esc((string) ($cabangSBY ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalBongkaranSBY ?? []))) ?>  
             }]
         });
 
         // MAKASSAR
         $('#tradoluarMKS').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan Trado Luar <?= $cabangMKS ?>' },
-            subtitle: { text: 'Per <?= $jlhblnMKS ?> Bulan (<?= $TahunMKS ?>)' },
-            xAxis: { categories: [<?= is_array($FTglMKS) ? implode(',', $FTglMKS) : $FTglMKS ?>] },
+            title: { text: 'GRAFIK Pengunaan Trado Luar <?= esc((string) ($cabangMKS ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnMKS ?? 0) ?> Bulan (<?= esc((string) ($TahunMKS ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglMKS ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -159,11 +159,11 @@
                 }]
             },
             series: [{
-                name: 'Muatan <?= $cabangMKS ?>',
-                data: [<?= is_array($TotalMuatanMKS) ? implode(',', $TotalMuatanMKS) : $TotalMuatanMKS ?>]
+                name: 'Muatan <?= esc((string) ($cabangMKS ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalMuatanMKS ?? []))) ?>
             }, {
-                name: 'Bongkaran <?= $cabangMKS ?>',
-                data: [<?= is_array($TotalBongkaranMKS) ? implode(',', $TotalBongkaranMKS) : $TotalBongkaranMKS ?>]  
+                name: 'Bongkaran <?= esc((string) ($cabangMKS ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalBongkaranMKS ?? []))) ?>  
             }]
         });
 

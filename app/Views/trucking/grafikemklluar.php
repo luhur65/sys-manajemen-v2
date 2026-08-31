@@ -45,9 +45,9 @@
         // JAKARTA
         $('#emklluarJKT').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= $cabangJKT ?>' },
-            subtitle: { text: 'Per <?= $jlhblnJKT ?> Bulan (<?= $TahunJKT ?>)' },
-            xAxis: { categories: [<?= is_array($FTglJKT) ? implode(',', $FTglJKT) : $FTglJKT ?>] },
+            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= esc((string) ($cabangJKT ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnJKT ?? 0) ?> Bulan (<?= esc((string) ($TahunJKT ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglJKT ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -64,17 +64,17 @@
                 }]
             },
             series: [{
-                name: 'EMKL Luar <?= $cabangJKT ?>',
-                data: [<?= is_array($TotalEmklluarJKT) ? implode(',', $TotalEmklluarJKT) : $TotalEmklluarJKT ?>]
+                name: 'EMKL Luar <?= esc((string) ($cabangJKT ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalEmklluarJKT ?? []))) ?>
             }]
         });
 
         // MEDAN
         $('#emklluarMDN').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= $cabangMDN ?>' },
-            subtitle: { text: 'Per <?= $jlhblnMDN ?> Bulan (<?= $TahunMDN ?>)' },
-            xAxis: { categories: [<?= is_array($FTglMDN) ? implode(',', $FTglMDN) : $FTglMDN ?>] },
+            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= esc((string) ($cabangMDN ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnMDN ?? 0) ?> Bulan (<?= esc((string) ($TahunMDN ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglMDN ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -91,17 +91,17 @@
                 }]
             },
             series: [{
-                name: 'EMKL Luar <?= $cabangMDN ?>',
-                data: [<?= is_array($TotalEmklluarMDN) ? implode(',', $TotalEmklluarMDN) : $TotalEmklluarMDN ?>]
+                name: 'EMKL Luar <?= esc((string) ($cabangMDN ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalEmklluarMDN ?? []))) ?>
             }]
         });
 
         // SURABAYA
         $('#emklluarSBY').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= $cabangSBY ?>' },
-            subtitle: { text: 'Per <?= $jlhblnSBY ?> Bulan (<?= $TahunSBY ?>)' },
-            xAxis: { categories: [<?= is_array($FTglSBY) ? implode(',', $FTglSBY) : $FTglSBY ?>] },
+            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= esc((string) ($cabangSBY ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnSBY ?? 0) ?> Bulan (<?= esc((string) ($TahunSBY ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglSBY ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -118,17 +118,17 @@
                 }]
             },
             series: [{
-                name: 'EMKL Luar <?= $cabangSBY ?>',
-                data: [<?= is_array($TotalEmklluarSBY) ? implode(',', $TotalEmklluarSBY) : $TotalEmklluarSBY ?>]
+                name: 'EMKL Luar <?= esc((string) ($cabangSBY ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalEmklluarSBY ?? []))) ?>
             }]
         });
 
         // MAKASSAR
         $('#emklluarMKS').highcharts({
             chart: { type: 'line' },
-            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= $cabangMKS ?>' },
-            subtitle: { text: 'Per <?= $jlhblnMKS ?> Bulan (<?= $TahunMKS ?>)' },
-            xAxis: { categories: [<?= is_array($FTglMKS) ? implode(',', $FTglMKS) : $FTglMKS ?>] },
+            title: { text: 'GRAFIK Pengunaan EMKL Luar <?= esc((string) ($cabangMKS ?? ''), 'js') ?>' },
+            subtitle: { text: 'Per <?= (int) ($jlhblnMKS ?? 0) ?> Bulan (<?= esc((string) ($TahunMKS ?? ''), 'js') ?>)' },
+            xAxis: { categories: <?= json_encode(array_values((array) ($FTglMKS ?? [])), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> },
             yAxis: {
                 title: { text: 'Jumlah Job' },
                 plotLines: [{ value: 0, width: 1, color: '#808080' }]
@@ -145,8 +145,8 @@
                 }]
             },
             series: [{
-                name: 'EMKL Luar <?= $cabangMKS ?>',
-                data: [<?= is_array($TotalEmklluarMKS) ? implode(',', $TotalEmklluarMKS) : $TotalEmklluarMKS ?>]
+                name: 'EMKL Luar <?= esc((string) ($cabangMKS ?? ''), 'js') ?>',
+                data: <?= json_encode(array_values((array) ($TotalEmklluarMKS ?? []))) ?>
             }]
         });
 

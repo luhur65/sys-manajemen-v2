@@ -90,7 +90,7 @@
                     <table id="jqGrid"></table>
                     <!-- <div id="jqGridPager"></div> -->
             <div class="d-flex justify-content-between align-items-center p-2 mt-0">
-                <div id="lastUpdateHandler">Last Update : <?= $last_update ?></div>
+                <div id="lastUpdateHandler">Last Update : <?= esc($last_update) ?></div>
                 <div id="jqGridInfoHandler"></div>
             </div>
                 </div>
