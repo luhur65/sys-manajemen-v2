@@ -53,26 +53,30 @@ class MloginModel extends Model
         return false;
     }
 
+    /**
+     * Ambil ulang baris user milik sesi yang sedang berjalan.
+     *
+     * H-05: sebelumnya method ini mencocokkan `WHERE password = <hash dari sesi>`
+     * — itulah yang memaksa hash bcrypt ikut disimpan di session file. Kunci
+     * primer `userpk` sudah cukup untuk mengidentifikasi baris, jadi hash tidak
+     * perlu dibawa-bawa. Sekaligus memperbaiki pembacaan `$_SESSION['userid']`
+     * yang mengabaikan prefiks SESSION_NAME sehingga selalu bernilai null.
+     *
+     * Catatan: tidak ada pemanggil di codebase saat ini (sisa migrasi CI3).
+     */
     public function cek()
     {
-        $userid = $_SESSION['userid'] ?? null;
-        $userlevel = $_SESSION['userlevel'] ?? null;
-        $username = session()->get(SESSION_NAME.'username') ?? null;
-        $password = $_SESSION['password'] ?? null;
-
-        $builder = $this->db->table($this->table);
-        $builder->where('userid', $userid);
-        $builder->where('userlevel', $userlevel);
-        $builder->where('username', $username);
-        $builder->where('password', $password);
-
-        $builder->limit(1);
-        $sql = $builder->get();
-        if ($sql->getNumRows() == 1) {
-            return $sql;
-        } else {
+        $userpk = session()->get(SESSION_NAME . 'userpk');
+        if (! $userpk) {
             return false;
         }
+
+        $sql = $this->db->table($this->table)
+                        ->where('userpk', $userpk)
+                        ->limit(1)
+                        ->get();
+
+        return $sql->getNumRows() === 1 ? $sql : false;
     }
 }
 

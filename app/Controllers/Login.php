@@ -246,7 +246,9 @@ class Login extends BaseController
                 SESSION_NAME . 'userid' => $row->userid,
                 SESSION_NAME . 'username' => $row->username,
                 SESSION_NAME . 'userlevel' => $row->userlevel,
-                SESSION_NAME . 'password' => $row->password,
+                // H-05: hash password TIDAK disimpan di sesi. Session driver adalah
+                // FileHandler, jadi apa pun yang masuk ke sini tertulis ke disk di
+                // writable/session dan bertahan sampai garbage collection.
                 SESSION_NAME . 'logged_in' => 1,
                 SESSION_NAME . 'cabangid' => $row->authorityid,
                 'username' => $row->username // For compatibility with some controllers using session()->get('username')
@@ -367,7 +369,7 @@ class Login extends BaseController
                     SESSION_NAME . 'userid' => $row->userid,
                     SESSION_NAME . 'username' => $row->username,
                     SESSION_NAME . 'userlevel' => $row->userlevel,
-                    SESSION_NAME . 'password' => $row->password,
+                    // H-05: hash password TIDAK disimpan di sesi.
                     SESSION_NAME . 'logged_in' => 1,
                     SESSION_NAME . 'cabangid' => $row->authorityid,
                     'username' => $row->username

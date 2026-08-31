@@ -65,7 +65,25 @@ use App\Controllers\BaseController;
 
 	public function editpassword(){
 		$userpk = session()->get(SESSION_NAME.'userpk');
-		$password = session()->get(SESSION_NAME.'password');
+
+		// H-05: hash password tidak lagi ada di sesi, jadi dibaca langsung dari
+		// database saat dibutuhkan. Ini juga menutup celah kecil pada pola lama:
+		// nilai di sesi bisa basi bila password diubah lewat jalur lain (reset
+		// oleh admin, misalnya), sehingga verifikasi di bawah memakai hash usang.
+		$db = \Config\Database::connect();
+		$userRow = $db->table('tbluser')
+		              ->select('password')
+		              ->where('userpk', $userpk)
+		              ->limit(1)
+		              ->get()
+		              ->getRow();
+
+		if ($userRow === null) {
+			echo "1";
+			return;
+		}
+
+		$password = $userRow->password;
 		$password1 = rawurldecode((string)$this->request->getGet('password1'));
 		$password2 = rawurldecode((string)$this->request->getGet('password2'));
 		$password3 = rawurldecode((string)$this->request->getGet('password3'));
@@ -88,7 +106,6 @@ use App\Controllers\BaseController;
             $newHash = password_hash($password2, PASSWORD_BCRYPT);
 			$data = array('password' => $newHash );
 			$data = $this->muserModel->edit("tbluser",$data,$userpk);
-			session()->set(SESSION_NAME.'password', $newHash);
 			$insert = [
                 'userpk' => $userpk,
                 'password' => $newHash,

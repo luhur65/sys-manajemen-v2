@@ -190,7 +190,7 @@ class SsoAuth extends BaseController
             SESSION_NAME . 'userid'    => $user['userid'],
             SESSION_NAME . 'username'  => $user['username'],
             SESSION_NAME . 'userlevel' => $user['userlevel'] ?? null,
-            SESSION_NAME . 'password'  => $user['password'],
+            // H-05: hash password TIDAK disimpan di sesi.
             SESSION_NAME . 'logged_in' => 1,
             SESSION_NAME . 'cabangid'  => $user['authorityid'] ?? null,
             'username'                 => $user['username'],
