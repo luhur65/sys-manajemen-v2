@@ -636,79 +636,46 @@
         }
       });
 
+      // M-02: dulu tombol ini menembak `forgot-password` dua kali — sekali
+      // untuk "cek dulu apakah username ada", baru sekali lagi untuk mengirim.
+      // Tahap pertama itu ada justru karena server menjawab beda untuk username
+      // yang tidak terdaftar. Server sekarang menjawab seragam, jadi tahap itu
+      // tidak bisa memberi tahu apa pun dan hanya menyisakan satu request
+      // tambahan. Cukup sekali kirim.
       $(document).on('click', '#resetPassword', function() {
         let user = $('#user').val();
         let csrfTokenName = $('input[name="<?= csrf_token() ?>"]').attr('name') || '<?= csrf_token() ?>';
         let csrfTokenValue = $('input[name="<?= csrf_token() ?>"]').val() || '<?= csrf_hash() ?>';
 
-        checkValidation(user, csrfTokenName, csrfTokenValue)
-          .then((response) => {
+        $('#processingLoader').removeClass('d-none');
+        $.ajax({
+          url: `<?= base_url() ?>forgot-password`,
+          method: 'POST',
+          dataType: "JSON",
+          data: {
+            user: user,
+            [csrfTokenName]: csrfTokenValue
+          },
+          success: (response) => {
             if (response.csrfToken) {
-              csrfTokenValue = response.csrfToken;
-              $('input[name="<?= csrf_token() ?>"]').val(csrfTokenValue);
+              $('input[name="<?= csrf_token() ?>"]').val(response.csrfToken);
             }
+            $('#processingLoader').addClass('d-none');
 
-            $('#processingLoader').removeClass('d-none')
-            $.ajax({
-              url: `<?= base_url() ?>forgot-password`,
-              method: 'POST',
-              dataType: "JSON",
-              data: {
-                user: user,
-                [csrfTokenName]: csrfTokenValue
-              },
-              success: (response) => {
-                if (response.csrfToken) {
-                  $('input[name="<?= csrf_token() ?>"]').val(response.csrfToken);
-                }
-                $('#processingLoader').addClass('d-none')
-
-                showSuccessDialog(response.message);
-              },
-              error: (error) => {
-                $('#processingLoader').addClass('d-none');
-                if (error.responseJSON && error.responseJSON.csrfToken) {
-                  $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
-                }
-                let errorMsg = error.responseJSON?.errors?.user || error.responseJSON?.error || 'Terjadi kesalahan sistem';
-                showDialog(errorMsg);
-              }
-            })
-          })
-          .catch((error) => {
+            showSuccessDialog(response.message);
+          },
+          error: (error) => {
+            $('#processingLoader').addClass('d-none');
             if (error.responseJSON && error.responseJSON.csrfToken) {
               $('input[name="<?= csrf_token() ?>"]').val(error.responseJSON.csrfToken);
             }
-            let errorMsg = error.responseJSON?.errors?.user || 'Terjadi kesalahan sistem';
+            // Sisa jalur error tinggal yang tidak bergantung pada akun:
+            // reset dimatikan (403) dan rate limit (429).
+            let errorMsg = error.responseJSON?.errors?.user || error.responseJSON?.error || 'Terjadi kesalahan sistem';
             showDialog(errorMsg);
-          })
-
-      });
-
-      function checkValidation(user, csrfTokenName, csrfTokenValue) {
-        return new Promise((resolve, reject) => {
-          $('#processingLoader').removeClass('d-none')
-          $.ajax({
-              url: `<?= base_url() ?>forgot-password`,
-              method: 'POST',
-              dataType: "JSON",
-              data: {
-                user: user,
-                check: true,
-                [csrfTokenName]: csrfTokenValue
-              },
-              success: (response) => {
-                resolve(response);
-              },
-              error: error => {
-                reject(error)
-              }
-            })
-            .always(() => {
-              $('#processingLoader').addClass('d-none')
-            });
+          }
         });
-      }
+      });
 
       // Theme toggle functionality
       $('#themeToggleBtn').on('click', function() {

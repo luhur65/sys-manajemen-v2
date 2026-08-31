@@ -70,6 +70,28 @@ class Login extends BaseController
             : $seconds . ' detik';
     }
 
+    /**
+     * M-02: respons tunggal untuk seluruh hasil `forgotPassword()`.
+     *
+     * Pesannya sengaja tidak memastikan apa pun tentang username yang dikirim.
+     * Semua keadaan — username tidak ada, akun tanpa email/WhatsApp, email
+     * terkirim, sampai SMTP gagal — memakai status, isi, dan bentuk yang sama,
+     * sehingga endpoint ini tidak bisa dipakai memeriksa keberadaan akun.
+     *
+     * Yang belum seragam: waktu respons. Permintaan yang benar-benar mengirim
+     * email selesai lebih lama daripada yang berhenti di username tak dikenal.
+     * Menutupnya menuntut antrean pengiriman terpisah; sementara ini laju
+     * pengukurannya ditahan rate limit `forgot` (H-04).
+     */
+    private function forgotPasswordResponse(): ResponseInterface
+    {
+        return $this->response->setJSON([
+            'status'    => 200,
+            'message'   => 'Jika username terdaftar, link reset akan dikirim ke email atau WhatsApp yang tercatat pada akun tersebut.',
+            'csrfToken' => csrf_hash(),
+        ]);
+    }
+
     public function index()
     {
         if (session()->has(SESSION_NAME . 'logged_in')) {
@@ -420,8 +442,10 @@ class Login extends BaseController
         // H-04: setiap link reset yang terkirim memakai kuota SMTP Brevo
         // perusahaan, jadi endpoint ini dibatasi walaupun requestnya "berhasil".
         // Pemeriksaan menutup kedua mode (validasi maupun kirim) supaya setelah
-        // batas tercapai endpoint ini benar-benar diam; yang mengurangi jatah
-        // hanya pengiriman yang sesungguhnya (lihat hit() di bawah).
+        // batas tercapai endpoint ini benar-benar diam. Yang mengurangi jatah
+        // adalah setiap permintaan kirim, terdaftar atau tidak (lihat hit() di
+        // bawah) — sejak M-02 jatahnya tidak boleh ikut menunjukkan akun mana
+        // yang ada.
         $wait = $this->throttle->retryAfter('forgot', $this->request->getIPAddress(), (string) $username);
 
         if ($wait !== null) {
@@ -436,17 +460,38 @@ class Login extends BaseController
             ]);
         }
 
+        // M-02: sejak titik ini pemanggil selalu menerima respons yang sama,
+        // apa pun hasilnya. Respons yang berbeda-beda di sinilah yang dulu bisa
+        // dipakai menyusun daftar username valid untuk credential stuffing.
+        if ($check) {
+            // Tahap "cek dulu" milik klien lama. Tidak ada lagi yang bisa
+            // divalidasi tanpa membocorkan sesuatu, jadi dijawab seragam tanpa
+            // mengirim apa pun; klien baru cukup memanggil endpoint ini sekali.
+            return $this->forgotPasswordResponse();
+        }
+
+        // Jatah dipotong untuk SETIAP permintaan yang sampai di sini, bukan
+        // hanya yang benar-benar mengirim email. Kalau hanya username terdaftar
+        // yang memotong jatah, penyerang cukup memperhatikan kapan 429 muncul
+        // untuk tahu akun mana yang ada — kebocoran yang sama lewat pintu lain.
+        // Tetap dipotong sebelum SMTP dipanggil, supaya pengiriman yang gagal
+        // pun ikut terhitung dan endpoint ini tidak bisa dipakai memukul server
+        // SMTP berulang kali.
+        $this->throttle->hit('forgot', $this->request->getIPAddress(), (string) $username);
+
         $muserModel = new \App\Models\MuserModel();
         // Use asArray to handle potential SQL Server column case sensitivity
         $userRow = $muserModel->asArray()->where('userid', $username)->first();
 
         if (!$userRow) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'errors' => ['user' => 'Username tidak ditemukan'],
-                'csrfToken' => csrf_hash()
+            log_message('info', 'Reset password diminta untuk username tak dikenal: {user} (ip: {ip})', [
+                'user' => (string) $username,
+                'ip'   => $this->request->getIPAddress(),
             ]);
+
+            return $this->forgotPasswordResponse();
         }
-        
+
         // Lowercase all keys to avoid issues if they created columns like 'Email' or 'EMAIL'
         $userRow = array_change_key_case($userRow, CASE_LOWER);
 
@@ -454,24 +499,14 @@ class Login extends BaseController
         $nowhatsapp = $userRow['nowhatsapp'] ?? '';
 
         if (empty($email) && empty($nowhatsapp)) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'errors' => ['user' => 'Akun ini tidak memiliki email atau nomor WhatsApp terdaftar.'],
-                'csrfToken' => csrf_hash()
+            // Keadaan ini dulu diberitahukan ke pemanggil — sekaligus memastikan
+            // akunnya ada. Sekarang hanya terlihat oleh admin, lewat log.
+            log_message('warning', 'Reset password: akun {user} tidak memiliki email maupun nomor WhatsApp.', [
+                'user' => (string) $username,
             ]);
-        }
 
-        if ($check) {
-            return $this->response->setJSON([
-                'status' => 200, 
-                'message' => 'Jika username ada, link reset akan dikirim ke email/WhatsApp.',
-                'csrfToken' => csrf_hash()
-            ]);
+            return $this->forgotPasswordResponse();
         }
-
-        // Mulai dari sini email benar-benar dikirim, jadi jatahnya dipotong.
-        // Sengaja dipotong SEBELUM pengiriman: kalau SMTP gagal pun percobaannya
-        // tetap dihitung, supaya tidak bisa dipakai memukul server SMTP berulang.
-        $this->throttle->hit('forgot', $this->request->getIPAddress(), (string) $username);
 
         $resetModel = new \App\Models\PasswordResetModel();
         $resetModel->where('username', $username)->delete();
@@ -525,10 +560,11 @@ class Login extends BaseController
                 // Token yang sudah terlanjur dibuat dibuang supaya tidak menggantung
                 $resetModel->where('username', $username)->delete();
 
-                return $this->response->setStatusCode(500)->setJSON([
-                    'error' => 'Maaf, link reset password belum bisa dikirim saat ini. Silakan coba beberapa saat lagi atau hubungi Admin IT.',
-                    'csrfToken' => csrf_hash()
-                ]);
+                // M-02: kegagalan SMTP hanya mungkin terjadi pada akun yang ADA
+                // dan punya email, jadi pesan khusus di sini sama saja dengan
+                // mengumumkan akun itu terdaftar. Kegagalannya sudah dicatat ke
+                // log di atas untuk ditindaklanjuti Admin IT.
+                return $this->forgotPasswordResponse();
             }
         }
 
@@ -537,11 +573,7 @@ class Login extends BaseController
             // TODO: Implement WA API Call Here
         }
 
-        return $this->response->setJSON([
-            'status' => 200, 
-            'message' => 'Link reset sudah dikirim ke email / WhatsApp Anda.',
-            'csrfToken' => csrf_hash()
-        ]);
+        return $this->forgotPasswordResponse();
     }
 
     public function resetPasswordForm()

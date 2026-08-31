@@ -20,9 +20,9 @@
 # APP
 #--------------------------------------------------------------------
 
-# CATATAN: app.baseURL TIDAK dibaca aplikasi ini. Config\App::__construct()
-# menyusun sendiri baseURL dari HTTP_HOST + app.folder, jadi app.folder-lah
-# yang menentukan url — termasuk url callback SSO.
+# CATATAN: url aplikasi ditentukan app.folder, bukan app.baseURL.
+# Config\App::__construct() menyusun baseURL dari host request + app.folder,
+# jadi app.folder-lah yang menentukan url — termasuk url callback SSO.
 #
 #   lokal       app.folder = '/sys-modern/'  -> http://localhost/sys-modern/
 #   staging     app.folder = 'sys'           -> https://staging.transporindo.com/sys/
@@ -30,6 +30,15 @@
 #
 # Untuk production di root domain, app.folder WAJIB ada dan bernilai kosong.
 # Menghapus barisnya sama sekali membuatnya jatuh ke default lama 'sys-modern'.
+#
+# Host di luar daftar tidak lagi bisa menyetir url yang dikirim aplikasi (link reset
+# password, callback SSO), dan aplikasi memakai app.baseURL sebagai gantinya.
+# Kosongkan barisnya untuk memakai bawaan: sys.transporindo.com,
+# staging.transporindo.com, localhost, 127.0.0.1. Host milik app.baseURL selalu
+# ikut diizinkan. Isi baris ini kalau server memakai domain lain.
+# app.allowedHostnames = 'sys.transporindo.com, staging.transporindo.com'
+#
+# Dipakai saat host request tidak dikenal — isi sesuai url resmi server ini.
 # app.baseURL = ''
 # If you have trouble with `.`, you could also use `_`.
 # app_baseURL = ''

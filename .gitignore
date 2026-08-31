@@ -135,6 +135,9 @@ writable/*
 # public test files
 /public/test_*.php
 
+# skrip utilitas lokal berisi kredensial DB (H-02) - jangan pernah di-commit
+cekmenu.php
+
 # scratch files
 /scratch/*
 /scratch_*.py
