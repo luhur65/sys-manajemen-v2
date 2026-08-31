@@ -111,8 +111,15 @@ class ContentSecurityPolicy extends BaseConfig
      * Will default to self if not overridden
      *
      * @var list<string>|string|null
+     *
+     * M-01: sebelumnya null, sehingga `base-uri` tidak pernah dikirim dan
+     * defaultnya adalah "bebas". Satu tag `<base href="//penyerang">` yang
+     * berhasil disuntikkan cukup untuk membelokkan SETIAP URL relatif di
+     * halaman — termasuk `src` skrip aplikasi sendiri — tanpa perlu menembus
+     * script-src. Ini pengetatan yang tidak menyentuh perilaku normal:
+     * aplikasi ini tidak memakai tag `<base>` sama sekali.
      */
-    public $baseURI;
+    public $baseURI = 'self';
 
     /**
      * Lists the URLs for workers and embedded frame contents
@@ -150,8 +157,13 @@ class ContentSecurityPolicy extends BaseConfig
      * `<meta>` tags and applies only to non-HTML resources.
      *
      * @var list<string>|string|null
+     *
+     * M-01: padanan modern dari X-Frame-Options: SAMEORIGIN yang sudah dipasang
+     * SecurityHeaders. Keduanya sengaja dipertahankan — `frame-ancestors` lebih
+     * ekspresif dan didahulukan browser modern, sedangkan X-Frame-Options masih
+     * menjadi satu-satunya yang dipahami klien lama.
      */
-    public $frameAncestors;
+    public $frameAncestors = 'self';
 
     /**
      * The frame-src directive restricts the URLs which may
@@ -172,8 +184,14 @@ class ContentSecurityPolicy extends BaseConfig
      * Allows control over Flash and other plugins.
      *
      * @var list<string>|string
+     *
+     * M-01: dari 'self' ke 'none'. Aplikasi ini tidak memakai satu pun tag
+     * `<object>`, `<embed>`, atau `<applet>` (sudah diperiksa di seluruh
+     * app/Views), jadi 'self' hanya menyisakan permukaan yang tidak dipakai.
+     * Pratinjau PDF memakai `<iframe>`, yang diatur `child-src`, bukan direktif
+     * ini — lihat previewPDFs() di mains.js.
      */
-    public $objectSrc = 'self';
+    public $objectSrc = 'none';
 
     /**
      * @var list<string>|string|null
