@@ -46,6 +46,12 @@ class GridFilter
         'nc' => 'NOT LIKE %s',
     ];
 
+    /**
+     * Operator pencarian teks. Hanya operator inilah yang dicocokkan ke angka
+     * BERFORMAT; sisanya (eq/lt/gt dsb.) tetap perbandingan numerik.
+     */
+    private const LIKE_OPERATORS = ['bw', 'bn', 'ew', 'en', 'cn', 'nc'];
+
     protected BaseConnection $db;
 
     /**
@@ -64,8 +70,13 @@ class GridFilter
      * @param array $fieldMap  Whitelist kolom. Bentuk yang diterima:
      *                         - `'FNShipper'`                      kolom polos
      *                         - `'FTgl' => "FORMAT(FTgl, 'x')"`    ekspresi SQL
-     *                         - `'FNominal' => ['sql' => 'CAST(FNominal AS VARCHAR)', 'numeric' => true]`
-     *                           `numeric` menghapus pemisah ribuan dari input user.
+     *                         - `'FNominal' => ['sql' => 'FNominal', 'numeric' => true]`
+     *                           `numeric` menandai kolom yang di grid tampil
+     *                           dengan pemisah ribuan; `sql` harus ekspresi
+     *                           angka (bukan CAST ke varchar).
+     *                         - `'FOmset' => ['sql' => 'FOmset', 'numeric' => true, 'decimals' => 2]`
+     *                           `decimals` menyamakan jumlah angka desimal
+     *                           dengan formatter kolom di jqGrid.
      *
      * @return string Kondisi tanpa kurung dan tanpa `AND` di depan, atau string
      *                kosong bila tidak ada satu pun rule yang valid.
@@ -130,7 +141,7 @@ class GridFilter
      * Menyusun whitelist menjadi bentuk seragam, dikunci dengan nama kolom
      * huruf kecil supaya pencocokan tidak bergantung besar-kecil huruf.
      *
-     * @return array<string, array{sql: string, numeric: bool}>
+     * @return array<string, array{sql: string, numeric: bool, decimals: int}>
      */
     private function normalizeFieldMap(array $fieldMap): array
     {
@@ -139,16 +150,17 @@ class GridFilter
         foreach ($fieldMap as $key => $value) {
             if (is_int($key)) {
                 $field = trim((string) $value);
-                $spec  = ['sql' => $field, 'numeric' => false];
+                $spec  = ['sql' => $field, 'numeric' => false, 'decimals' => 0];
             } else {
                 $field = trim((string) $key);
 
                 $spec = is_array($value)
                     ? [
-                        'sql'     => trim((string) ($value['sql'] ?? $field)),
-                        'numeric' => ! empty($value['numeric']),
+                        'sql'      => trim((string) ($value['sql'] ?? $field)),
+                        'numeric'  => ! empty($value['numeric']),
+                        'decimals' => max(0, min(6, (int) ($value['decimals'] ?? 0))),
                     ]
-                    : ['sql' => trim((string) $value), 'numeric' => false];
+                    : ['sql' => trim((string) $value), 'numeric' => false, 'decimals' => 0];
             }
 
             // Nama kolom yang dikirim client harus identifier polos. Ekspresi SQL
@@ -166,7 +178,7 @@ class GridFilter
     }
 
     /**
-     * @param array<string, array{sql: string, numeric: bool}> $allowed
+     * @param array<string, array{sql: string, numeric: bool, decimals: int}> $allowed
      *
      * @return string|null null bila rule ditolak.
      */
@@ -185,13 +197,9 @@ class GridFilter
         }
 
         $operation = isset($rule->op) ? strtolower(trim((string) $rule->op)) : '';
-        $column    = $allowed[$field]['sql'];
+        $spec      = $allowed[$field];
+        $column    = $spec['sql'];
         $data      = isset($rule->data) ? (string) $rule->data : '';
-
-        if ($allowed[$field]['numeric']) {
-            // Grid menampilkan angka dengan pemisah ribuan; kolomnya sendiri tidak.
-            $data = str_replace(',', '', $data);
-        }
 
         // Operator tanpa nilai.
         if ($operation === 'nu') {
@@ -200,6 +208,25 @@ class GridFilter
 
         if ($operation === 'nn') {
             return $column . " != ''";
+        }
+
+        if ($spec['numeric']) {
+            $display = in_array($operation, self::LIKE_OPERATORS, true)
+                ? $this->numericDisplayExpression($spec)
+                : null;
+
+            if ($display !== null) {
+                // Pencarian teks dicocokkan ke angka BERFORMAT, persis seperti
+                // yang dilihat user di grid dan yang disorot setHighlight().
+                // Tanpa ini, mengetik ",3" dicari sebagai "3" sehingga setiap
+                // baris yang punya angka 3 di mana pun ikut lolos walau tidak
+                // ter-highlight.
+                $column = $display;
+            } else {
+                // Perbandingan numerik (eq/lt/gt/in/...): pemisah ribuan yang
+                // diketik user dibuang supaya nilainya bisa dibandingkan.
+                $data = str_replace(',', '', $data);
+            }
         }
 
         // Operator dengan daftar nilai.
@@ -227,6 +254,35 @@ class GridFilter
         };
 
         return $column . ' ' . sprintf(self::OPERATORS[$operation], $this->db->escape($value));
+    }
+
+    /**
+     * Ekspresi SQL yang menghasilkan angka persis seperti yang dirender jqGrid
+     * (pemisah ribuan koma, jumlah desimal mengikuti formatter kolom), supaya
+     * hasil filter LIKE sama dengan yang di-highlight di layar.
+     *
+     * Ekspresi hanya disusun dari `sql` milik whitelist (ditulis developer) dan
+     * `decimals` yang sudah dipaksa jadi integer, jadi tidak ada nilai request
+     * yang masuk ke sini.
+     *
+     * @param array{sql: string, numeric: bool, decimals: int} $spec
+     *
+     * @return string|null null bila driver-nya tidak punya fungsi format angka;
+     *                     pemanggil lalu memakai perilaku lama (buang koma).
+     */
+    private function numericDisplayExpression(array $spec): ?string
+    {
+        $decimals = $spec['decimals'];
+
+        return match ($this->db->DBDriver) {
+            'SQLSRV' => sprintf(
+                "FORMAT(%s, '%s', 'en-US')",
+                $spec['sql'],
+                $decimals > 0 ? '#,##0.' . str_repeat('0', $decimals) : '#,##0'
+            ),
+            'MySQLi', 'mysqli' => sprintf("FORMAT(%s, %d, 'en_US')", $spec['sql'], $decimals),
+            default            => null,
+        };
     }
 
     /**

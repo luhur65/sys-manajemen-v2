@@ -30,8 +30,8 @@ class Piutangemkl extends BaseController
         'FTgl' => "UPPER(FORMAT(FTgl, 'dd-MMM-yyyy'))",
         'FTglJT' => "UPPER(FORMAT(FTglJT, 'dd-MMM-yyyy'))",
         'FNTgl' => "(ltrim(rtrim(str(FThnJob)))+'-'+(case when FBlnJob>=10 then '' else '0' end)+ltrim(rtrim(str(FBlnJob))))",
-        'FNominal' => ['sql' => 'CAST(FNominal AS VARCHAR)', 'numeric' => true],
-        'FSisa' => ['sql' => 'CAST(FSisa AS VARCHAR)', 'numeric' => true],
+        'FNominal' => ['sql' => 'FNominal', 'numeric' => true],
+        'FSisa' => ['sql' => 'FSisa', 'numeric' => true],
         'FSelisih' => ['sql' => 'FSelisih', 'numeric' => true],
         'FTOP' => ['sql' => 'FTOP', 'numeric' => true],
     ];

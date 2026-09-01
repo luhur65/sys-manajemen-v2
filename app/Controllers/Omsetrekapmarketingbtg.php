@@ -22,7 +22,7 @@ class Omsetrekapmarketingbtg extends BaseController
         'FBiayaLapangan' => ['sql' => 'FBiayaLapangan', 'numeric' => true],
         'FNomPph23' => ['sql' => 'FNomPph23', 'numeric' => true],
         'FProfit' => ['sql' => 'FProfit', 'numeric' => true],
-        'FMargin' => ['sql' => 'FMargin', 'numeric' => true],
+        'FMargin' => ['sql' => 'FMargin', 'numeric' => true, 'decimals' => 2],
         'FTglUpdate',
     ];
 
