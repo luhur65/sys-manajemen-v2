@@ -9,7 +9,6 @@ class Site extends BaseConfig
     public string $siteTitle     = 'Management Information System';
     public string $siteName      = 'PT. TRANSPORINDO AGUNG SEJAHTERA';
     public string $siteSlogan    = 'Management Information System';
-    public string $siteVersion   = '1.0.0';
     
     // Meta Tags
     public string $metaAuthor    = 'TAS IT Department';

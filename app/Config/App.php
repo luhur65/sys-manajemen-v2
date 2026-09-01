@@ -202,8 +202,28 @@ class App extends BaseConfig
      *     ]
      *
      * @var array<string, string>
+     *
+     * Daftar ini TIDAK ditulis tangan di sini: `__construct()` mengisinya dari
+     * `app.proxyIPs` di .env (atau {@see self::PROXY_BAWAAN} kalau .env tidak
+     * menyebutkannya). Yang menentukan bukan cuma IP klien yang tercatat --
+     * `IncomingRequest::isSecure()` juga menolak mempercayai `X-Forwarded-Proto`
+     * selama pengirimnya bukan proxy terdaftar, sehingga di belakang tunnel
+     * (TLS diputus di Cloudflare, PHP menerima http polos) cookie bertanda
+     * `secure` gagal dikirim dengan SecurityException.
      */
     public array $proxyIPs = [];
+
+    /**
+     * Proxy yang dipercaya kalau .env tidak menyebutkan `app.proxyIPs`.
+     *
+     * Sengaja loopback saja: pada ketiga server yang berjalan, pemutus TLS
+     * (cloudflared, atau web server di depan PHP-FPM) ada di mesin yang sama
+     * dan menyambung lewat localhost. Request dari internet yang menembak port
+     * aplikasi secara langsung tetap membawa IP publik, jadi tidak ikut
+     * dipercaya -- hanya proses di mesin itu sendiri yang bisa menyetir
+     * `X-Forwarded-For` dan `X-Forwarded-Proto`.
+     */
+    private const PROXY_BAWAAN = ['127.0.0.1', '::1'];
 
     /**
      * --------------------------------------------------------------------------
@@ -224,6 +244,18 @@ class App extends BaseConfig
     public bool $CSPEnabled = true;
 
 
+    /**
+     * --------------------------------------------------------------------------
+     * Versi Aplikasi
+     * --------------------------------------------------------------------------
+     *
+     * Ditampilkan di kaki sidebar. Nilainya JANGAN disunting di sini: isi
+     * `app.version` di .env, karena tiap server (lokal, staging, production)
+     * bisa memegang versi berbeda sementara berkas ini sama untuk semuanya.
+     * Nilai di bawah cuma cadangan kalau .env tidak menyebutkannya.
+     */
+    public string $version = '2.0.0';
+
     public function __construct()
     {
         // M-05: `app.baseURL` di .env kini dipakai sebagai nilai STATIS — nilai
@@ -235,6 +267,21 @@ class App extends BaseConfig
         if (is_string($baseUrlEnv) && trim($baseUrlEnv) !== '') {
             $this->baseURL = trim($baseUrlEnv);
         }
+
+        // Versi aplikasi dari .env. Dibaca manual lewat getenv() -- sama seperti
+        // app.baseURL dan app.folder di atas -- karena konstruktor ini tidak
+        // memanggil parent::__construct(), jadi mekanisme override .env bawaan
+        // BaseConfig tidak berjalan untuk kelas ini. Ditaruh sebelum `return`
+        // pada host tak dikenal supaya versi tetap tampil di situasi itu.
+        $versionEnv = getenv('app.version');
+
+        if (is_string($versionEnv) && trim($versionEnv) !== '') {
+            $this->version = trim($versionEnv);
+        }
+
+        // Diisi sebelum `return` pada host tak dikenal: penentuan https dan IP
+        // klien tetap dibutuhkan meski url tidak jadi disusun dari header Host.
+        $this->proxyIPs = $this->proxyYangDipercaya();
 
         $this->allowedHostnames = $this->hostYangDiizinkan();
 
@@ -295,6 +342,83 @@ class App extends BaseConfig
      *
      * @return list<string>
      */
+    /**
+     * Proxy tepercaya dari `app.proxyIPs` di .env.
+     *
+     * Formatnya daftar IP atau subnet CIDR yang dipisah koma/spasi, mis.
+     * `app.proxyIPs = '127.0.0.1, ::1'`. Header pembawa IP klien mengikuti
+     * `app.proxyHeader` (bawaan `X-Forwarded-For`), karena format yang diminta
+     * framework adalah `ip => header`
+     * ({@see \CodeIgniter\HTTP\RequestTrait::getIPAddress()}).
+     *
+     * Di belakang Cloudflare, `X-Forwarded-For` BUKAN pilihan yang aman untuk
+     * mencatat pengunjung: Cloudflare menambahkan IP asli ke rantai yang sudah
+     * ada, sementara framework mengambil entri PERTAMA -- pengunjung yang
+     * mengirim `X-Forwarded-For: 1.2.3.4` sendiri akan tercatat sebagai
+     * 1.2.3.4. Isi `app.proxyHeader = 'CF-Connecting-IP'` di server yang
+     * dilayani Cloudflare; header itu selalu ditulis ulang oleh Cloudflare dan
+     * tidak bisa disetir pengunjung.
+     *
+     * Baris yang sengaja dikosongkan (`app.proxyIPs = ''`) berarti TIDAK ada
+     * proxy yang dipercaya -- beda dengan barisnya tidak ada sama sekali, yang
+     * jatuh ke PROXY_BAWAAN. Pembedaan ini sama seperti app.folder: server yang
+     * melayani internet langsung tanpa proxy bisa mematikannya secara eksplisit.
+     *
+     * @return array<string, string>
+     */
+    private function proxyYangDipercaya(): array
+    {
+        $dariEnv = getenv('app.proxyIPs');
+
+        if ($dariEnv === false || $dariEnv === null) {
+            $daftar = self::PROXY_BAWAAN;
+        } else {
+            $daftar = preg_split('/[\s,]+/', trim($dariEnv), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        }
+
+        $header = $this->headerIpKlien();
+        $hasil  = [];
+
+        foreach ($daftar as $proxy) {
+            $proxy = trim($proxy);
+
+            if ($proxy === '') {
+                continue;
+            }
+
+            // Entri ngawur di .env tidak boleh sampai ke framework: getIPAddress()
+            // melempar ConfigException untuk bentuk daftar yang salah, dan itu
+            // mematikan seluruh aplikasi -- bukan cuma pencatatan IP.
+            $tanpaSubnet = explode('/', $proxy, 2);
+
+            if (filter_var($tanpaSubnet[0], FILTER_VALIDATE_IP) === false) {
+                continue;
+            }
+
+            $hasil[$proxy] = $header;
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * Header pembawa IP pengunjung, dari `app.proxyHeader` di .env.
+     *
+     * Hanya nama header yang wajar yang diterima; isian ngawur jatuh ke bawaan
+     * ketimbang diteruskan ke framework sebagai nama header yang tidak pernah
+     * ada -- diam-diam mengembalikan alamat proxy untuk semua orang.
+     */
+    private function headerIpKlien(): string
+    {
+        $dariEnv = getenv('app.proxyHeader');
+
+        if (! is_string($dariEnv) || preg_match('/^[A-Za-z0-9-]{1,64}$/', trim($dariEnv)) !== 1) {
+            return 'X-Forwarded-For';
+        }
+
+        return trim($dariEnv);
+    }
+
     private function hostYangDiizinkan(): array
     {
         $dariEnv = getenv('app.allowedHostnames');

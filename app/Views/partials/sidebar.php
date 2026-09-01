@@ -30,6 +30,20 @@
             </div>
         </div>
 
+        <!-- Pencarian menu sidebar; digerakkan plugin SidebarSearch bawaan AdminLTE
+             (data-widget="sidebar-search") yang sudah ikut ter-bundle di
+             dist/js/adminlte.js, jadi tidak perlu skrip tambahan. -->
+        <div class="form-inline">
+            <div class="input-group" data-widget="sidebar-search">
+                <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                <div class="input-group-append">
+                    <button class="btn btn-sidebar">
+                        <i class="fas fa-search fa-fw"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Sidebar Menu -->
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
@@ -39,4 +53,12 @@
         <!-- /.sidebar-menu -->
     </div>
     <!-- /.sidebar -->
+    <!-- /. version app -->
+    <div class="sidebar-brand-wrapper text-center text-white text-small mt-3">
+        <a href="<?= base_url('home') ?>" class="brand-link">
+            <!-- <img src="<?= asset('libraries/tas-lib/img/taslogo.png') ?>" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .8"> -->
+            <span class="brand-text font-weight-light">VERSION <?= esc(config('App')->version) ?></span>
+        </a>
+    </div>
+    <!-- /. version app -->
 </aside>

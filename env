@@ -45,6 +45,32 @@
 # app.forceGlobalSecureRequests = false
 # app.CSPEnabled = false
 
+# Versi aplikasi yang tampil di kaki sidebar. Kalau baris ini tidak diisi,
+# dipakai nilai cadangan di Config\App::$version.
+# app.version = '2.0.0'
+
+# Proxy yang boleh menyetir X-Forwarded-Proto dan X-Forwarded-For, berisi IP
+# atau subnet CIDR yang dipisah koma. Tanpa baris ini yang dipercaya hanya
+# loopback (127.0.0.1, ::1) -- cukup untuk cloudflared atau web server yang
+# jalan di mesin yang sama.
+#
+# WAJIB benar kalau TLS diputus di depan aplikasi (tunnel Cloudflare, reverse
+# proxy): selama proxy-nya tidak terdaftar, CodeIgniter menganggap koneksinya
+# tidak aman, sehingga cookie.secure = true berujung SecurityException
+# "Attempted to send a secure cookie over a non-secure connection" dan setiap
+# pengguna tercatat ber-IP proxy -- throttle login dan audit trail jadi salah
+# sasaran. Kosongkan (app.proxyIPs = '') kalau aplikasi melayani internet
+# langsung tanpa proxy.
+# app.proxyIPs = '127.0.0.1, ::1'
+
+# Header yang dibaca sebagai IP pengunjung (bawaan X-Forwarded-For).
+# Di belakang Cloudflare isi CF-Connecting-IP: Cloudflare MENAMBAHKAN ip asli
+# ke rantai X-Forwarded-For yang dikirim pengunjung sementara framework
+# mengambil entri pertama, jadi lewat XFF pengunjung bisa memilih sendiri ip
+# yang tercatat di throttle login dan audit trail. CF-Connecting-IP selalu
+# ditulis ulang Cloudflare.
+# app.proxyHeader = 'CF-Connecting-IP'
+
 # Cookie sesi hanya dikirim lewat HTTPS. WAJIB true di staging dan production
 # (keduanya HTTPS); biarkan false untuk pengembangan lokal di http://localhost.
 # cookie.secure = true
