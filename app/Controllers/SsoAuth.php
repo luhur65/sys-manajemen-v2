@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Libraries\SsoNonceStore;
 use App\Libraries\SsoTicket;
 use App\Libraries\SsoTicketException;
+use App\Libraries\UserStatus;
 use App\Models\MlogModel;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\Sso as SsoConfig;
@@ -157,6 +158,20 @@ class SsoAuth extends BaseController
                     (string) $claims['sub']
                 ));
             }
+        }
+
+        // Status akun diperiksa SETELAH identitas ketemu, dan berlaku untuk kedua
+        // cabang di atas — termasuk Panel Casting. Casting sengaja tidak
+        // dikecualikan: kalau akun nonaktif tidak boleh dipakai pemiliknya, ia
+        // juga tidak boleh dipakai atas namanya. Selama security.userAktifEnforce
+        // masih false, ini hanya mencatat WOULD-DENY.
+        if (UserStatus::menolak($user['aktif'] ?? null, (string) $user['userid'], $impersonated ? 'casting' : 'sso')) {
+            return $this->fail('nonaktif', sprintf(
+                'callback: akun userid=%s nonaktif (tbluser.aktif=%s), jalur=%s.',
+                (string) $user['userid'],
+                var_export($user['aktif'] ?? null, true),
+                $impersonated ? 'casting' : 'sso'
+            ));
         }
 
         // Tiket tanpa klaim `sid` menghasilkan sesi yang TIDAK bisa dijangkau

@@ -399,6 +399,7 @@ class User extends BaseController
                 $row->userid,
                 $row->username,
                 $karyawanMap[$karyawanid] ?? '',
+                \App\Libraries\UserStatus::aktif($row->aktif ?? null) ? 'Aktif' : 'Nonaktif',
                 $row->dashboard,
                 $row->email,
                 $row->nowhatsapp,
@@ -447,6 +448,10 @@ class User extends BaseController
             'password'   => $this->request->getPost('password'),
             'dashboard'  => $this->request->getPost('dashboard'),
             'karyawanid' => $karyawanid,
+            // Checkbox: tidak dicentang berarti tidak ikut terkirim sama sekali,
+            // jadi ketiadaannya harus dibaca sebagai 0 — bukan sebagai "biarkan
+            // apa adanya", yang akan membuat akun mustahil dinonaktifkan lewat form.
+            'aktif'      => $this->request->getPost('aktif') !== null ? 1 : 0,
             'user_roles' => $this->request->getPost('user_roles')
         ];
 

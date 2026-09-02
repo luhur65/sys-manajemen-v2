@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\LoginThrottle;
+use App\Libraries\UserStatus;
 use App\Models\MlogModel;
 use App\Models\MloginModel;
 use App\Controllers\BaseController;
@@ -179,6 +180,7 @@ class Login extends BaseController
             // akun. "Belum terdaftar" akan menyesatkan — barisnya memang dipilih
             // dari daftar, jadi kalau hilang berarti daftarnya yang basi.
             'casting'  => 'Target Panel Casting tidak ditemukan di SYS. Daftar user mungkin sudah berubah — muat ulang panel lalu coba lagi.',
+            'nonaktif' => 'Akun Anda sudah tidak aktif. Silakan hubungi administrator.',
             'expired'  => 'Sesi SSO Anda telah berakhir. Silakan login kembali.',
             'server'   => 'Terjadi kesalahan saat memproses login SSO. Coba lagi nanti.',
             'onlysso'  => 'Login userid/password sudah dinonaktifkan. Silakan masuk lewat SSO.',
@@ -252,6 +254,21 @@ class Login extends BaseController
 
         if ($cek != "" && $cek->getNumRows() > 0) {
             $row = $cek->getRow();
+
+            // Password benar, tapi akunnya mungkin sudah dinonaktifkan. Diperiksa
+            // SEBELUM throttle dibersihkan: akun nonaktif tidak boleh jadi cara
+            // mengosongkan hitungan percobaan. Selama security.userAktifEnforce
+            // masih false, ini hanya mencatat WOULD-DENY dan login diteruskan.
+            if (UserStatus::menolak($row->aktif ?? null, (string) $userid, 'password')) {
+                $this->mlogModel->saveLog(
+                    MlogModel::LOGIN_FAILED,
+                    'Login ditolak: akun nonaktif',
+                    ['userid' => (string) $userid]
+                );
+
+                return redirect()->to(base_url('login'))
+                    ->with(SESSION_NAME . 'message', UserStatus::pesan());
+            }
 
             // Login berhasil: hapus hukuman pada akun ini. Ember per-IP sengaja
             // dibiarkan, supaya satu tebakan yang kebetulan benar tidak menghapus

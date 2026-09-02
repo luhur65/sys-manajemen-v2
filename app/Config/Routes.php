@@ -417,14 +417,14 @@ $routes->match(['GET', 'POST'], 'Parameter/export', 'Parameter::export');
 $routes->match(['GET', 'POST'], 'parameter/export', 'Parameter::export');
 
 // Routes for App\Controllers\Piutangemkl (Piutangemkl)
-$routes->match(['get', 'post'], 'Piutangemkl', 'Piutangemkl::index');
-$routes->match(['get', 'post'], 'piutangemkl', 'Piutangemkl::index');
-$routes->match(['get', 'post'], 'Piutangemkl/index', 'Piutangemkl::index');
-$routes->match(['get', 'post'], 'piutangemkl/index', 'Piutangemkl::index');
-$routes->match(['get', 'post'], 'Piutangemkl/grid', 'Piutangemkl::grid');
-$routes->match(['get', 'post'], 'piutangemkl/grid', 'Piutangemkl::grid');
-$routes->match(['get', 'post'], 'Piutangemkl/grid/(:any)', 'Piutangemkl::grid/$1');
-$routes->match(['get', 'post'], 'piutangemkl/grid/(:any)', 'Piutangemkl::grid/$1');
+$routes->match(['GET', 'POST'], 'Piutangemkl', 'Piutangemkl::index');
+$routes->match(['GET', 'POST'], 'piutangemkl', 'Piutangemkl::index');
+$routes->match(['GET', 'POST'], 'Piutangemkl/index', 'Piutangemkl::index');
+$routes->match(['GET', 'POST'], 'piutangemkl/index', 'Piutangemkl::index');
+$routes->match(['GET', 'POST'], 'Piutangemkl/grid', 'Piutangemkl::grid');
+$routes->match(['GET', 'POST'], 'piutangemkl/grid', 'Piutangemkl::grid');
+$routes->match(['GET', 'POST'], 'Piutangemkl/grid/(:any)', 'Piutangemkl::grid/$1');
+$routes->match(['GET', 'POST'], 'piutangemkl/grid/(:any)', 'Piutangemkl::grid/$1');
 $routes->match(['GET', 'POST'], 'Piutangemkl/operation/(:any)', 'Piutangemkl::operation/$1');
 $routes->match(['GET', 'POST'], 'piutangemkl/operation/(:any)', 'Piutangemkl::operation/$1');
 $routes->match(['GET', 'POST'], 'Piutangemkl/getlastupdate/(:any)', 'Piutangemkl::getlastupdate/$1');

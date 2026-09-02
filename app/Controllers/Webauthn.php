@@ -337,6 +337,23 @@ class Webauthn extends BaseController
                     return $this->response->setJSON(['error' => true, 'message' => 'Data pengguna tidak ditemukan. Harus Login Terlebih Dahulu menggunakan password.'])->setStatusCode(400);
                 }
 
+                // Cabang ini MEMBUAT sesi dari halaman login, jadi statusnya
+                // diperiksa seperti login password. Cabang buka-kunci di atas
+                // sengaja tidak: itu penegasan ulang sesi yang sudah ada, dan
+                // mengunci orang di layar terkunci bukan cara menonaktifkan akun.
+                if (\App\Libraries\UserStatus::menolak($user['aktif'] ?? null, (string) $user['userid'], 'biometrik')) {
+                    (new MlogModel())->saveLog(
+                        MlogModel::LOGIN_FAILED,
+                        'Login biometrik ditolak: akun nonaktif',
+                        ['userid' => (string) $user['userid']]
+                    );
+
+                    return $this->response->setJSON([
+                        'error'   => true,
+                        'message' => \App\Libraries\UserStatus::pesan(),
+                    ])->setStatusCode(403);
+                }
+
                 // Cegah session fixation: login biometrik dari halaman login juga
                 // menaikkan level privilese, jadi butuh session ID baru seperti
                 // login password. Isi $_SESSION (termasuk webauthn_challenge)

@@ -61,6 +61,23 @@
                         </div>
                     </div>
 
+                    <div class="row form-group">
+                        <div class="col-12 col-sm-3 col-md-2">
+                            <label class="col-form-label">Status</label>
+                        </div>
+                        <div class="col-12 col-sm-9 col-md-10">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" name="aktif" id="aktif" value="1">
+                                <label class="custom-control-label" for="aktif">Akun aktif</label>
+                            </div>
+                            <small class="text-muted">
+                                Akun nonaktif ditolak di semua jalur masuk — password, biometrik,
+                                SSO, dan Panel Casting — begitu <code>security.userAktifEnforce</code>
+                                dinyalakan.
+                            </small>
+                        </div>
+                    </div>
+
                     <div class="row form-group" id="password-container">
                         <div class="col-12 col-sm-3 col-md-2">
                             <label class="col-form-label">Password <span class="text-danger">*</span></label>
@@ -243,6 +260,16 @@
                     name: 'namakaryawan',
                     index: 'namakaryawan',
                     width: (isDesktop ? sm_dekstop_3 : sm_mobile_2),
+                    search: false,
+                    sortable: false,
+                },
+                {
+                    // Nilainya sudah diterjemahkan di server lewat UserStatus,
+                    // jadi grid tidak ikut menebak arti 0/1 sendiri.
+                    label: 'Status',
+                    name: 'statusaktif',
+                    index: 'statusaktif',
+                    width: (isDesktop ? sm_dekstop_2 : sm_mobile_2),
                     search: false,
                     sortable: false,
                 },
@@ -544,6 +571,17 @@
         });
     });
 
+    // Cerminan App\Libraries\UserStatus::aktif() di sisi klien: apa pun yang
+    // bukan penanda nonaktif dianggap aktif, termasuk nilai kosong. Daftarnya
+    // sengaja sama supaya centang di layar tidak pernah berbeda pendapat dengan
+    // keputusan yang diambil server saat login.
+    const PENANDA_NONAKTIF = ['0', 'N', 'T', 'TIDAK', 'NONAKTIF', 'FALSE'];
+
+    function setAktif(nilai) {
+        const teks = String(nilai ?? '').trim().toUpperCase();
+        $('#aktif').prop('checked', teks === '' || !PENANDA_NONAKTIF.includes(teks));
+    }
+
     // Kosong = user tidak dipetakan ke karyawan mana pun. Itu sah: akun sistem
     // seperti ADMIN atau ITMKS memang tidak punya padanan di master HR.
     function setKaryawan(id, nama) {
@@ -573,6 +611,7 @@
 
         setKaryawan('', '');
         setKaryawanEnabled(true);
+        setAktif(1); // user baru default aktif
 
         loadRoles();
         $('#crudModal').modal('show');
@@ -600,6 +639,7 @@
             $('#nowhatsapp').val(res.nowhatsapp);
             $('#dashboard').val(res.dashboard);
             setKaryawan(res.karyawanid > 0 ? res.karyawanid : '', res.namakaryawan);
+            setAktif(res.aktif);
             setKaryawanEnabled(true);
             loadRoles(res.user_roles);
             $('#crudModal').modal('show');
@@ -624,6 +664,7 @@
             $('#username').val(res.username);
             $('#dashboard').val(res.dashboard);
             setKaryawan(res.karyawanid > 0 ? res.karyawanid : '', res.namakaryawan);
+            setAktif(res.aktif);
             setKaryawanEnabled(false);
             loadRoles(res.user_roles);
 
@@ -651,6 +692,7 @@
             $('#username').val(res.username);
             $('#dashboard').val(res.dashboard);
             setKaryawan(res.karyawanid > 0 ? res.karyawanid : '', res.namakaryawan);
+            setAktif(res.aktif);
             setKaryawanEnabled(false);
             loadRoles(res.user_roles);
 

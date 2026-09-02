@@ -128,6 +128,26 @@
 #           menemukan baris tblacos yang masih kurang.
 # security.aclEnforce = true
 
+# Penegakan kolom user aktif (App\Libraries\UserStatus).
+#   false = user nonaktif TETAP bisa masuk, tapi setiap kejadiannya dicatat
+#           sebagai "AKTIF WOULD-DENY" di writable/logs. Default, dan yang benar
+#           sampai kolomnya selesai dirapikan.
+#   true  = user nonaktif ditolak di SEMUA jalur: password, biometrik, SSO, dan
+#           Panel Casting.
+#
+# JANGAN nyalakan sebelum datanya dirapikan. Kolom ini dulu tidak pernah dibaca
+# siapa pun dan setiap user baru dibuat dengan aktif = 0, jadi di database yang
+# belum disentuh hampir SELURUH baris bernilai 0 — menyalakannya lebih dulu akan
+# mengunci hampir semua orang sekaligus, termasuk lewat password.
+#
+# Urutan yang benar:
+#   1. Rapikan status tiap user lewat halaman User (kolom Status & saklar di form)
+#   2. Biarkan berjalan beberapa hari, lalu periksa "AKTIF WOULD-DENY" di log —
+#      itu daftar orang yang akan terkunci kalau saklarnya dinyalakan sekarang
+#   3. Setelah daftar itu benar-benar kosong (atau hanya berisi orang yang memang
+#      harus ditolak), barulah setel true
+# security.userAktifEnforce = false
+
 #--------------------------------------------------------------------
 # SSO (auth-sso / auth-sso-api)
 #--------------------------------------------------------------------
