@@ -112,10 +112,12 @@ class MlogModel extends Model
                 'message'       => !empty($message) ? $message : null,
                 'message_error' => !empty($messageError) ? $messageError : null,
                 'context'       => $this->encodeContext($context),
-                // Dipotong ke panjang IPv6 terpanjang. ip() membaca header
-                // X-Forwarded-For yang dikendalikan klien: tanpa batas ini,
-                // header raksasa membuat INSERT gagal — dan percobaan login
-                // yang mengirimnya justru tidak meninggalkan jejak.
+                // Dipotong ke panjang IPv6 terpanjang. Sejak ip() memakai
+                // getIPAddress(), isinya sudah divalidasi framework dan mustahil
+                // melewati 45 karakter; batas ini tinggal pengaman kalau sumber IP
+                // diganti lagi ke header mentah -- dulu ia satu-satunya yang menahan
+                // header raksasa membuat INSERT gagal, sehingga percobaan login yang
+                // mengirimnya justru tidak meninggalkan jejak.
                 'ip'            => self::potong(ip(), 45),
                 'detect'        => detect(),
                 'created_at'    => date('Y-m-d H:i:s'),

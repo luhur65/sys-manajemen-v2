@@ -12,7 +12,14 @@
     <ul class="navbar-nav ml-auto">
         <li class="nav-item mr-3 d-none d-md-block">
             <div class="text-right">
-                your ip <span class="d-none d-lg-inline"> address : </span> (<?= esc($_SERVER['REMOTE_ADDR'] ?? '') ?>)
+                <?php
+                // Bukan $_SERVER['REMOTE_ADDR']: di belakang cloudflared, peer TCP
+                // aplikasi selalu loopback, jadi badge ini menampilkan ::1 untuk semua
+                // pengunjung. getIPAddress() menukarnya dengan IP asli dari header yang
+                // ditunjuk Config\App::$proxyHeader, tapi hanya kalau request memang
+                // datang dari proxy yang terdaftar di $proxyIPs.
+                ?>
+                your ip <span class="d-none d-lg-inline"> address : </span> (<?= esc(service('request')->getIPAddress()) ?>)
             </div>
         </li>
         <li class="nav-item">
