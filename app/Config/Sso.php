@@ -118,4 +118,31 @@ class Sso extends BaseConfig
      * mematikannya akan mengurung pengguna di layar terkunci.
      */
     public bool $passwordLoginEnabled = true;
+
+    /**
+     * Ke mana pengguna diantar SETELAH sesi sys-modern diakhiri.
+     *
+     * false = perilaku lama, dan tetap jadi default. Hanya sesi yang LAHIR dari
+     *         SSO yang dikembalikan ke dashboard SSO; sesi login lokal pulang ke
+     *         halaman /login sys-modern.
+     * true  = semua sesi diantar ke sso.dashboardUrl, termasuk yang tadi masuk
+     *         lewat userid/password. Dipakai kalau SSO sudah jadi pintu masuk
+     *         resmi dan halaman login lokal tidak lagi ingin ditawarkan sebagai
+     *         tujuan setelah keluar.
+     *
+     * Saklar ini HANYA mengubah tujuan redirect. Yang lain tidak ikut berubah:
+     * sesinya tetap dihancurkan lebih dulu, LOGOUT tetap dicatat selagi masih
+     * ada yang bisa menjelaskan sesi siapa yang berakhir, dan sesi SSO-nya
+     * sendiri tetap TIDAK dicabut — mencabutnya akan melogout pengguna dari HR
+     * dan CRM sekaligus, dan itu wewenang dashboard SSO.
+     *
+     * Diabaikan selama SSO belum dikonfigurasi (`enabled = false` atau
+     * `dashboardUrl` kosong): tujuannya kembali ke /login. Mengantar orang ke
+     * alamat kosong hanya menukar halaman login dengan halaman error.
+     *
+     * Perhatikan pasangannya dengan passwordLoginEnabled. Selama login lokal
+     * masih hidup, /login tetap bisa dibuka langsung — jadi saklar ini bukan
+     * cara mematikan login lokal, hanya cara menyembunyikannya dari alur keluar.
+     */
+    public bool $logoutToSso = false;
 }

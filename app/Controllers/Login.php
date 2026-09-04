@@ -339,13 +339,36 @@ class Login extends BaseController
 
         session()->destroy();
 
-        // Pengguna SSO dikembalikan ke dashboard SSO, bukan ke halaman login
-        // lokal yang tidak pernah ia pakai.
-        if ($fromSso && $sso->enabled && trim($sso->dashboardUrl) !== '') {
-            return redirect()->to(rtrim($sso->dashboardUrl, '/'));
+        return redirect()->to($this->logoutTarget($sso, $fromSso));
+    }
+
+    /**
+     * Halaman tujuan setelah sesi diakhiri.
+     *
+     * Dua mekanisme hidup berdampingan, dipilih oleh sso.logoutToSso:
+     *
+     *   false (default, mekanisme lama) — hanya sesi yang LAHIR dari SSO yang
+     *          dikembalikan ke dashboard. Pengguna SSO tidak pernah memakai
+     *          halaman login lokal, jadi mendaratkannya di sana hanya membuat
+     *          dia menebak-nebak apa yang harus diketik. Sesi login lokal
+     *          pulang ke /login seperti biasa.
+     *   true — semua sesi diantar ke dashboard SSO, termasuk yang tadi masuk
+     *          lewat userid/password.
+     *
+     * Keduanya jatuh kembali ke /login saat SSO belum dikonfigurasi. Ini bukan
+     * sekadar kerapian: logout SELALU berhasil mengakhiri sesi, jadi salah
+     * konfigurasi di sini baru terasa setelah pengguna benar-benar keluar — dan
+     * alamat kosong meninggalkannya di halaman error tanpa jalan kembali.
+     */
+    private function logoutTarget(\Config\Sso $sso, bool $fromSso): string
+    {
+        $dashboard = rtrim(trim($sso->dashboardUrl), '/');
+
+        if (! $sso->enabled || $dashboard === '') {
+            return base_url('login');
         }
 
-        return redirect()->to(base_url("login"));
+        return ($sso->logoutToSso || $fromSso) ? $dashboard : base_url('login');
     }
 
     public function unlock()

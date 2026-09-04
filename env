@@ -188,3 +188,8 @@
 # Saklar login lokal (userid/password + reset password). Set false hanya setelah
 # SSO terbukti jalan: false berarti SSO satu-satunya jalan masuk ke sys.
 # sso.passwordLoginEnabled = true
+
+# Tujuan setelah logout. false (default) = hanya sesi yang lahir dari SSO yang
+# dikembalikan ke dashboard SSO; true = semua sesi, termasuk yang login lokal.
+# Diabaikan selama sso.enabled = false atau sso.dashboardUrl kosong.
+# sso.logoutToSso = false
