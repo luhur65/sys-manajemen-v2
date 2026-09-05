@@ -2,6 +2,7 @@
 
 namespace App\Filters;
 
+use App\Libraries\SsoExit;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -21,14 +22,28 @@ class AuthFilter implements FilterInterface
     {
         // SESSION_NAME is defined in Constants.php
         if (! session()->get(SESSION_NAME . 'logged_in')) {
-            if ($request->isAJAX()) {
-                return $this->sessionEndedJson(base_url('login'));
-            }
-
-            return redirect()->to(base_url('login'));
+            // Sesi yang sudah tidak ada tidak bisa ditanya lagi apakah ia lahir
+            // dari SSO, jadi tujuannya ditentukan sepenuhnya oleh
+            // sso.logoutToSso. Halaman /login sendiri tidak melewati filter ini
+            // — ia ada di daftar `except` — sehingga login lokal tetap bisa
+            // dibuka langsung sekalipun setiap jalan lain berujung di SSO.
+            return $this->sessionEnded($request, SsoExit::target());
         }
 
         return $this->enforceSingleLogout($request);
+    }
+
+    /**
+     * Satu jawaban untuk setiap sesi yang berakhir, dalam dua rupa: halaman
+     * berpindah untuk navigasi biasa, 401 ber-JSON untuk AJAX. Alamat tujuannya
+     * sama persis — yang memutuskan alamat itu App\Libraries\SsoExit, bukan
+     * masing-masing cabang di sini.
+     */
+    private function sessionEnded(RequestInterface $request, string $target)
+    {
+        return $request->isAJAX()
+            ? $this->sessionEndedJson($target)
+            : redirect()->to($target);
     }
 
     /**
@@ -108,17 +123,19 @@ class AuthFilter implements FilterInterface
         $slo->forget($sid);
         session()->destroy();
 
-        // Tujuan yang sama dengan cabang non-AJAX di bawah, supaya pengguna yang
-        // sesinya berakhir saat menekan tombol mendapat penjelasan yang sama
-        // dengan yang sesinya berakhir saat memuat halaman.
-        if ($request->isAJAX()) {
-            return $this->sessionEndedJson(base_url('login?sso=expired'));
-        }
-
         // Alasannya dititipkan lewat query string, bukan flashdata: sesi baru
         // saja dihancurkan, jadi tidak ada tempat menyimpan flashdata. Login
         // controller menerjemahkan kode ini jadi kalimat (lihat ssoMessage()).
-        return redirect()->to(base_url('login?sso=expired'));
+        // Jalur AJAX memakai tujuan yang sama, supaya pengguna yang sesinya
+        // berakhir saat menekan tombol mendapat penjelasan yang sama dengan
+        // yang sesinya berakhir saat memuat halaman.
+        //
+        // `fromSso` sengaja dibiarkan false walaupun sesi ini jelas lahir dari
+        // SSO — `sso_sid` tidak akan ada kalau bukan. Perilaku lama jalur ini
+        // memang mendaratkan pengguna di halaman login beserta sebabnya, dan
+        // itu tidak boleh berubah selama sso.logoutToSso masih mati. Saklar
+        // itulah satu-satunya yang memindahkan tujuannya ke dashboard SSO.
+        return $this->sessionEnded($request, SsoExit::target(false, 'expired'));
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)

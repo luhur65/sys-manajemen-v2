@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use CodeIgniter\Config\Factories;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 
@@ -32,6 +33,14 @@ final class SessionExpiredResponseTest extends CIUnitTestCase
                 'Butuh ekstensi sqlite3. Jalankan: php -d extension=sqlite3 vendor/bin/phpunit'
             );
         }
+
+        // Yang diuji di berkas ini BENTUK jawabannya, bukan tujuannya. Saklar
+        // sso.logoutToSso dipatok mati supaya hasilnya tidak ikut berubah
+        // mengikuti .env environment yang kebetulan menjalankan test; tujuan
+        // versi SSO-nya punya berkas sendiri (SsoSessionEndRedirectTest).
+        $sso              = config(\Config\Sso::class);
+        $sso->logoutToSso = false;
+        Factories::injectMock('config', 'Sso', $sso);
     }
 
     public function testRequestAjaxTanpaSesiDijawab401DenganPenanda(): void
@@ -74,9 +83,9 @@ final class SessionExpiredResponseTest extends CIUnitTestCase
         $source = (string) file_get_contents(APPPATH . 'Filters/AuthFilter.php');
 
         $this->assertStringContainsString(
-            "sessionEndedJson(base_url('login?sso=expired'))",
+            "SsoExit::target(false, 'expired')",
             $source,
-            'Cabang SLO tidak mengirim ?sso=expired, jadi pengguna tidak diberi tahu sebabnya.'
+            'Cabang SLO tidak lagi membawa kode expired, jadi pengguna tidak diberi tahu sebabnya.'
         );
 
         // Kedua cabang harus memakai penyusun jawaban yang sama — kalau salah
@@ -85,8 +94,15 @@ final class SessionExpiredResponseTest extends CIUnitTestCase
         // supaya deklarasinya sendiri tidak ikut terhitung.
         $this->assertSame(
             2,
+            substr_count($source, '$this->sessionEnded('),
+            'Ada cabang sesi-berakhir yang tidak lewat sessionEnded().'
+        );
+
+        // Dan penyusun itu satu-satunya tempat 401 ber-JSON dibuat.
+        $this->assertSame(
+            1,
             substr_count($source, '$this->sessionEndedJson('),
-            'Ada cabang 401 yang tidak lewat sessionEndedJson().'
+            'Ada cabang 401 yang menulis jawabannya sendiri, di luar sessionEnded().'
         );
     }
 

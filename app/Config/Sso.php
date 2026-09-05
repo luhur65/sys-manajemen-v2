@@ -130,6 +130,21 @@ class Sso extends BaseConfig
      *         resmi dan halaman login lokal tidak lagi ingin ditawarkan sebagai
      *         tujuan setelah keluar.
      *
+     * Berlaku untuk SETIAP akhir sesi, bukan cuma tombol logout: sesi yang habis
+     * sendiri, cookie sesi yang hilang, dan sesi yang dicabut lewat Single
+     * Logout ikut mengikutinya (App\Libraries\SsoExit yang memutuskan). Kalau
+     * hanya tombolnya yang dipindahkan, pengguna yang sesinya berakhir sendiri
+     * tetap mendarat di halaman login sys — padahal justru itu kejadian yang
+     * paling sering ia alami.
+     *
+     * Satu pengecualian yang disengaja: jalur Single Logout tetap membawa kode
+     * `?sso=expired` saat saklarnya MATI, supaya halaman login bisa menjelaskan
+     * kenapa sesinya berakhir. Yang memindahkannya ke dashboard hanya saklar ini.
+     *
+     * Halaman /login sendiri tidak ikut tertutup: ia ada di daftar `except`
+     * milik filter auth, jadi tetap bisa dibuka langsung sebagai jalan masuk
+     * cadangan selama passwordLoginEnabled masih true.
+     *
      * Saklar ini HANYA mengubah tujuan redirect. Yang lain tidak ikut berubah:
      * sesinya tetap dihancurkan lebih dulu, LOGOUT tetap dicatat selagi masih
      * ada yang bisa menjelaskan sesi siapa yang berakhir, dan sesi SSO-nya
