@@ -112,6 +112,26 @@
     <!-- Highlight -->
     <script src="<?= asset('libraries/highlight/highlight.js') ?>"></script>
 
+    <!-- Polyfill Object.hasOwn untuk browser lawas (Chrome/Edge < 93, Firefox < 92, Safari < 15.4).
+         jqGrid 590 memanggil Object.hasOwn langsung di grid.base.js (pengecekan STRIP_KEYS saat
+         cleanData aktif, jalan tiap kali grid memuat data) -- tanpa ini browser lama gagal dengan
+         "Object.hasOwn is not a function" lalu error susulan di tempat yang memakai hasil fungsi itu. -->
+    <script>
+        if (!Object.hasOwn) {
+            console.error(new Error("ERROR KARENA USER MENGGUNAKAN CHROME/EDGE < 93, Firefox < 92, Safari < 15.4"));
+            Object.defineProperty(Object, 'hasOwn', {
+                value: function (object, property) {
+                    if (object == null) {
+                        throw new TypeError('Cannot convert undefined or null to object');
+                    }
+                    return Object.prototype.hasOwnProperty.call(Object(object), property);
+                },
+                configurable: true,
+                writable: true
+            });
+        }
+    </script>
+
     <!-- JQGrid 570 (From Trucking) -->
     <script src="<?= asset('libraries/jqgrid/590/js/i18n/grid.locale-en.js') ?>" type="text/javascript"></script>
     <script src="<?= asset('libraries/jqgrid/590/js/jquery.jqGrid.min.js') ?>" type="text/javascript"></script>
