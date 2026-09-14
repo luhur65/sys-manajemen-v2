@@ -24,6 +24,31 @@
 
 ---
 
+## 1.1 Status Implementasi (Diperbarui 14 September 2026)
+
+**Tahap 1, 2, dan 3 dari Bagian 5 sudah dikerjakan**, kecuali satu penyimpangan pada jQuery UI. Rincian per komponen ada di tabel Bagian 5; ringkasannya:
+
+| Item | Status |
+|---|---|
+| Moment.js → 2.30.1 (CVE-2022-24785, CVE-2022-31129) | ✅ Selesai |
+| Font Awesome → 6.7.2 | ✅ Selesai |
+| jqGrid CSS → `590/` (sinkron dengan JS) | ✅ Selesai (sebelum sesi ini) |
+| Select2 3.4.6 duplikat di `user/index.php` dihapus | ✅ Selesai |
+| Inputmask → 5.0.10 (satu path, tidak lagi 5.0.6 vs 5.0.7) | ✅ Selesai |
+| AutoNumeric → 4.10.10 | ✅ Selesai — lihat catatan versi run-time di bawah |
+| Select2 → 4.1.0 | ✅ Selesai |
+| jQuery → 3.7.1 (batas maksimal, **bukan** 4.0.0) | ✅ Selesai |
+| jQuery UI (JS + kedua tema) → 1.13.3 seragam | ⚠️ **Menyimpang dari rekomendasi** — lihat catatan di bawah |
+| Pembersihan folder library mati (~780 MB, Bagian 6.1) | Belum dikerjakan |
+
+**Penyimpangan jQuery UI — perlu keputusan.** JS dan CSS struktur dinaikkan ke **1.14.2**, bukan 1.13.3 seperti rekomendasi Bagian 3.2 (alasan rekomendasi itu: 1.14.2 "menghapus beberapa API yang sudah lama deprecated dan memerlukan pengujian jqGrid — bukan pilihan pertama"). Kedua tema (`cupertino`, `darkhive`) **tidak ikut diperbarui** dan tetap di versi asalnya (1.13.2 dan 1.14.1) karena hanya folder `1.14.2/` yang tersedia secara lokal — tema ThemeRoller yang sepadan belum diunduh. Hasilnya: tiga versi jQuery UI masih hidup berdampingan seperti temuan T-3.6 semula, hanya angkanya bergeser (1.14.2 / 1.13.2 / 1.14.1, sebelumnya 1.13.1 / 1.13.2 / 1.14.1). Smoke test manual di grid `piutangemkl` (drag-and-drop panel Atur Kolom, yang memakai jQuery UI Sortable) berjalan normal, tapi ini bukan pengujian jqGrid yang menyeluruh seperti diminta rekomendasi asli.
+
+**Catatan versi run-time AutoNumeric.** Berkas yang terpasang adalah rilis 4.10.10 resmi (komentar header di `AutoNumeric.js:4` menyatakan `@version 4.10.10`, sesuai npm), tetapi `AutoNumeric.version()` mengembalikan string `"4.10.9"` pada saat dijalankan — string versi internal yang tidak ikut di-bump oleh maintainer upstream di rilis ini. Bukan bug pemasangan; hanya locandaan bila ada kode yang membaca `AutoNumeric.version()` untuk pengecekan.
+
+**Verifikasi 14 September 2026:** smoke test langsung di browser (login, dashboard, grid `piutangemkl` dengan data nyata) dengan user berautentikasi. Dikonfirmasi lewat network request (200 OK di seluruh path pustaka yang diubah) dan lewat runtime (`jQuery.fn.jquery`, `jQuery.ui.version`, `moment.version`, dll. dibaca langsung dari console). Tidak ada error konsol yang terkait pustaka manapun; satu-satunya console error adalah peringatan COOP header yang sudah ada sebelumnya (server berjalan di HTTP, bukan menyangkut perubahan ini). `composer test` — 332 test, 1 gagal (`BaseUrlFolderTest::testPengembanganLokal`, murni beda konfigurasi host lokal mesin ini, `App.php` tidak tersentuh perubahan apa pun).
+
+---
+
 ## 2. Inventaris Komponen Aktif
 
 Sumber pemuatan: `app/Views/partials/header.php` dan `app/Views/partials/footer.php`.
@@ -199,26 +224,26 @@ Migrasi Bootstrap 5 baru layak dipertimbangkan bila salah satu terjadi:
 
 ### Tahap 1 — Keamanan (risiko rendah, kerjakan lebih dulu)
 
-| Komponen | Dari | Ke | Catatan |
-|---|---|---|---|
-| Moment.js | 2.29.1 | 2.30.1 | Ganti berkas, API kompatibel |
-| jQuery UI (JS + kedua tema) | 1.13.1 / 1.13.2 / 1.14.1 | 1.13.3 seragam | Patch keamanan + sinkronisasi |
-| Font Awesome | 5.15.4 | 6.7.2 | v6 masih menerima kelas `fas`/`far` lama |
+| Komponen | Dari | Ke | Catatan | Status |
+|---|---|---|---|---|
+| Moment.js | 2.29.1 | 2.30.1 | Ganti berkas, API kompatibel | ✅ Selesai |
+| jQuery UI (JS + kedua tema) | 1.13.1 / 1.13.2 / 1.14.1 | 1.13.3 seragam | Patch keamanan + sinkronisasi | ⚠️ JS+CSS struktur naik ke **1.14.2** (bukan 1.13.3), kedua tema **belum** ikut disamakan — lihat §1.1 |
+| Font Awesome | 5.15.4 | 6.7.2 | v6 masih menerima kelas `fas`/`far` lama | ✅ Selesai |
 
 ### Tahap 2 — Perbaikan konfigurasi (tanpa update versi)
 
-1. `app/Views/partials/header.php:20` — arahkan CSS jqGrid ke `jqgrid/590/`.
-2. `app/Views/user/index.php:88-89` — migrasikan ke Select2 4.x, hapus Select2 3.4.6.
-3. Samakan versi Inputmask (repo punya 5.0.6 di `libraries/inputmask/` dan 5.0.7 di `adminlte/plugins/`; hanya 5.0.6 yang dimuat).
+1. `app/Views/partials/header.php:20` — arahkan CSS jqGrid ke `jqgrid/590/`. ✅ Selesai (sebelum sesi ini)
+2. `app/Views/user/index.php:88-89` — migrasikan ke Select2 4.x, hapus Select2 3.4.6. ✅ Selesai
+3. Samakan versi Inputmask (repo punya 5.0.6 di `libraries/inputmask/` dan 5.0.7 di `adminlte/plugins/`; hanya 5.0.6 yang dimuat). ✅ Path aktif naik ke 5.0.10; salinan 5.0.7 di `adminlte/plugins/inputmask/` masih ada tapi tetap tidak dimuat (tidak berbahaya, kandidat pembersihan §6.1)
 
 ### Tahap 3 — Update independen (perlu pengujian regresi)
 
-| Komponen | Dari | Ke | Area uji |
-|---|---|---|---|
-| AutoNumeric | 4.5.4 | 4.10.10 | Semua input numerik / format rupiah |
-| Inputmask | 5.0.6 | 5.0.10 | Input tanggal & mask khusus |
-| Select2 | 4.0.13 | 4.1.0 | Seluruh dropdown pencarian |
-| jQuery | 3.6.0 | 3.7.1 | Smoke test menyeluruh |
+| Komponen | Dari | Ke | Area uji | Status |
+|---|---|---|---|---|
+| AutoNumeric | 4.5.4 | 4.10.10 | Semua input numerik / format rupiah | ✅ Selesai |
+| Inputmask | 5.0.6 | 5.0.10 | Input tanggal & mask khusus | ✅ Selesai |
+| Select2 | 4.0.13 | 4.1.0 | Seluruh dropdown pencarian | ✅ Selesai — diuji langsung di grid `piutangemkl` |
+| jQuery | 3.6.0 | 3.7.1 | Smoke test menyeluruh | ✅ Selesai — diuji langsung (login, dashboard, grid) |
 
 ### Yang TIDAK boleh diupdate
 
