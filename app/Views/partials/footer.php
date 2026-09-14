@@ -200,7 +200,7 @@
             const $nav = $('nav.main-header');
 
             function applyDarkMode() {
-                $theme.attr('href', '<?= asset('libraries/jquery-ui/darkhive/jquery-ui.min.css') ?>');
+                $theme.attr('href', '<?= asset('libraries/jquery-ui/darkhive/1.14.2/jquery-ui.min.css') ?>');
                 localStorage.setItem('theme', 'dark');
                 $('html').addClass('dark-mode');
                 $body.addClass('dark-mode');
@@ -209,7 +209,7 @@
             }
 
             function applyLightMode() {
-                $theme.attr('href', '<?= asset('libraries/jquery-ui/cupertino/jquery-ui.min.css') ?>');
+                $theme.attr('href', '<?= asset('libraries/jquery-ui/cupertino/1.14.2/jquery-ui.min.css') ?>');
                 localStorage.setItem('theme', 'light');
                 $('html').removeClass('dark-mode');
                 $body.removeClass('dark-mode');

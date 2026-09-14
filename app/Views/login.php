@@ -27,7 +27,7 @@
   <!-- Theme style -->
   <link rel="stylesheet" href="<?= asset('libraries/adminlte/dist/css/adminlte.min.css') ?>">
   <!-- Jquery UI -->
-  <link rel="stylesheet" href="<?= asset('libraries/jquery-ui/cupertino/jquery-ui.min.css') ?>">
+  <link rel="stylesheet" href="<?= asset('libraries/jquery-ui/cupertino/1.14.2/jquery-ui.min.css') ?>">
   <!-- Custom Style -->
   <link rel="stylesheet" href="<?= asset('libraries/tas-lib/css/styles.css') ?>">
 

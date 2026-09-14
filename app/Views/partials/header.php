@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="<?= asset('libraries/nestable2/1.6.0/css/jquery.nestable.min.css') ?>" />
 
     <!-- Jquery UI -->
-    <link id="jquery-theme" rel="stylesheet" href="<?= asset('libraries/jquery-ui/cupertino/jquery-ui.min.css') ?>">
+    <link id="jquery-theme" rel="stylesheet" href="<?= asset('libraries/jquery-ui/cupertino/1.14.2/jquery-ui.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('libraries/jquery-ui/1.14.2/jquery-ui.min.css') ?>">
 
     <!-- Custom Style (From Trucking) -->
