@@ -23,7 +23,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/fontawesome-free/css/all.min.css') ?>">
+  <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/fontawesome-free/6.7.2/css/all.min.css') ?>">
   <!-- Theme style -->
   <link rel="stylesheet" href="<?= asset('libraries/adminlte/dist/css/adminlte.min.css') ?>">
   <!-- Jquery UI -->
@@ -501,9 +501,9 @@
   </div>
 
   <!-- jQuery -->
-  <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
+  <script src="<?= asset('libraries/adminlte/plugins/jquery/3.7.1/jquery.min.js') ?>"></script>
   <!-- jQuery UI -->
-  <script src="<?= asset('libraries/jquery-ui/1.13.1/jquery-ui.min.js') ?>"></script>
+  <script src="<?= asset('libraries/jquery-ui/1.14.2/jquery-ui.min.js') ?>"></script>
 
   <!-- CSRF (C-03): halaman login berdiri sendiri (tidak memakai partials/header.php),
        jadi token dipasang di sini. Menutup POST webauthn/processLogin dari webauthn.js. -->

@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/fontawesome-free/css/all.min.css') ?>">
+  <link rel="stylesheet" href="<?= asset('libraries/adminlte/plugins/fontawesome-free/6.7.2/css/all.min.css') ?>">
   <!-- Custom Style -->
   <style>
     /* VERDANT CUSTOM STYLES */
@@ -271,7 +271,7 @@
     </div>
   </div>
 
-  <script src="<?= asset('libraries/adminlte/plugins/jquery/jquery.min.js') ?>"></script>
+  <script src="<?= asset('libraries/adminlte/plugins/jquery/3.7.1/jquery.min.js') ?>"></script>
   <script>
     $(document).ready(function() {
       // Toggle theme logic from local storage

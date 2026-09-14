@@ -88,7 +88,7 @@
     <script src="<?= asset('libraries/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
 
     <!-- daterangepicker -->
-    <script src="<?= asset('libraries/adminlte/plugins/moment/moment.min.js') ?>"></script>
+    <script src="<?= asset('libraries/adminlte/plugins/moment/2.30.1/moment.min.js') ?>"></script>
     <script src="<?= asset('libraries/adminlte/plugins/daterangepicker/daterangepicker.js') ?>"></script>
 
     <!-- overlayScrollbars -->
@@ -98,13 +98,13 @@
     <script src="<?= asset('libraries/adminlte/dist/js/adminlte.js') ?>"></script>
 
     <!-- Select2 -->
-    <script src="<?= asset('libraries/adminlte/plugins/select2/js/select2.full.min.js') ?>"></script>
+    <script src="<?= asset('libraries/adminlte/plugins/select2/4.1.0/js/select2.full.min.js') ?>"></script>
 
     <!-- AutoNumeric -->
-    <script src="<?= asset('libraries/autonumeric/4.5.4/autonumeric.min.js') ?>"></script>
+    <script src="<?= asset('libraries/autonumeric/4.10.10/autoNumeric.min.js') ?>"></script>
 
     <!-- Inputmask -->
-    <script src="<?= asset('libraries/inputmask/5.0.6/jquery.inputmask.min.js') ?>"></script>
+    <script src="<?= asset('libraries/inputmask/5.0.10/jquery.inputmask.min.js') ?>"></script>
 
     <!-- Nestable2 -->
     <script src="<?= asset('libraries/nestable2/1.6.0/js/jquery.nestable.min.js') ?>"></script>
