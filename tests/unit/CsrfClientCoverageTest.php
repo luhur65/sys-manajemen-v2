@@ -108,7 +108,11 @@ final class CsrfClientCoverageTest extends CIUnitTestCase
         foreach (['partials/header.php', 'login.php'] as $view) {
             $source = file_get_contents(APPPATH . 'Views/' . $view);
 
-            $jquery = strpos($source, 'plugins/jquery/jquery.min.js');
+            // Path jQuery kini dibubuhi folder versi (mis. "3.7.1/"), jadi dicocokkan
+            // dengan pola, bukan string literal.
+            $jquery = preg_match('#plugins/jquery/(?:[\d.]+/)?jquery\.min\.js#', $source, $m, PREG_OFFSET_CAPTURE)
+                ? $m[0][1]
+                : false;
             $setup  = strpos($source, '$.ajaxSetup(');
 
             $this->assertNotFalse($jquery, $view . ': tag jQuery tidak ditemukan.');
