@@ -1867,7 +1867,7 @@ function initDatepicker(classDatepicker = "datepicker") {
             },
         })
         .inputmask({
-            inputFormat: "dd-mm-yyyy",
+            inputFormat: "dd-MM-yyyy",
             alias: "datetime",
         })
         .focusout(function (e) {
@@ -1876,7 +1876,7 @@ function initDatepicker(classDatepicker = "datepicker") {
                 if (val.length == 8) {
                     $(this)
                         .inputmask({
-                            inputFormat: "dd-mm-yyyy",
+                            inputFormat: "dd-MM-yyyy",
                         })
                         .val([val.slice(0, 6), "20", val.slice(6)].join(""));
                 }
@@ -2098,7 +2098,7 @@ function initMonthpicker(classDatepicker = "monthpicker") {
     }
 
     element.MonthPicker({ MonthFormat: "mm-yy" }).inputmask({
-        inputFormat: "mm-yyyy",
+        inputFormat: "MM-yyyy",
         alias: "datetime",
     });
 
