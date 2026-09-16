@@ -181,6 +181,10 @@ class Login extends BaseController
             // akun. "Belum terdaftar" akan menyesatkan — barisnya memang dipilih
             // dari daftar, jadi kalau hilang berarti daftarnya yang basi.
             'casting'  => 'Target Panel Casting tidak ditemukan di SYS. Daftar user mungkin sudah berubah — muat ulang panel lalu coba lagi.',
+            // Beda dari 'casting': ini akun milik pengguna sendiri (dipilih di
+            // dialog multi-akun dashboard SSO), bukan target admin. Bisa
+            // dicoba ulang dengan akun lain di daftar yang sama.
+            'account'  => 'Akun yang dipilih tidak ditemukan di SYS. Coba pilih akun lain, atau hubungi admin SYS.',
             'nonaktif' => 'Akun Anda sudah tidak aktif. Silakan hubungi administrator.',
             'expired'  => 'Sesi SSO Anda telah berakhir. Silakan login kembali.',
             'server'   => 'Terjadi kesalahan saat memproses login SSO. Coba lagi nanti.',

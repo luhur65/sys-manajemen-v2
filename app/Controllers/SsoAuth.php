@@ -113,6 +113,33 @@ class SsoAuth extends BaseController
         // itu bukan tempat untuk longgar.
         $impersonated = ($claims['impersonated'] ?? null) === true;
 
+        // Tiket dari dialog multi-akun dashboard SSO (satu karyawan dengan
+        // beberapa login SYS — mis. ADMIN/STEVEN/HRDPST, ketiganya
+        // karyawan_id yang sama). Ini BUKAN Panel Casting: tidak ada
+        // persetujuan admin IT. auth-sso-api kini menandatangani `sub` pada
+        // tiket NON-casting sebagai primary key ASLI baris tbluser yang
+        // dipilih (bukan id internal ssoapi sendiri) — persis mekanisme yang
+        // sudah dipakai Panel Casting, cuma tanpa syarat persetujuannya.
+        // `email`/`karyawanId` tetap person-level (sama untuk setiap akun
+        // milik satu karyawan), jadi keduanya tidak pernah bisa dipakai
+        // membedakan akun; `sub` sekarang bisa.
+        //
+        // Diperiksa HANYA saat tidak impersonated. Bentuknya sengaja cuma
+        // "digit murni" — tidak dianggap otomatis sah cuma karena bentuknya
+        // angka: tiket dari format LAMA (`sub` = id internal ssoapi, bukan
+        // userpk) juga angka, dan kebetulan bisa cocok ke baris tbluser yang
+        // sama sekali tidak terkait. resolveSelectedAccount() di bawah
+        // menutup celah itu dengan mencocokkan ulang ke klaim karyawanId.
+        $subUserpk = null;
+
+        if (! $impersonated) {
+            $subMentah = isset($claims['sub']) ? trim((string) $claims['sub']) : '';
+
+            if ($subMentah !== '' && ctype_digit($subMentah)) {
+                $subUserpk = (int) $subMentah;
+            }
+        }
+
         if ($impersonated) {
             try {
                 $user = $this->resolveImpersonationTarget($claims);
@@ -126,6 +153,22 @@ class SsoAuth extends BaseController
                 return $this->fail('casting', sprintf(
                     'callback: target Panel Casting userpk=%s tidak ada di tbluser.',
                     (string) $claims['sub']
+                ));
+            }
+        } elseif ($subUserpk !== null) {
+            try {
+                $user = $this->resolveSelectedAccount($claims, $subUserpk);
+            } catch (Throwable $e) {
+                log_message('error', 'SSO callback: gagal mencari akun terpilih — ' . $e->getMessage());
+
+                return $this->fail('server', null);
+            }
+
+            if ($user === null) {
+                return $this->fail('account', sprintf(
+                    'callback: akun terpilih userpk=%d tidak ada di tbluser, atau karyawanid-nya tidak cocok dengan klaim karyawanId pada tiket (%s).',
+                    $subUserpk,
+                    (string) ($claims['karyawanId'] ?? '-')
                 ));
             }
         } else {
@@ -160,17 +203,20 @@ class SsoAuth extends BaseController
             }
         }
 
-        // Status akun diperiksa SETELAH identitas ketemu, dan berlaku untuk kedua
-        // cabang di atas — termasuk Panel Casting. Casting sengaja tidak
-        // dikecualikan: kalau akun nonaktif tidak boleh dipakai pemiliknya, ia
-        // juga tidak boleh dipakai atas namanya. Selama security.userAktifEnforce
-        // masih false, ini hanya mencatat WOULD-DENY.
-        if (UserStatus::menolak($user['aktif'] ?? null, (string) $user['userid'], $impersonated ? 'casting' : 'sso')) {
+        // Status akun diperiksa SETELAH identitas ketemu, dan berlaku untuk
+        // KETIGA cabang di atas — termasuk Panel Casting dan akun terpilih.
+        // Tidak ada satu pun yang dikecualikan: kalau akun nonaktif tidak
+        // boleh dipakai pemiliknya, ia juga tidak boleh dipakai lewat jalur
+        // lain. Selama security.userAktifEnforce masih false, ini hanya
+        // mencatat WOULD-DENY.
+        $jalur = $impersonated ? 'casting' : ($subUserpk !== null ? 'akun-pilihan' : 'sso');
+
+        if (UserStatus::menolak($user['aktif'] ?? null, (string) $user['userid'], $jalur)) {
             return $this->fail('nonaktif', sprintf(
                 'callback: akun userid=%s nonaktif (tbluser.aktif=%s), jalur=%s.',
                 (string) $user['userid'],
                 var_export($user['aktif'] ?? null, true),
-                $impersonated ? 'casting' : 'sso'
+                $jalur
             ));
         }
 
@@ -253,6 +299,13 @@ class SsoAuth extends BaseController
                 $penyetuju !== '' ? $penyetuju : '-',
                 $this->request->getIPAddress()
             ));
+        } elseif ($subUserpk !== null) {
+            // Bukan Panel Casting — tidak ada actor/approver terpisah di sini,
+            // karyawan yang login sendiri yang memilih salah satu akunnya
+            // sendiri. Yang dicatat cukup akun mana yang dipakai, supaya baris
+            // log dari sesi seperti ini tidak terbaca seolah-olah selalu
+            // jatuh ke akun default seperti sebelum klaim ini ada.
+            $aktivitas = sprintf('Login via SSO (akun dipilih: %s)', (string) $user['userid']);
         }
 
         session()->set($sessionData);
@@ -369,6 +422,70 @@ class SsoAuth extends BaseController
             ->getResultArray();
 
         return count($rows) === 1 ? $rows[0] : null;
+    }
+
+    /**
+     * Mencari baris `tbluser` untuk akun yang dipilih di dialog multi-akun
+     * dashboard SSO — satu karyawan dengan beberapa login SYS (mis. ADMIN/
+     * STEVEN/HRDPST), BUKAN Panel Casting: tidak ada persetujuan admin IT di
+     * jalur ini, karyawan yang login sendiri yang memilih salah satu akunnya
+     * sendiri.
+     *
+     * Dicocokkan pada `userpk` — sama seperti resolveImpersonationTarget(),
+     * karena auth-sso-api sekarang menandatangani `sub` sebagai primary key
+     * ASLI baris tbluser yang dipilih untuk KEDUA jenis tiket (casting maupun
+     * pilihan sendiri), bukan cuma untuk casting. Bedanya dari
+     * resolveImpersonationTarget(): metode itu boleh percaya `sub` begitu
+     * saja karena tiketnya hanya terbit setelah persetujuan OTP admin IT.
+     * Jalur ini TIDAK punya persetujuan itu — dan lebih riskan lagi, kalau
+     * `sub`-nya kebetulan berasal dari format tiket LAMA (id internal ssoapi
+     * sendiri, bukan userpk), angka itu bisa kebetulan cocok ke baris
+     * `tbluser` yang sama sekali tidak terkait. Karena itu di sini WAJIB
+     * dicocokkan ulang ke `karyawanid` baris itu terhadap klaim `karyawanId`
+     * pada tiket yang sama — baris yang ketemu tapi karyawanid-nya tidak
+     * cocok berarti `sub` itu bukan userpk yang dimaksud, ditolak.
+     *
+     * @param array<string, mixed> $claims
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveSelectedAccount(array $claims, int $userpk): ?array
+    {
+        $karyawanIdKlaim = $claims['karyawanId'] ?? null;
+
+        if (! is_int($karyawanIdKlaim) && ! (is_string($karyawanIdKlaim) && ctype_digit($karyawanIdKlaim))) {
+            log_message('error', 'SSO akun-pilihan: tiket untuk userpk=' . $userpk . ' tidak membawa klaim karyawanId yang sah — tidak bisa memverifikasi kecocokan akun.');
+
+            return null;
+        }
+
+        $karyawanId = (int) $karyawanIdKlaim;
+
+        $rows = \Config\Database::connect()
+            ->table('tbluser')
+            ->where('userpk', $userpk)
+            ->limit(2)
+            ->get()
+            ->getResultArray();
+
+        if (count($rows) !== 1) {
+            return null;
+        }
+
+        $row = $rows[0];
+
+        if ((int) ($row['karyawanid'] ?? 0) !== $karyawanId) {
+            log_message('error', sprintf(
+                'SSO akun-pilihan: userpk=%d ditemukan tapi tbluser.karyawanid (%s) tidak cocok dengan klaim karyawanId pada tiket (%s) — ditolak. Kemungkinan tiket format lama (sub = id internal ssoapi, bukan userpk).',
+                $userpk,
+                (string) ($row['karyawanid'] ?? '-'),
+                (string) $karyawanId
+            ));
+
+            return null;
+        }
+
+        return $row;
     }
 
     /**
