@@ -430,6 +430,12 @@ $routes->match(['GET', 'POST'], 'piutangemkl/operation/(:any)', 'Piutangemkl::op
 $routes->match(['GET', 'POST'], 'Piutangemkl/getlastupdate/(:any)', 'Piutangemkl::getlastupdate/$1');
 $routes->match(['GET', 'POST'], 'piutangemkl/getlastupdate/(:any)', 'Piutangemkl::getlastupdate/$1');
 
+// Routes for App\Controllers\Piutangoverdue (Laporan Piutang Overdue - stored procedure)
+$routes->match(['GET', 'POST'], 'piutangoverdue', 'Piutangoverdue::index');
+$routes->match(['GET', 'POST'], 'piutangoverdue/index', 'Piutangoverdue::index');
+$routes->match(['GET', 'POST'], 'piutangoverdue/grid', 'Piutangoverdue::grid');
+$routes->get('piutangoverdue/options', 'Piutangoverdue::options');
+
 // Routes for App\Controllers\Profil (Profil)
 $routes->match(['GET', 'POST'], 'Profil', 'Profil::index');
 $routes->post('profil/deleteWebauthnDevice', 'Profil::deleteWebauthnDevice');

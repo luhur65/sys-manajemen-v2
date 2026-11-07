@@ -60,6 +60,8 @@ class MyAuth {
 			// lookup & combo
 			,'carishippersama','listmarketingcabang','combotradoluar','combomarketing','datacabang','datamarketing'
 			,'getbyid','getroles','getacos','lookupaco','lookupkaryawan','get_marketing','getlastupdate','detail','reseq','userroles'
+			// isi dropdown filter (mis. piutangoverdue/options)
+			,'options'
 			// varian per cabang
 			,'pesanmdn','pesansby','pesanmks','pesanjkt','pesantnl','pesanbtg','mks'
 		],
