@@ -30,7 +30,7 @@ class MmenutopModel extends Model
 			}else if(strtolower($row->menuname)=="report design" and strtolower(strtoupper(session()->get(SESSION_NAME.'username')))!='admin'){
 				continue;
 			}else{
-				$check =hasPermission($row->class,$row->method);
+				$check = hasMenuAccess($row->class,$row->method);
 				if($check==true || $row->class==""){
 					if($row->class=="" && count($this->get_data($row->menuid))==0 && $row->menuparent!=0){
 

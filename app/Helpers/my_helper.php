@@ -200,6 +200,48 @@ if(!function_exists('hasPermission')){
     }
 }
 
+/**
+ * Apakah class ACO milik sebuah menu punya controller yang benar-benar ada?
+ *
+ * tblacos / tblmenu masih memuat modul warisan CI3 yang belum dimigrasi
+ * (mis. Ritasitrado, Statuskendaraan) sehingga linknya 404. Daftar controller
+ * dibaca dari app/Controllers dan dicocokkan tanpa membedakan huruf besar/kecil,
+ * karena tblacos menyimpan nama class dengan huruf bebas sementara file
+ * controller case-sensitive di Linux. Hanya mempengaruhi tampilan menu; ACL
+ * dan routing tidak diubah.
+ */
+if(!function_exists('controllerAvailable')){
+    function controllerAvailable($class){
+        static $controllers = null;
+        if ($controllers === null) {
+            $controllers = [];
+            foreach (glob(APPPATH . 'Controllers/*.php') ?: [] as $file) {
+                $controllers[strtolower(basename($file, '.php'))] = true;
+            }
+        }
+
+        $class = strtolower((string) $class);
+        // Menu tanpa class (induk/link bebas) tidak diperiksa.
+        if ($class === '') {
+            return true;
+        }
+        // Route-nya dialihkan ke controller lain (lihat Routes.php).
+        $alias = ['logout' => 'login'];
+        $class = $alias[$class] ?? $class;
+
+        return isset($controllers[$class]);
+    }
+}
+
+/**
+ * hasPermission() + pastikan modulnya ada. Dipakai untuk menampilkan menu/tombol.
+ */
+if(!function_exists('hasMenuAccess')){
+    function hasMenuAccess($class,$method){
+        return controllerAvailable($class) && hasPermission($class,$method);
+    }
+}
+
 function getTableWhere($table,$where,$isOne=0){
     $db = \Config\Database::connect();
     $builder = $db->table($table);

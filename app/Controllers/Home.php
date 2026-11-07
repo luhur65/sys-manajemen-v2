@@ -36,7 +36,7 @@ class Home extends BaseController
         // Define buttons based on permissions
         $buttons = [];
         
-        if (hasPermission('truckingtradoluar', 'index')) {
+        if (hasMenuAccess('truckingtradoluar', 'index')) {
             $buttons[] = [
                 'title' => 'Pengunaan Trado Luar',
                 'link'  => base_url('truckingtradoluar'),
@@ -45,7 +45,7 @@ class Home extends BaseController
             ];
         }
         
-        if (hasPermission('truckingtradodalam', 'index')) {
+        if (hasMenuAccess('truckingtradodalam', 'index')) {
             $buttons[] = [
                 'title' => 'Pengunaan Trado Dalam',
                 'link'  => base_url('truckingtradodalam'),
@@ -54,7 +54,7 @@ class Home extends BaseController
             ];
         }
         
-        if (hasPermission('truckingemkllain', 'index')) {
+        if (hasMenuAccess('truckingemkllain', 'index')) {
             $buttons[] = [
                 'title' => 'Pengunaan EMKL Lain',
                 'link'  => base_url('truckingemkllain'),
@@ -63,7 +63,7 @@ class Home extends BaseController
             ];
         }
         
-        if (hasPermission('truckinghargatradoluarlebihmahal', 'index')) {
+        if (hasMenuAccess('truckinghargatradoluarlebihmahal', 'index')) {
             $buttons[] = [
                 'title' => 'Laporan Harga Trado Luar Yang Lebih Mahal',
                 'link'  => base_url('truckinghargatradoluarlebihmahal'),
@@ -72,7 +72,7 @@ class Home extends BaseController
             ];
         }
         
-        if (hasPermission('ritasitrado', 'index')) {
+        if (hasMenuAccess('ritasitrado', 'index')) {
             $buttons[] = [
                 'title' => 'Laporan Ritasi Trado',
                 'link'  => base_url('ritasitrado'),
@@ -81,7 +81,7 @@ class Home extends BaseController
             ];
         }
         
-        if (hasPermission('statuskendaraan', 'index')) {
+        if (hasMenuAccess('statuskendaraan', 'index')) {
             $buttons[] = [
                 'title' => 'Laporan Status Kendaraan',
                 'link'  => base_url('statuskendaraan'),
@@ -90,7 +90,7 @@ class Home extends BaseController
             ];
         }
         
-        if (hasPermission('rekapmarketing', 'cabang')) {
+        if (hasMenuAccess('rekapmarketing', 'cabang')) {
             $buttons[] = [
                 'title' => 'Laporan Rekap Marketing',
                 'link'  => base_url('rekapmarketing/cabang'),
@@ -99,7 +99,7 @@ class Home extends BaseController
             ];
         }
 
-        if (hasPermission('omset', 'index')) {
+        if (hasMenuAccess('omset', 'index')) {
             $buttons[] = [
                 'title' => 'Laporan Omset Emkl',
                 'link'  => base_url('omset'),
@@ -108,7 +108,7 @@ class Home extends BaseController
             ];
         }
 
-        if (hasPermission('piutangemkl', 'index')) {
+        if (hasMenuAccess('piutangemkl', 'index')) {
             $buttons[] = [
                 'title' => 'Laporan Piutang Emkl',
                 'link'  => base_url('piutangemkl'),
@@ -116,7 +116,16 @@ class Home extends BaseController
                 'color' => 'bg-olive'
             ];
         }
-        
+
+        if (hasMenuAccess('piutangoverdue', 'index')) {
+            $buttons[] = [
+                'title' => 'Laporan Piutang Overdue',
+                'link'  => base_url('piutangoverdue'),
+                'icon'  => 'fas fa-exclamation-triangle',
+                'color' => 'bg-maroon'
+            ];
+        }
+
         $data['buttons'] = $buttons;
         
         return $this->render('home', $data);
