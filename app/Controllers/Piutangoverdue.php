@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Export\ExcelExporter;
+use App\Libraries\Export\NullExportNotifier;
 use App\Models\MpiutangoverdueModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -23,6 +25,21 @@ class Piutangoverdue extends BaseController
     ];
     private const NUMERIC = ['FNominal', 'FTop', 'FReal', 'FSelisih'];
     private const DATES   = ['FTglInvoice', 'FTglTT'];
+
+    /** Kolom Excel = kolom grid, urutan & label sama. */
+    private const EXCEL_COLUMNS = [
+        ['key' => 'FCabang',     'label' => 'Cabang',           'width' => 14],
+        ['key' => 'FShipper',    'label' => 'Nama Shipper',     'width' => 40],
+        ['key' => 'FMarketing',  'label' => 'Marketing',        'width' => 28],
+        ['key' => 'FTglInvoice', 'label' => 'Tgl Invoice',      'type' => 'date', 'width' => 14],
+        ['key' => 'FTglTT',      'label' => 'Tgl Tanda Terima', 'type' => 'date', 'width' => 16],
+        ['key' => 'FNInvoice',   'label' => 'No Invoice',       'width' => 42],
+        ['key' => 'FNominal',    'label' => 'Nominal Invoice',  'type' => 'number', 'width' => 18],
+        ['key' => 'FTop',        'label' => 'TOP (Hari)',       'type' => 'integer', 'width' => 11],
+        ['key' => 'FReal',       'label' => 'Real (Hari)',      'type' => 'integer', 'width' => 11],
+        ['key' => 'FSelisih',    'label' => 'Selisih (Hari)',   'type' => 'integer', 'width' => 13],
+        ['key' => 'FKeterangan', 'label' => 'Keterangan',       'width' => 36],
+    ];
 
     /** Dipakai bila usp_getcabangoverdue gagal (mis. DB crm tidak ada di lokal). */
     private const CABANG_FALLBACK = ['MEDAN', 'JAKARTA', 'SURABAYA', 'MAKASSAR', 'SEMARANG', 'BITUNG'];
@@ -91,34 +108,13 @@ class Piutangoverdue extends BaseController
         $page  = max(1, (int) ($this->request->getPost('page') ?: 1));
         $limit = (int) ($this->request->getPost('totalrows') ?: $this->request->getPost('rows') ?: 50);
         $limit = max(1, $limit);
-        $sidx  = (string) $this->request->getPost('sidx'); // kosong = urutan asli SP
-        $sord  = strtolower((string) $this->request->getPost('sord')) === 'asc' ? 'asc' : 'desc';
-
-        $jumlahHari = (int) ($this->request->getPost('jumlahhari') ?? 14);
 
         try {
-            $rows = $this->model->getList(
-                $this->param('cabang', 'post'),
-                $this->param('bulan', 'post'),
-                $this->param('marketing', 'post'),
-                $this->param('shipper', 'post'),
-                $jumlahHari
-            );
+            $rows = $this->loadRows('post');
         } catch (\Throwable $e) {
             log_message('error', 'usp_getlistshipperoverdue: ' . $e->getMessage());
             return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal memuat data laporan']);
         }
-
-        // Format tanggal untuk tampilan (juga dipakai filter toolbar).
-        foreach ($rows as &$r) {
-            foreach (self::DATES as $f) {
-                $r[$f] = $r[$f] ? date('d-M-Y', strtotime($r[$f])) : '';
-            }
-        }
-        unset($r);
-
-        $rows = $this->applyFilters($rows, $this->request->getPost('filters'));
-        $rows = $this->applySort($rows, $sidx, $sord);
 
         $count       = count($rows);
         $total_pages = $count > 0 ? (int) ceil($count / $limit) : 0;
@@ -141,6 +137,89 @@ class Piutangoverdue extends BaseController
         ];
 
         return $this->response->setJSON($responce);
+    }
+
+    /**
+     * Export Excel: isi sama dengan grid (filter atas, filter toolbar dan
+     * sort yang sedang aktif), tanpa paging.
+     *
+     * Mode sinkron: file dibuat per chunk lalu langsung di-download.
+     * Untuk mode background + socket, lihat Config\Export dan
+     * App\Libraries\Export\SocketExportNotifier.
+     */
+    public function excel()
+    {
+        try {
+            $rows = $this->loadRows('get');
+        } catch (\Throwable $e) {
+            log_message('error', 'Piutangoverdue::excel: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setBody('Gagal memuat data laporan');
+        }
+
+        $cabang = $this->param('cabang');
+        $bulan  = $this->param('bulan');
+
+        $exporter = new ExcelExporter(self::EXCEL_COLUMNS, new NullExportNotifier());
+        $exporter->setTitle('LAPORAN PIUTANG OVERDUE', [
+            'Cabang'      => $cabang,
+            'Bulan'       => $bulan,
+            'Marketing'   => $this->param('marketing'),
+            'Shipper'     => $this->param('shipper'),
+            'Jumlah Hari' => (string) $this->jumlahHari('get'),
+            'Dicetak'     => date('d-m-Y H:i:s'),
+        ]);
+
+        $fileName = 'Laporan_Piutang_Overdue_' . $cabang . '_' . $bulan . '_' . date('Ymd_His');
+
+        try {
+            $path = $exporter->export(
+                ExcelExporter::chunk($rows),
+                count($rows),
+                $fileName,
+                ['FNInvoice' => 'GRAND TOTAL', 'FNominal' => array_sum(array_column($rows, 'FNominal'))]
+            );
+        } catch (\Throwable $e) {
+            log_message('error', 'Piutangoverdue::excel write: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setBody('Gagal membuat file Excel');
+        }
+
+        return ExcelExporter::download($path, preg_replace('/[^A-Za-z0-9_\-]+/', '_', $fileName) . '.xlsx');
+    }
+
+    /**
+     * Ambil data dari SP lalu terapkan filter toolbar & sort.
+     * Dipakai bersama oleh grid() (POST) dan excel() (GET) agar isinya sama.
+     */
+    private function loadRows(string $method): array
+    {
+        $in = fn(string $k) => $method === 'post' ? $this->request->getPost($k) : $this->request->getGet($k);
+
+        $rows = $this->model->getList(
+            $this->param('cabang', $method),
+            $this->param('bulan', $method),
+            $this->param('marketing', $method),
+            $this->param('shipper', $method),
+            $this->jumlahHari($method)
+        );
+
+        // Format tanggal untuk tampilan (juga dipakai filter toolbar).
+        foreach ($rows as &$r) {
+            foreach (self::DATES as $f) {
+                $r[$f] = $r[$f] ? date('d-M-Y', strtotime($r[$f])) : '';
+            }
+        }
+        unset($r);
+
+        $sord = strtolower((string) $in('sord')) === 'asc' ? 'asc' : 'desc';
+        $rows = $this->applyFilters($rows, $in('filters'));
+
+        return $this->applySort($rows, (string) $in('sidx'), $sord); // sidx kosong = urutan asli SP
+    }
+
+    private function jumlahHari(string $method): int
+    {
+        $val = $method === 'post' ? $this->request->getPost('jumlahhari') : $this->request->getGet('jumlahhari');
+        return (int) ($val ?? 14);
     }
 
     /** Ambil parameter filter, default 'ALL'. */

@@ -32,7 +32,7 @@
                 <div class="col-lg-2 col-md-2 col-sm-6">
                     <div class="form-group filter-input-group">
                         <label class="filter-label text-nowrap">Jml Hari</label>
-                        <input type="number" id="jumlahHariInput" class="form-control" value="14" min="0" step="1">
+                        <input type="number" id="jumlahHariInput" class="form-control text-right" value="14" min="0" step="1" style="max-width: 100px;">
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4 col-sm-12 d-flex align-items-end">
@@ -55,6 +55,11 @@
     <div class="card card-default">
         <div class="card-header">
             <h3 class="card-title" id="gridTitle">DATA PIUTANG OVERDUE</h3>
+            <div class="card-tools">
+                <button type="button" id="btnExcel" class="btn btn-success btn-sm text-nowrap">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+            </div>
         </div>
         <div class="card-body p-0">
             <table id="jqGrid"></table>
@@ -311,6 +316,52 @@
         });
 
         $('#btnFilter').on('click', reloadGrid);
+
+        // ---------- Export Excel ----------
+        // Memakai parameter yang SEDANG dipakai grid (filter atas yang sudah
+        // di-Filter, filter toolbar, dan sort), jadi isi Excel = isi grid.
+        $('#btnExcel').on('click', async function() {
+            const $btn = $(this);
+            const pd = $grid.jqGrid('getGridParam', 'postData') || {};
+            const params = new URLSearchParams({
+                cabang: pd.cabang || 'ALL',
+                bulan: pd.bulan || 'ALL',
+                marketing: pd.marketing || 'ALL',
+                shipper: pd.shipper || 'ALL',
+                jumlahhari: pd.jumlahhari ?? 14,
+                filters: pd.filters || '',
+                sidx: pd.sidx || '',
+                sord: pd.sord || ''
+            });
+
+            $btn.prop('disabled', true).find('i').attr('class', 'fas fa-spinner fa-spin');
+            try {
+                const res = await fetch(`<?= base_url('piutangoverdue/excel') ?>?` + params.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                const type = res.headers.get('Content-Type') || '';
+                if (!res.ok || type.indexOf('spreadsheetml') === -1) {
+                    let msg = 'Gagal export Excel';
+                    try { const j = await res.clone().json(); msg = j.message || j.error || msg; } catch (e) { msg = (await res.text()) || msg; }
+                    throw new Error(msg);
+                }
+                const disp = res.headers.get('Content-Disposition') || '';
+                const m = /filename="?([^";]+)"?/i.exec(disp);
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = m ? m[1] : 'Laporan_Piutang_Overdue.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            } catch (err) {
+                if (typeof Swal !== 'undefined') Swal.fire('Error', err.message, 'error'); else alert(err.message);
+            } finally {
+                $btn.prop('disabled', false).find('i').attr('class', 'fas fa-file-excel');
+            }
+        });
         $('#jumlahHariInput').on('keydown', function(e) { if (e.which === 13) reloadGrid(); });
 
         $('#btnReset').on('click', function() {

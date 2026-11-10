@@ -435,6 +435,7 @@ $routes->match(['GET', 'POST'], 'piutangoverdue', 'Piutangoverdue::index');
 $routes->match(['GET', 'POST'], 'piutangoverdue/index', 'Piutangoverdue::index');
 $routes->match(['GET', 'POST'], 'piutangoverdue/grid', 'Piutangoverdue::grid');
 $routes->get('piutangoverdue/options', 'Piutangoverdue::options');
+$routes->get('piutangoverdue/excel', 'Piutangoverdue::excel');
 
 // Routes for App\Controllers\Profil (Profil)
 $routes->match(['GET', 'POST'], 'Profil', 'Profil::index');
