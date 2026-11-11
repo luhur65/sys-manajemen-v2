@@ -148,6 +148,8 @@
     <script src="<?= asset('libraries/tas-lib/js/ColumnSettingsManager.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/GridAutoInjector.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/GridAutoHeight.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/GridLiveResize.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/GridHeaderFit.js') ?>"></script>
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
     <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>

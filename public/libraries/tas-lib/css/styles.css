@@ -88,6 +88,21 @@ body {
 .ui-jqgrid-labels th{
 	padding:0.6rem!important;
 }
+/* HEADER WRAP: label kolom turun baris per kata seperti Wrap Text di Excel.
+   Lebar minimum tiap kolom dihitung GridHeaderFit.js supaya muat dua baris. */
+.ui-jqgrid .ui-jqgrid-htable tr.ui-jqgrid-labels th.ui-th-column {
+	white-space: normal;
+	height: auto;
+	vertical-align: middle;
+}
+.ui-jqgrid .ui-jqgrid-htable tr.ui-jqgrid-labels th.ui-th-column > div.ui-th-div {
+	white-space: normal;
+	height: auto;
+	line-height: 1.25;
+	text-align: center;
+	justify-content: center; /* div header ber-display flex */
+	align-items: center;
+}
 /* END PADDING GRID */
 
 input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
@@ -101,6 +116,11 @@ input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
 	margin-top: 10px;
 	font-family: dejavu;
 	/* font-size: 0.875rem; */
+}
+
+/* Warna panah sort di header kolom */
+.ui-jqgrid th.ui-th-column .ui-grid-ico-sort {
+	color: #007bff;
 }
 
 .ui-jqgrid .ui-icon-asc {

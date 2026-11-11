@@ -124,8 +124,8 @@ if (typeof $.jgrid !== 'undefined' && $.jgrid.styleUI) {
     // }
 }
 
-// Inject CSS to hide disabled sort icons and align active arrows perfectly inline
-$('<style>th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; } th.ui-th-column .s-ico { display: inline-block !important; } th.ui-th-column .ui-grid-ico-sort { position: static !important; margin-top: 0 !important; margin-left: 6px !important; font-size: 0.9em !important; transform: translateY(1px) !important; }</style>').appendTo('head');
+// Inject CSS to hide disabled sort icons and show the active arrow IN FRONT of the header text
+$('<style>th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; } th.ui-th-column .ui-jqgrid-sortable { display: flex !important; align-items: center; } th.ui-th-column .s-ico { display: inline-block !important; order: -1; flex: 0 0 auto; } th.ui-th-column .ui-grid-ico-sort { position: static !important; margin-top: 0 !important; margin-left: 0 !important; margin-right: 6px !important; font-size: 0.9em !important; transform: translateY(1px) !important; }</style>').appendTo('head');
 
 $(document).ready(function () {
     // setFormats();
