@@ -46,7 +46,7 @@ class Omsetrekapmarketingbtg extends BaseController
         $data['last_update'] = '';
         $tgllast = $this->momsetrekapmarketingbtgModel->get_tglupdate();
         if(!empty($tgllast)) {
-            $data['last_update'] = date("d-m-Y h:i:s", strtotime($tgllast[0]->FlastUpdate));
+            $data['last_update'] = date("d-m-Y H:i:s", strtotime($tgllast[0]->FlastUpdate));
         }
         
         return $this->render('omsetrekapmarketingbtg/index', $data);
@@ -123,7 +123,7 @@ class Omsetrekapmarketingbtg extends BaseController
         $grandTotal = $this->momsetrekapmarketingbtgModel->getGrandTotal($where);
         $tglUpdateData = $this->momsetrekapmarketingbtgModel->get_tglupdate();
         $lastUpdate = (!empty($tglUpdateData) && !empty($tglUpdateData[0]->FlastUpdate)) 
-            ? date("d-m-Y h:i:s", strtotime($tglUpdateData[0]->FlastUpdate)) : '';
+            ? date("d-m-Y H:i:s", strtotime($tglUpdateData[0]->FlastUpdate)) : '';
 
         $responce = new \stdClass();
         $responce->page = $page;

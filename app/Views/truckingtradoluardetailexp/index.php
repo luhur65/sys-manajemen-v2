@@ -385,40 +385,9 @@
 
             $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             
-            // Generic explicit reset for footerData and custom footers
-            try {
-                var colModel = $('#jqGrid').jqGrid('getGridParam', 'colModel');
-                var footerObj = {};
-                if (colModel) {
-                    colModel.forEach(function(col) {
-                        if (col.name !== 'rn' && col.name !== 'cb') {
-                            if (col.formatter === 'number' || col.formatter === 'integer' || col.align === 'right') {
-                                footerObj[col.name] = 0;
-                            } else if (col.name.toLowerCase().includes('trans') || col.name.toLowerCase().includes('jenis') || col.name.toLowerCase().includes('shipper')) {
-                                footerObj[col.name] = "Total";
-                            } else {
-                                footerObj[col.name] = "";
-                            }
-                        }
-                    });
-                    $('#jqGrid').jqGrid("footerData", "set", footerObj);
-                }
-                var gridObj = $('#jqGrid')[0].grid;
-                if (gridObj && gridObj.sDiv) {
-                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
-                        $(this).find('td').each(function() {
-                            var align = $(this).css('text-align');
-                            var text = $(this).text().trim();
-                            if (align === 'right') {
-                                $(this).text(text === '' ? '' : 0);
-                            } else if (/^[\d.,-]+$/.test(text)) {
-                                $(this).text(0);
-                            }
-                        });
-                    });
-                }
-                $('#lastUpdateHandler, #jqGridInfoHandler').html('');
-            } catch(e) {}
+            // Footer, Last Update dan info digambar ulang oleh loadComplete setelah data dimuat.
+            // Di sini cukup rapikan tombol silang filter dan kembalikan urutan sort awal.
+            if (typeof resetLazyGridView === 'function') resetLazyGridView('#jqGrid');
             $('#btnFilter').trigger('click');
         });
 

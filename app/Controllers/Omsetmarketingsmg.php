@@ -47,7 +47,7 @@ class Omsetmarketingsmg extends BaseController
         $data['last_update'] = '';
         $tgllast = $this->mOmsetmarketingsmgModel->get_tglupdate();
         if(!empty($tgllast)) {
-            $data['last_update'] = date("d-m-Y h:i:s", strtotime($tgllast[0]->FlastUpdate));
+            $data['last_update'] = date("d-m-Y H:i:s", strtotime($tgllast[0]->FlastUpdate));
         }
         
         return $this->render('Omsetmarketingsmg/index', $data);
@@ -95,7 +95,7 @@ class Omsetmarketingsmg extends BaseController
         $grandTotal = $this->mOmsetmarketingsmgModel->getGrandTotal($where);
         $tglUpdateData = $this->mOmsetmarketingsmgModel->get_tglupdate();
         $lastUpdate = (!empty($tglUpdateData) && !empty($tglUpdateData[0]->FlastUpdate)) 
-            ? date("d-m-Y h:i:s", strtotime($tglUpdateData[0]->FlastUpdate)) : '';
+            ? date("d-m-Y H:i:s", strtotime($tglUpdateData[0]->FlastUpdate)) : '';
 
         $responce = new \stdClass();
         $responce->page = $page;

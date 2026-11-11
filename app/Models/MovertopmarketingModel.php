@@ -110,6 +110,7 @@ class MovertopmarketingModel extends Model
 	}
 
     public function get_marketing($where){
+        if ($where == 'SMG') $where = 'SMR';
 		$sql = $this->dbtruck->query("SELECT DISTINCT FNMarketing FROM LapEMKL_OverDue WHERE FKCABANG = ?", [$where]);
 		$hasil = '<option value="">ALL</option>';
 		foreach ($sql->getResult() as $key) {
@@ -118,6 +119,7 @@ class MovertopmarketingModel extends Model
 		return $hasil;
 	}
     public function get_tglupdate($cabangid) {
+        if ($cabangid == 'SMG') $cabangid = 'SMR';
 		$sql = $this->dbtruck->query("SELECT max(FlastUpdate) as FlastUpdate FROM LapEMKL_OverDue WHERE FKCABANG = ?", [$cabangid]);
 
 		return $sql->getResult();

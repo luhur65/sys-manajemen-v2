@@ -106,7 +106,6 @@
                 if (data && (data.records === 0 || data.records === "0")) {
                     data.userdata = {};
                     try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
-                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
                 }
                 // Force clear footer if no records found
                 if (data && (data.records === 0 || data.records === "0")) {
@@ -116,7 +115,6 @@
                             if (_sDiv) {
                                 $(_sDiv).find('tr.footrow td, tr[class*=\"myfootrow\"] td').html('&nbsp;');
                             }
-                            $('#lastUpdateHandler, #jqGridInfoHandler').html('');
                             $(this).jqGrid('setGridParam', { userData: null });
                         } catch(e) {}
                     }.bind(this), 50);

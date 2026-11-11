@@ -269,16 +269,79 @@ function processLoadingQueue(gridId, api, postData, rowsCount) {
     }
 }
 
+/**
+ * Dipanggil tombol Reset di tiap view, setelah clearToolbar().
+ * - Menyembunyikan tombol silang filter yang inputnya sudah kosong.
+ * - Mengembalikan urutan sort ke urutan saat grid pertama kali dimuat,
+ *   beserta panah di header.
+ * Footer tidak disentuh: loadComplete menggambarnya ulang setelah data dimuat.
+ */
+function resetLazyGridView(gridSelector) {
+    var grid = $(gridSelector);
+    if (!grid.length || !grid[0].grid) return;
+
+    var el = grid[0];
+    var view = grid.closest('.ui-jqgrid-view');
+    var disabledClass = 'ui-state-disabled ui-disabled';
+
+    view.find('.ui-search-toolbar .clearsearchclass').attr('style', 'display: none !important');
+
+    var state = getGridState(grid);
+    if (state.defaultSortName === undefined) return;
+
+    var colModel = el.p.colModel || [];
+    var sortCol = -1;
+    for (var i = 0; i < colModel.length; i++) {
+        if (state.defaultSortName !== '' && (colModel[i].name === state.defaultSortName || colModel[i].index === state.defaultSortName)) {
+            sortCol = i;
+            break;
+        }
+    }
+
+    // Matikan panah di semua kolom, lalu nyalakan hanya di kolom urutan awal.
+    for (var h = 0; h < el.grid.headers.length; h++) {
+        var th = el.grid.headers[h].el;
+        $('span.s-ico', th).hide();
+        $('span.ui-icon-asc, span.ui-icon-desc', th).addClass(disabledClass);
+    }
+    if (sortCol >= 0) {
+        var sortTh = el.grid.headers[sortCol].el;
+        $('span.s-ico', sortTh).show();
+        $('span.ui-icon-' + state.defaultSortOrd, sortTh).removeClass(disabledClass);
+    }
+
+    el.p.sortname = state.defaultSortName;
+    el.p.sortorder = state.defaultSortOrd;
+    el.p.lastsort = sortCol >= 0 ? sortCol : 0;
+    if (el.p.postData) {
+        el.p.postData.sidx = state.defaultSortName;
+        el.p.postData.sord = state.defaultSortOrd;
+    }
+}
+
 function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 'down', proses = 'page', callback, onlyCache = false) {
     var grid = $(gridId);
     var state = getGridState(grid);
     rowsPerPage = rowsCount;
+
+    // Urutan saat muatan pertama dicatat sebagai urutan awal untuk tombol Reset.
+    if (state.defaultSortName === undefined) {
+        state.defaultSortName = grid.jqGrid('getGridParam', 'sortname') || '';
+        state.defaultSortOrd = grid.jqGrid('getGridParam', 'sortorder') || 'asc';
+    }
 
     if (proses !== 'reload' && proses !== 'jump' && state.minPageLoaded > 0 && hasFilterChanged(grid)) {
         resetGridState(grid);
         pageNumber = 1;
         direction = 'down';
         proses = 'reload';
+    }
+
+    // Tiap muatan baru (reload/jump) menaikkan nomor generasi. Respons dari generasi
+    // lama (request lambat yang baru tiba) diabaikan supaya tidak menimpa data terbaru.
+    if (proses === 'reload' || proses === 'jump') {
+        state.loadSeq = (state.loadSeq || 0) + 1;
+        if (state.lsPrefetchingPages) state.lsPrefetchingPages.clear();
     }
 
     if (proses === 'reload') {
@@ -340,6 +403,7 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
             $('.loaderGrid').removeClass('d-none');
         }
 
+        var requestSeq = state.loadSeq || 0;
         var currentFilters = grid.jqGrid('getGridParam', 'postData').filters;
         var _isSearch = grid.jqGrid('getGridParam', 'postData')._search;
         if (currentFilters) {
@@ -363,6 +427,7 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
             type: 'POST',
             data: fullPostData,
             success: function (res) {
+                if (requestSeq !== (state.loadSeq || 0)) return; // respons basi
                 if (!onlyCache) $('.loaderGrid').addClass('d-none');
                 state.totalRecord = res.records;
                 state.totalPages = res.total;
@@ -370,6 +435,16 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
                 if (!res.rows || !res.rows.length) {
                     if (!onlyCache) state.loading = false;
                     if (state.lsPrefetchingPages) state.lsPrefetchingPages.delete(pageNumber);
+
+                    // Hasil kosong pada muatan baru (reload/jump): beri tahu grid supaya
+                    // footer, userdata dan info tidak menampilkan angka dari data sebelumnya.
+                    if (!onlyCache && proses !== 'page') {
+                        grid.jqGrid('setGridParam', { userData: res.userdata || {}, records: 0 });
+                        var emptyLoadComplete = grid.jqGrid('getGridParam', 'loadComplete');
+                        if (typeof emptyLoadComplete === 'function') emptyLoadComplete.call(grid[0], res);
+                        var emptyGridId = grid.attr('id') || grid.jqGrid('getGridParam', 'id');
+                        $('#' + emptyGridId + 'InfoHandler').text('View 0 - 0 of 0');
+                    }
                     return;
                 }
 
@@ -407,11 +482,13 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
                 if (callback) callback(res);
             },
             error: function (xhr, textStatus, errorThrown) {
+                if (requestSeq !== (state.loadSeq || 0)) return;
                 if (!onlyCache) $('.loaderGrid').addClass('d-none');
                 console.error('Grid Load Error:', textStatus, errorThrown);
                 if (state.lsPrefetchingPages) state.lsPrefetchingPages.delete(pageNumber);
             },
             complete: function () {
+                if (requestSeq !== (state.loadSeq || 0)) return;
                 if (!onlyCache) {
                     state.loading = false;
                     var freshPostData = grid.jqGrid('getGridParam', 'postData');

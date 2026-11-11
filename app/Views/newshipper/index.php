@@ -184,7 +184,6 @@
                 if (res && (res.records === 0 || res.records === "0")) {
                     res.userdata = {};
                     try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
-                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
                 }
                 
                 if (typeof setupLazyLoadScrollHandler === 'function') {

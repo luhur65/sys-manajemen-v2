@@ -307,7 +307,11 @@
                 var newSelectedTh = this.grid.headers[iCol].el;
                 $("span.s-ico", previousSelectedTh).hide();
                 $("span.s-ico", newSelectedTh).show();
-                var disabledClass = "ui-state-disabled";
+                // jqGrid 5.9 memakai dua class untuk panah nonaktif; keduanya harus diatur.
+                var disabledClass = "ui-state-disabled ui-disabled";
+                // Panah kolom sebelumnya dimatikan lewat class; .hide() saja tidak cukup
+                // karena tampilnya ikon diatur oleh CSS tema.
+                $("span.ui-icon-asc, span.ui-icon-desc", previousSelectedTh).addClass(disabledClass);
                 $("span.ui-icon-asc, span.ui-icon-desc", newSelectedTh).addClass(disabledClass);
                 $("span.ui-icon-" + sortorder, newSelectedTh).removeClass(disabledClass);
                 this.p.lastsort = iCol;
@@ -318,17 +322,11 @@
                 return 'stop';
             },
             loadComplete: function(res) {
-                // Gracefully clear footer by feeding an empty userdata object
-                // This preserves custom footer text labels but zeroes out the totals
-                if (res && (res.records === 0 || res.records === "0")) {
-                    res.userdata = {};
-                    try { $(this).jqGrid('setGridParam', { userData: null }); } catch(e) {}
-                    $('#lastUpdateHandler, #jqGridInfoHandler').text('');
-                }
-                
-                // Support both standard load and lazy load response
+                // Support both standard load and lazy load response.
+                // Catatan: loadComplete juga terpanggil dengan data lokal kosong tiap kali
+                // grid dikosongkan (clearGridData), jadi userdata tidak boleh dibuang di sini.
                 var $gridObj = $(this);
-                var userData = res.userdata || $(this).jqGrid('getGridParam', 'userData');
+                var userData = (res && res.userdata) || $(this).jqGrid('getGridParam', 'userData');
 
                 if (userData && userData.last_update) {
                     $('#lastUpdateHandler').text('Last Update : ' + userData.last_update);
@@ -392,8 +390,8 @@
 
                 if (userData) {
                     $secondFooter.find("td[aria-describedby$='_FNShipper']").text("GRAND TOTAL :").css('text-align', 'right');
-                    $secondFooter.find("td[aria-describedby$='_FNominal']").text(formatMoney(userData.GrandTotalNominal)).css('text-align', 'right');
-                    $secondFooter.find("td[aria-describedby$='_FSisa']").text(formatMoney(userData.GrandTotalSisa)).css('text-align', 'right');
+                    $secondFooter.find("td[aria-describedby$='_FNominal']").text(formatMoney(Number(userData.GrandTotalNominal) || 0)).css('text-align', 'right');
+                    $secondFooter.find("td[aria-describedby$='_FSisa']").text(formatMoney(Number(userData.GrandTotalSisa) || 0)).css('text-align', 'right');
                 }
 
                 // Initialize lazy loading scroll handler
@@ -479,41 +477,32 @@
             $('input[type="text"]:not(.hasDatepicker):not(.monthpicker):not(.yearpicker):not(#bulan):not(#blnInput):not(#thnInput)').val('');
             
             try { $('#jqGrid')[0].clearToolbar(false); } catch(e) {}
-            
-            // Generic explicit reset for footerData and custom footers
+
+            // Input filter toolbar sudah kosong, jadi tombol silangnya ikut disembunyikan.
+            $('#jqGrid').closest('.ui-jqgrid-view').find('.ui-search-toolbar .clearsearchclass')
+                .attr('style', 'display: none !important');
+
+            // Kembalikan urutan ke default (OverDue terbesar dulu) beserta panah di header.
             try {
-                var colModel = $('#jqGrid').jqGrid('getGridParam', 'colModel');
-                var footerObj = {};
-                if (colModel) {
-                    colModel.forEach(function(col) {
-                        if (col.name !== 'rn' && col.name !== 'cb') {
-                            if (col.formatter === 'number' || col.formatter === 'integer' || col.align === 'right') {
-                                footerObj[col.name] = 0;
-                            } else if (col.name.toLowerCase().includes('trans') || col.name.toLowerCase().includes('jenis') || col.name.toLowerCase().includes('shipper')) {
-                                footerObj[col.name] = "Total";
-                            } else {
-                                footerObj[col.name] = "";
-                            }
-                        }
-                    });
-                    $('#jqGrid').jqGrid("footerData", "set", footerObj);
+                var gridEl = $('#jqGrid')[0];
+                var defaultSortCol = gridEl.p.colModel.findIndex(function(col) { return col.name === 'FSelisih'; });
+                if (defaultSortCol >= 0) {
+                    var prevTh = gridEl.grid.headers[gridEl.p.lastsort] ? gridEl.grid.headers[gridEl.p.lastsort].el : null;
+                    var defaultTh = gridEl.grid.headers[defaultSortCol].el;
+                    if (prevTh) {
+                        $('span.s-ico', prevTh).hide();
+                        $('span.ui-icon-asc, span.ui-icon-desc', prevTh).addClass('ui-state-disabled ui-disabled');
+                    }
+                    $('span.s-ico', defaultTh).show();
+                    $('span.ui-icon-asc, span.ui-icon-desc', defaultTh).addClass('ui-state-disabled ui-disabled');
+                    $('span.ui-icon-desc', defaultTh).removeClass('ui-state-disabled ui-disabled');
+                    gridEl.p.sortname = 'FSelisih';
+                    gridEl.p.sortorder = 'desc';
+                    gridEl.p.lastsort = defaultSortCol;
                 }
-                var gridObj = $('#jqGrid')[0].grid;
-                if (gridObj && gridObj.sDiv) {
-                    $(gridObj.sDiv).find('tr.footrow, tr[class*="myfootrow"]').each(function() {
-                        $(this).find('td').each(function() {
-                            var align = $(this).css('text-align');
-                            var text = $(this).text().trim();
-                            if (align === 'right') {
-                                $(this).text(text === '' ? '' : 0);
-                            } else if (/^[\d.,-]+$/.test(text)) {
-                                $(this).text(0);
-                            }
-                        });
-                    });
-                }
-                $('#lastUpdateHandler, #jqGridInfoHandler').html('');
             } catch(e) {}
+
+            // Footer, Last Update dan info digambar ulang oleh loadComplete setelah data dimuat.
             $('#btnFilter').trigger('click');
         });
         // --- Excel-like Active Cell Navigation ---

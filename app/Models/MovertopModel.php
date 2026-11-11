@@ -109,6 +109,7 @@ class MovertopModel extends Model
 		return $data;
 	}
     public function get_tglupdate($cabangid) {
+        if ($cabangid == 'SMG') $cabangid = 'SMR';
 		$sql = $this->dbtruck->query("SELECT max(FlastUpdate) as FlastUpdate FROM LapEMKL_OverDue WHERE FKCABANG = ?", [$cabangid]);
 
 		return $sql->getResult();

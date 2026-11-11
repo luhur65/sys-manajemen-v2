@@ -100,6 +100,7 @@ class MpiutangemklModel extends Model
     {
         // Using LapEMKL_OverDue for last update date, as per original code which usedmoverTop for both
         // but let's use LapEMKL_Piutang if FlastUpdate exists. Let's assume it does.
+        if ($cabangid == 'SMG') $cabangid = 'SMR';
         $sql = $this->dbtruck->query("SELECT max(FlastUpdate) as FlastUpdate FROM LapEMKL_Piutang WHERE FKCABANG = ?", [$cabangid]);
         return $sql->getResult();
     }

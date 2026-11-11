@@ -54,7 +54,7 @@ class Piutangemkl extends BaseController
         $data['title'] = 'Laporan Piutang EMKL';
         
         // Initial last update for Medan (Default)
-        $data['last_update'] = date("d-m-Y H:i:s", strtotime($this->getlastupdate('MDN')));
+        $data['last_update'] = $this->formatLastUpdate($this->getlastupdate('MDN'));
         
         return $this->render('piutangemkl/gridpiutangemkl', $data);
     }
@@ -131,7 +131,9 @@ class Piutangemkl extends BaseController
                 'FNoJob'     => $row->FNoJob,
                 'FBlnJob'    => $row->FBlnJob,
                 'FThnJob'    => $row->FThnJob,
-                'FNTgl'      => $row->FNTgl ? date('d-M-Y', strtotime($row->FNTgl)) : '',
+                // Sudah berformat 'yyyy-MM' dari query; jangan diubah jadi tanggal
+                // supaya cocok dengan label "Thn-Bln Job" dan filter kolomnya.
+                'FNTgl'      => $row->FNTgl,
                 'FJnsJob'    => $row->FJnsJob,
                 'FJnsPiutang'=> $row->FJnsPiutang
             );
@@ -140,12 +142,23 @@ class Piutangemkl extends BaseController
         
         // Add metadata for last update and grand totals
         $responce->userdata = [
-            'last_update' => date("d-m-Y H:i:s", strtotime($this->getlastupdate($cabang))),
+            'last_update' => $this->formatLastUpdate($this->getlastupdate($cabang)),
             'GrandTotalNominal' => $grandTotal->TotalNominal ?? 0,
             'GrandTotalSisa' => $grandTotal->TotalSisa ?? 0
         ];
 
         return $this->response->setJSON($responce);
+    }
+
+    /**
+     * Cabang tanpa data tidak punya tanggal update; tampilkan '-' alih-alih
+     * 01-01-1970 hasil strtotime('').
+     */
+    private function formatLastUpdate($tanggal): string
+    {
+        $waktu = $tanggal ? strtotime((string) $tanggal) : false;
+
+        return $waktu ? date("d-m-Y H:i:s", $waktu) : '-';
     }
 
     public function getlastupdate($cabangid)
