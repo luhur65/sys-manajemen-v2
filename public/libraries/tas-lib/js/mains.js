@@ -584,6 +584,29 @@ function removeTags(str) {
  */
 let topSelected = 0;
 let bottomSelected = 12;
+// True jika tombol sedang dipakai oleh dropdown (select2 / <select> native),
+// sehingga navigasi keyboard grid tidak boleh ikut berjalan.
+// Begitu dropdown tertutup, tombol kembali dipakai grid.
+var select2JustClosed = false;
+
+// Tombol yang menutup dropdown (mis. Enter saat memilih opsi) masih merambat ke
+// document setelah dropdown tertutup; tandai agar tombol itu tidak ikut menggeser grid.
+$(document).on("select2:closing", function () {
+    select2JustClosed = true;
+
+    setTimeout(function () {
+        select2JustClosed = false;
+    }, 0);
+});
+
+function isKeyOwnedByDropdown(e) {
+    if (select2JustClosed) return true;
+
+    if ($(".select2-container--open").length > 0) return true;
+
+    return $(e.target).is("select");
+}
+
 function setCustomBindKeys(grid) {
     if (grid.length > 0) {
         activeGrid = grid;
@@ -592,6 +615,8 @@ function setCustomBindKeys(grid) {
     setSidebarBindKeys();
 
     $(document).off("keydown.grid").on("keydown.grid", function (e) {
+        if (isKeyOwnedByDropdown(e)) return;
+
         if (!sidebarIsOpen && activeGrid && activeGrid.length > 0) {
             // Abaikan jika fokus di input/textarea
             // if ($(e.target).is("input, textarea, select")) return;
@@ -1044,6 +1069,8 @@ function setCustomLazyLoadingKeys(gridId, menu) {
     setSidebarBindKeys();
 
     $(document).on("keydown", function (e) {
+        if (isKeyOwnedByDropdown(e)) return;
+
         // Pastikan sidebar tertutup dan ada grid aktif
         if (!sidebarIsOpen && activeGrid) {
 
