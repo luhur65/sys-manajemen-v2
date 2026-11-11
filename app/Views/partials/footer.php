@@ -147,6 +147,7 @@
     <script src="<?= asset('libraries/tas-lib/js/GridPreferenceManager.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/ColumnSettingsManager.js') ?>"></script>
     <script src="<?= asset('libraries/tas-lib/js/GridAutoInjector.js') ?>"></script>
+    <script src="<?= asset('libraries/tas-lib/js/GridAutoHeight.js') ?>"></script>
     
     <?php if (session()->has(SESSION_NAME . 'logged_in')): ?>
     <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>

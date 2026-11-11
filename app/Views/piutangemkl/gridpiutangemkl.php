@@ -253,6 +253,7 @@
             autowidth: true,
             shrinkToFit: false,
             height: 350,
+            autoHeight: true, // tinggi default 13 baris; mengecil di layar pendek (GridAutoHeight.js)
             rowNum: 50,
             toolbar: [true, "top"],
             rowList: [10, 20, 30, 50, 100],

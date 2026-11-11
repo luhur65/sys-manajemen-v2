@@ -619,8 +619,14 @@ function setCustomBindKeys(grid) {
 
                 // Row Height & Visible Rows for Lazy Load calculations
                 var bDiv = grid.closest('.ui-jqgrid-bdiv');
-                var singleRowHeight = grid.find('tr.jqgrow').first().height() || 30;
-                var visibleRows = Math.floor(bDiv.height() / singleRowHeight) || 10;
+                var firstRowEl = grid.find('tr.jqgrow').first()[0];
+                var singleRowHeight = (firstRowEl && firstRowEl.offsetHeight) || 30;
+                // Jumlah baris UTUH yang muat di area terlihat. Pakai clientHeight, bukan height():
+                // height() ikut menghitung scrollbar horizontal sehingga bisa lebih besar satu baris
+                // dari yang benar-benar terlihat. +1px menampung pembulatan sub-pixel.
+                var visibleRows = bDiv[0].clientHeight > 0
+                    ? Math.max(1, Math.floor((bDiv[0].clientHeight + 1) / singleRowHeight))
+                    : 10;
                 var serverPageSize = (typeof rowsPerPage !== 'undefined' && rowsPerPage > 0) ? rowsPerPage : (parseInt(grid.getGridParam('rowNum')) || 50);
 
                 // =================================================================
@@ -741,7 +747,7 @@ function setCustomBindKeys(grid) {
                             var targetDomIdx = targetAbsIndex - firstDomAbsIndex;
                             var targetId = gridIds[targetDomIdx];
                             grid.resetSelection().setSelection(targetId);
-                            scrollRowIntoView(grid, targetId);
+                            scrollRowIntoView(grid, targetId, 'top');
                         } else if (firstDomAbsIndex > 0) {
                             var targetPageLoad = Math.floor(targetAbsIndex / serverPageSize) + 1;
 
@@ -756,7 +762,7 @@ function setCustomBindKeys(grid) {
 
                                     var targetId = newIds[targetDomIdx];
                                     grid.resetSelection().setSelection(targetId);
-                                    scrollRowIntoView(grid, targetId);
+                                    scrollRowIntoView(grid, targetId, 'top');
                                 }
                             });
                         }
@@ -768,7 +774,7 @@ function setCustomBindKeys(grid) {
                             var targetDomIdx = targetAbsIndex - firstDomAbsIndex;
                             var targetId = gridIds[targetDomIdx];
                             grid.resetSelection().setSelection(targetId);
-                            scrollRowIntoView(grid, targetId);
+                            scrollRowIntoView(grid, targetId, 'bottom');
                         } else if (lastDomAbsIndex < totRec - 1) {
                             var targetPageLoad = Math.floor(targetAbsIndex / serverPageSize) + 1;
 
@@ -783,7 +789,7 @@ function setCustomBindKeys(grid) {
 
                                     var targetId = newIds[targetDomIdx];
                                     grid.resetSelection().setSelection(targetId);
-                                    scrollRowIntoView(grid, targetId);
+                                    scrollRowIntoView(grid, targetId, 'bottom');
                                 }
                             });
                         }
@@ -838,7 +844,15 @@ function setCustomBindKeys(grid) {
     });
 }
 
-function scrollRowIntoView(grid, rowId) {
+/**
+ * Scroll area grid sampai baris `rowId` terlihat.
+ * @param align 'top'    -> baris tepat di tepi atas area terlihat (PageUp)
+ *              'bottom' -> baris tepat di tepi bawah area terlihat (PageDown)
+ *              kosong   -> scroll seminimal mungkin sampai baris terlihat (panah atas/bawah)
+ *              Dengan 'top'/'bottom' baris tujuan selalu menempel di tepi, walau sebelumnya
+ *              sudah terlihat, sehingga tidak ada baris yang tersisa di belakangnya.
+ */
+function scrollRowIntoView(grid, rowId, align) {
     var bDiv = grid.closest('.ui-jqgrid-bdiv');
     var escapedRowId = $.jgrid.jqID(rowId);
     var row = grid.find('tr#' + escapedRowId);
@@ -851,7 +865,11 @@ function scrollRowIntoView(grid, rowId) {
         // clientHeight sudah otomatis akurat tanpa menghitung scrollbar horizontal
         var divHeight = bDiv[0].clientHeight;
 
-        if (rowTop < divScrollTop) {
+        if (align === 'top') {
+            bDiv.scrollTop(rowTop);
+        } else if (align === 'bottom') {
+            bDiv.scrollTop(Math.max(0, rowBottom - divHeight));
+        } else if (rowTop < divScrollTop) {
             bDiv.scrollTop(rowTop);
         } else if (rowBottom > divScrollTop + divHeight) {
             // Cukup kurangi dengan divHeight murni

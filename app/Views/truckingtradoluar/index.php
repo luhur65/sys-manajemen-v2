@@ -190,6 +190,7 @@
             viewrecords: false,
             autowidth: true,
             height: 400,
+            autoHeight: true, // tinggi default; mengecil di layar pendek (GridAutoHeight.js)
             shrinkToFit: false,
             rownumbers: true,
             footerrow: true,

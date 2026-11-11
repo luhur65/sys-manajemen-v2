@@ -122,6 +122,7 @@
             autowidth: true,
             shrinkToFit: false,
             height: 400,
+            autoHeight: true, // tinggi default; mengecil di layar pendek (GridAutoHeight.js)
             rowNum: rowNum,
             rownumbers: true,
             rownumWidth: 45,
