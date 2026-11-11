@@ -76,7 +76,7 @@ class Piutangoverdue extends BaseController
                     try {
                         $list = $this->model->getCabang();
                     } catch (\Throwable $e) {
-                        log_message('error', 'usp_getcabangoverdue: ' . $e->getMessage());
+                        log_message('error', 'Piutangoverdue cabang (usp_getcabangoverdue): ' . $e->getMessage());
                         $list = self::CABANG_FALLBACK;
                     }
                     if (!in_array('ALL', $list, true)) {
@@ -112,7 +112,7 @@ class Piutangoverdue extends BaseController
         try {
             $rows = $this->loadRows('post');
         } catch (\Throwable $e) {
-            log_message('error', 'usp_getlistshipperoverdue: ' . $e->getMessage());
+            log_message('error', 'Piutangoverdue::grid (usp_getlistshipperoverdue): ' . $e->getMessage());
             return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal memuat data laporan']);
         }
 
