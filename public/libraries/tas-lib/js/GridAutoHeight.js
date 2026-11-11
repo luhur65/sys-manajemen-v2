@@ -2,21 +2,26 @@
  * GridAutoHeight
  * ─────────────────────────────────────────────────────────────────────────────
  * Membungkus $.fn.jqGrid supaya grid yang menyalakan `autoHeight: true`
- * menyesuaikan tinggi body-nya dengan sisa ruang layar.
+ * selalu setinggi DEFAULT_ROWS (13) baris utuh, di semua ukuran layar.
  *
  *   height: 400,       // hanya dipakai sebelum ada baris (belum bisa menghitung tinggi baris)
- *   autoHeight: true,  // tinggi default = DEFAULT_ROWS (13) baris utuh untuk SEMUA grid;
- *                      // layar yang lebih pendek: grid mengecil supaya halaman tidak
- *                      // perlu di-scroll ke bawah hanya untuk melihat isi grid
- *
- * Di layar desktop, tinggi akhir = sisa ruang layar di bawah posisi body grid
- * (dikurangi baris total grid, info/pager, padding & margin pembungkus, serta
- * footer halaman), dibatasi antara tinggi minimum dan tinggi default 13 baris.
- * Di ponsel (< 768px) filter menumpuk vertikal dan halaman memang di-scroll,
- * jadi grid selalu setinggi default.
+ *   autoHeight: true,  // tinggi = 13 baris utuh untuk SEMUA grid
  *
  * Tinggi selalu kelipatan tinggi baris (ditambah scrollbar horizontal bila ada)
- * supaya tidak ada baris yang terpotong.
+ * supaya tidak ada baris yang terpotong dan PageUp/PageDown mendarat rapi.
+ *
+ * Perilaku di layar yang lebih pendek dari grid + elemen sekitarnya diatur FIT_MODE:
+ *   'always' (default) grid mengikuti sisa ruang layar di desktop, antara 10 dan 13 baris.
+ *            Layar pendek, laptop kecil, dan browser yang di-zoom sama-sama tertangani karena
+ *            yang dihitung adalah tinggi viewport efektif, bukan tingkat zoom-nya.
+ *   'never'  grid tetap 13 baris, halaman di-scroll seperti biasa
+ *   'zoom'   seperti 'never', tetapi saat zoom terdeteksi (rasio outerWidth/innerWidth > 1.05)
+ *            grid mengikuti sisa layar. Tidak andal: sebagian browser Chromium (mis. Opera,
+ *            Edge) ikut menskalakan outerWidth sehingga zoom tidak terdeteksi.
+ * Saat mengikuti layar, tinggi akhir = sisa ruang layar di bawah posisi body grid
+ * (dikurangi baris total grid, info/pager, padding & margin pembungkus, serta footer
+ * halaman), dibatasi antara MIN_ROWS (10) dan DEFAULT_ROWS (13) baris. Grid tidak pernah
+ * lebih pendek dari 10 baris; bila sisa layar tidak cukup, halaman di-scroll.
  *
  * Dihitung ulang saat: grid selesai memuat data, jendela di-resize, halaman
  * selesai dimuat (font/gambar bisa menggeser tata letak), sidebar dibuka/ditutup,
@@ -30,17 +35,39 @@
 
     var previousJqGrid = $.fn.jqGrid;
 
+    // 'never' | 'zoom' | 'always' -- lihat penjelasan di atas.
+    var FIT_MODE = 'always';
+    // Rasio outerWidth/innerWidth di atas ini dianggap browser sedang di-zoom lebih dari 100%.
+    // Ambang 1.05 menyisihkan tepi jendela (±1%) dan menangkap zoom terkecil (110%).
+    var ZOOM_RATIO_THRESHOLD = 1.05;
     // Jarak aman di bawah footer halaman supaya tidak muncul scrollbar karena selisih pembulatan.
+    // Hanya dipakai saat grid mengikuti sisa ruang layar.
     var BOTTOM_GAP = 10;
     // Jumlah baris utuh yang terlihat pada tinggi default; sama untuk semua grid.
     var DEFAULT_ROWS = 13;
-    // Batas bawah di desktop: lebih pendek dari ini halaman boleh di-scroll daripada grid diperas habis.
-    var MIN_HEIGHT_DESKTOP = 120;
+    // Jumlah baris utuh minimum saat grid mengikuti sisa ruang layar: kurang dari ini
+    // halaman di-scroll daripada grid diperas lebih pendek.
+    var MIN_ROWS = 10;
     // Di bawah lebar ini (breakpoint "md" Bootstrap) tata letak ponsel dipakai.
     var PHONE_MAX_WIDTH = 768;
 
     function px($el, prop) {
         return parseFloat($el.css(prop)) || 0;
+    }
+
+    /**
+     * Browser sedang di-zoom lebih dari 100%?
+     * Di Chrome/Edge outerWidth dalam piksel perangkat tanpa zoom, sedangkan innerWidth dalam
+     * piksel CSS yang sudah terkena zoom, jadi rasionya sama dengan tingkat zoom (130% -> 1.3).
+     * Docked DevTools atau panel samping juga memperkecil innerWidth sehingga ikut terdeteksi;
+     * itu aman karena hasilnya hanya grid yang menyesuaikan sisa ruang layar.
+     * Firefox melaporkan keduanya terkena zoom, jadi zoom tidak terdeteksi di sana. Sebagian browser
+     * Chromium lain (diuji pada browser pengguna di zoom 130%) juga tidak terdeteksi, karena itu
+     * mode 'zoom' bukan default; hanya dipakai bila FIT_MODE = 'zoom'.
+     */
+    function isBrowserZoomedIn() {
+        return window.outerWidth > 0 && window.innerWidth > 0 &&
+            (window.outerWidth / window.innerWidth) > ZOOM_RATIO_THRESHOLD;
     }
 
     /** Total tinggi semua yang berada di bawah body grid sampai ujung halaman. */
@@ -89,17 +116,19 @@
         var maxHeight = rowHeight > 0 ? DEFAULT_ROWS * rowHeight + chrome : declaredHeight;
 
         var height;
-        if ($(window).width() < PHONE_MAX_WIDTH) {
+        var fitToViewport = FIT_MODE === 'always' || (FIT_MODE === 'zoom' && isBrowserZoomedIn());
+        // Tanpa baris, tinggi baris belum diketahui sehingga MIN_ROWS belum bisa dihitung:
+        // pakai tinggi deklarasi dulu, dihitung ulang setelah data dimuat.
+        if (!fitToViewport || rowHeight === 0 || $(window).width() < PHONE_MAX_WIDTH) {
             height = maxHeight;
         } else {
+            var minHeight = MIN_ROWS * rowHeight + chrome;
             var available = Math.floor($(window).height() - $bdiv.offset().top - spaceBelow($bdiv) - BOTTOM_GAP);
-            height = Math.max(Math.min(maxHeight, MIN_HEIGHT_DESKTOP), Math.min(maxHeight, available));
+            height = Math.max(minHeight, Math.min(maxHeight, available));
 
             // Bulatkan ke kelipatan tinggi baris supaya tidak ada baris yang terpotong di tepi bawah
             // dan PageUp/PageDown (setCustomBindKeys) selalu mendarat tepat di tepi area terlihat.
-            if (rowHeight > 0) {
-                height = Math.max(1, Math.floor((height - chrome) / rowHeight)) * rowHeight + chrome;
-            }
+            height = Math.floor((height - chrome) / rowHeight) * rowHeight + chrome;
         }
 
         if (Math.abs($bdiv.outerHeight() - height) > 1) {
