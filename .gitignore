@@ -157,3 +157,6 @@ test_*.php
 
 # Claude
 .claude/
+
+# docs
+docs/
