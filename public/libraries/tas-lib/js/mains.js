@@ -94,35 +94,41 @@ if (typeof $.jgrid !== 'undefined' && $.jgrid.styleUI) {
         if ($.jgrid.styleUI.Bootstrap4.table && $.jgrid.styleUI.Bootstrap4.table.className) {
             $.jgrid.styleUI.Bootstrap4.table.className = $.jgrid.styleUI.Bootstrap4.table.className.replace('table-hover', '');
         }
-        // if ($.jgrid.styleUI.Bootstrap4.base) {
-        //     $.jgrid.styleUI.Bootstrap4.base.icon_asc = 'fa-arrow-up';
-        //     $.jgrid.styleUI.Bootstrap4.base.icon_desc = 'fa-arrow-down';
-        // }
     }
     if ($.jgrid.styleUI.Bootstrap5) {
         if ($.jgrid.styleUI.Bootstrap5.table && $.jgrid.styleUI.Bootstrap5.table.className) {
             $.jgrid.styleUI.Bootstrap5.table.className = $.jgrid.styleUI.Bootstrap5.table.className.replace('table-hover', '');
         }
-        // if ($.jgrid.styleUI.Bootstrap5.base) {
-        //     $.jgrid.styleUI.Bootstrap5.base.icon_asc = 'fa-arrow-up';
-        //     $.jgrid.styleUI.Bootstrap5.base.icon_desc = 'fa-arrow-down';
-        // }
+    }
+}
+
+// Bentuk ikon sort seragam di SEMUA grid: asc = panah atas, desc = panah bawah.
+// Warna (asc biru / desc merah) diatur di styles.css (.ui-icon-asc / .ui-icon-desc).
+//
+// Set ikon jqGrid ada di $.jgrid.iconSet (BUKAN $.jgrid.styleUI.fontAwesome).
+// Setiap grid dengan styleUI 'Bootstrap4'/'Bootstrap5' akan me-merge
+// $.jgrid.iconSet[ts.p.iconSet] ke styleUI-nya saat dibuat, jadi override harus
+// dipasang SEBELUM grid pertama dibuat. mains.js dimuat tepat setelah jqGrid di
+// footer.php, sehingga aman. Semua grid proyek ini memakai iconSet 'fontAwesome'.
+(function () {
+    if (typeof $.jgrid === 'undefined') return;
+
+    // fa-fw = lebar tetap, supaya panah asc & desc sejajar dengan teks header.
+    var sortIcons = { icon_asc: 'fa-fw fa-arrow-up', icon_desc: 'fa-fw fa-arrow-down' };
+
+    // iconSet fontAwesome (sumber yang di-merge saat grid dibuat)
+    if ($.jgrid.iconSet && $.jgrid.iconSet.fontAwesome && $.jgrid.iconSet.fontAwesome.base) {
+        $.extend($.jgrid.iconSet.fontAwesome.base, sortIcons);
     }
 
-    // Explicitly inject fontAwesome mapping if missing or override if present
-    // if (!$.jgrid.styleUI.fontAwesome) {
-    //     $.jgrid.styleUI.fontAwesome = {
-    //         common: { icon_base: "fas" },
-    //         base: {
-    //             icon_asc: 'fa-arrow-up',
-    //             icon_desc: 'fa-arrow-down'
-    //         }
-    //     };
-    // } else if ($.jgrid.styleUI.fontAwesome.base) {
-    //     $.jgrid.styleUI.fontAwesome.base.icon_asc = 'fa-arrow-up';
-    //     $.jgrid.styleUI.fontAwesome.base.icon_desc = 'fa-arrow-down';
-    // }
-}
+    // Jaga-jaga kalau ada grid Bootstrap4/5 yang tidak memakai iconSet fontAwesome
+    // namun tetap memakai base styleUI-nya.
+    ['Bootstrap4', 'Bootstrap5'].forEach(function (ui) {
+        if ($.jgrid.styleUI && $.jgrid.styleUI[ui] && $.jgrid.styleUI[ui].base) {
+            $.extend($.jgrid.styleUI[ui].base, sortIcons);
+        }
+    });
+})();
 
 // Inject CSS to hide disabled sort icons and show the active arrow IN FRONT of the header text
 $('<style>th.ui-th-column .ui-grid-ico-sort.ui-disabled { display: none !important; } th.ui-th-column .ui-jqgrid-sortable { display: flex !important; align-items: center; } th.ui-th-column .s-ico { display: inline-block !important; order: -1; flex: 0 0 auto; } th.ui-th-column .ui-grid-ico-sort { position: static !important; margin-top: 0 !important; margin-left: 0 !important; margin-right: 6px !important; font-size: 0.9em !important; transform: translateY(1px) !important; }</style>').appendTo('head');
@@ -304,6 +310,10 @@ function initAutoNumeric(elements = null, options = null) {
         digitGroupSeparator: formats.THOUSANDSEPARATOR,
         decimalCharacter: formats.DECIMALSEPARATOR,
         modifyValueOnWheel: false,
+        // AutoNumeric 4.10.10: kembalikan perilaku 4.5.4 (tanpa ini panah atas/bawah
+        // mengubah angka dan tombol "-" tidak lagi membalik tanda).
+        modifyValueOnUpDownArrow: false,
+        negativePositiveSignBehavior: true,
         minimumValue: 0,
     };
 
@@ -332,6 +342,9 @@ function initAutoNumericMinus(elements = null, options = null) {
         digitGroupSeparator: formats.THOUSANDSEPARATOR,
         decimalCharacter: formats.DECIMALSEPARATOR,
         modifyValueOnWheel: false,
+        // AutoNumeric 4.10.10: kembalikan perilaku 4.5.4 (lihat initAutoNumeric).
+        modifyValueOnUpDownArrow: false,
+        negativePositiveSignBehavior: true,
     };
 
     Object.assign(option, options);
@@ -3806,19 +3819,6 @@ function deleteSelectedRowLazyLoad(gridSelector) {
         }
     }
 }
-
-// console.log('ICON ASC BEFORE OVERRIDE: ', $.jgrid.styleUI.fontAwesome ? $.jgrid.styleUI.fontAwesome.base.icon_asc : 'fontAwesome is missing');
-
-// console.log('STYLEUI KEYS:', Object.keys($.jgrid.styleUI));
-
-// console.log('BOOTSTRAP4 ICON ASC:', $.jgrid.styleUI.Bootstrap4 ? $.jgrid.styleUI.Bootstrap4.base.icon_asc : 'Bootstrap4 missing');
-
-$(document).ready(function () {
-    if ($('.fa-caret-up').length || $('.fa-caret-down').length) {
-        $('.fa-caret-up').removeClass('fa-caret-up').addClass('fa-fw fa-arrow-up');
-        $('.fa-caret-down').removeClass('fa-caret-down').addClass('fa-fw fa-arrow-down');
-    }
-});
 
 // Global extension for CSS-based Sticky Frozen Columns
 $.jgrid.extend({

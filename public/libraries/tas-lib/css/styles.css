@@ -118,9 +118,15 @@ input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
 	/* font-size: 0.875rem; */
 }
 
-/* Warna panah sort di header kolom */
-.ui-jqgrid th.ui-th-column .ui-grid-ico-sort {
+/* Warna panah sort di header kolom: asc = biru, desc = merah.
+   Dipisah lewat class ui-icon-asc / ui-icon-desc (bawaan jqGrid) agar tetap
+   berlaku apa pun bentuk ikonnya (fa-caret-* maupun fa-arrow-*, lihat mains.js). */
+.ui-jqgrid th.ui-th-column .ui-grid-ico-sort.ui-icon-asc {
 	color: #007bff;
+}
+
+.ui-jqgrid th.ui-th-column .ui-grid-ico-sort.ui-icon-desc {
+	color: #dc3545;
 }
 
 .ui-jqgrid .ui-icon-asc {
