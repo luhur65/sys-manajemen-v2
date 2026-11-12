@@ -74,6 +74,12 @@
         if (g.footers.length > 0 && g.footers[idx]) g.footers[idx].style.width = w;
         if (g.hrheaders.length > 0 && g.hrheaders[idx]) g.hrheaders[idx].style.width = w;
 
+        // Grid dengan setGroupHeaders: lebar kolom header ditentukan baris layout tersembunyi
+        // (table-layout: fixed). jqGrid baru memperbaruinya saat mouse dilepas (jqGridResizeStop),
+        // jadi tanpa ini header dan baris filter tertinggal dari body selama kolom ditarik.
+        var layoutRow = g.hDiv.querySelector('tr.jqg-first-row-header');
+        if (layoutRow && layoutRow.children[idx]) layoutRow.children[idx].style.width = w;
+
         var tw = tblWidth + 'px';
         for (var i = 0; i < active.tables.length; i++) {
             if (active.tables[i]) active.tables[i].style.width = tw;
