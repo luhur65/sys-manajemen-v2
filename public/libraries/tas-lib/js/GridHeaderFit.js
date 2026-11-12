@@ -75,6 +75,31 @@
         return Math.ceil(content + px(dcs.paddingLeft) + px(dcs.paddingRight) + chrome) + 1;
     }
 
+    /**
+     * Samakan lebar baris layout header grup (tr.jqg-first-row-header) dengan lebar kolom
+     * sebenarnya.
+     *
+     * Grid dengan setGroupHeaders punya baris tersembunyi ini di tabel header. Karena tabel
+     * memakai table-layout: fixed, baris pertama itulah yang menentukan lebar semua kolom
+     * header. jqGrid hanya memperbaruinya lewat event jqGridResizeStop, sedangkan pelebaran
+     * di sini sengaja tidak memicu event itu. Akibatnya lebar kolom header tertinggal dari
+     * body dan footer, dan garis batas kolom tidak sejajar.
+     */
+    function syncGroupHeaderRow(ts) {
+        var view = $(ts).closest('.ui-jqgrid-view')[0];
+        var row = view && view.querySelector('.ui-jqgrid-hdiv tr.jqg-first-row-header');
+        if (!row) return;
+
+        var cells = row.children;
+        for (var i = 0; i < ts.p.colModel.length && i < cells.length; i++) {
+            var h = ts.grid.headers[i];
+            if (!h || !h.width) continue;
+
+            var want = h.width + 'px';
+            if (cells[i].style.width !== want) cells[i].style.width = want;
+        }
+    }
+
     function fit(ts) {
         var g = ts && ts.grid;
         var p = ts && ts.p;
@@ -109,6 +134,10 @@
                 changed = true;
             }
         }
+
+        // Selalu disinkronkan, bukan hanya saat ada pelebaran: setGroupHeaders bisa dipanggil
+        // setelah pelebaran terakhir dan menyalin lebar yang sudah usang.
+        syncGroupHeaderRow(ts);
 
         if (changed && typeof ts.applyStickyFrozenColumns === 'function') {
             ts.applyStickyFrozenColumns();
