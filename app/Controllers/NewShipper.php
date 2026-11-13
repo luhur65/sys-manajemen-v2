@@ -83,12 +83,12 @@ class NewShipper extends BaseController
 
         $i = 0;
         foreach ($dataResult as $row) {
-            $response->rows[$i]['id'] = $row['FNCabang'].'_'.$row['FNShipper'];
-            $response->rows[$i]['cell'] = [
-                $row['FNCabang'],
-                $row['FNShipper'],
-                $row['FTgl'] ? date('d-M-Y', strtotime($row['FTgl'])) : '',
-                $row['FNMarketing']
+            $response->rows[$i] = [
+                'id'          => $row['FNCabang'].'_'.$row['FNShipper'],
+                'FNCabang'    => $row['FNCabang'],
+                'FNShipper'   => $row['FNShipper'],
+                'FTgl'        => $row['FTgl'] ? date('d-M-Y', strtotime($row['FTgl'])) : '',
+                'FNMarketing' => $row['FNMarketing']
             ];
             $i++;
         }

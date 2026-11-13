@@ -84,15 +84,15 @@ class Parameter extends BaseController
         $responce->records = $count;
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $row->parameter_key;
-            $responce->rows[$i]['cell'] = array(
-                $row->parameter_key,
-                $row->parametergrpid,
-                $row->parameterid,
-                $row->parametertext,
-                $row->parametermemo,
-                $row->modifiedby,
-                $row->modifiedonview
+            $responce->rows[$i] = array(
+                'id'             => $row->parameter_key,
+                'parameter_key'  => $row->parameter_key,
+                'parametergrpid' => $row->parametergrpid,
+                'parameterid'    => $row->parameterid,
+                'parametertext'  => $row->parametertext,
+                'parametermemo'  => $row->parametermemo,
+                'modifiedby'     => $row->modifiedby,
+                'modifiedonview' => $row->modifiedonview
             );
             $i++;
         }

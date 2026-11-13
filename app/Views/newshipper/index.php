@@ -116,6 +116,7 @@
             url: apiUrl,
             mtype: "POST",
             datatype: "local",
+            jsonReader: { repeatitems: false },
             postData: {
                 cabang: function() { return $('#cabangSelect').val(); },
                 datefrom: function() { return isInitialLoad ? '' : $('#datefrom').val(); },

@@ -158,11 +158,11 @@ class UserAcl extends BaseController
             
             $row->acoid = $route != '-' ? $route->class . "/" . $route->method : $route;
             
-            $responce->rows[$i]['id'] = $row->useraclid;
-            $responce->rows[$i]['cell'] = array(
-                $row->acoid,
-                $row->modifiedby,
-                $row->modifiedonview
+            $responce->rows[$i] = array(
+                'id'         => $row->useraclid,
+                'acoid'      => $row->acoid,
+                'modifiedby' => $row->modifiedby,
+                'modifiedon' => $row->modifiedonview
             );
             $i++;
         }
@@ -235,12 +235,12 @@ class UserAcl extends BaseController
                 $methodName = '-';
             }
             
-            $responce->rows[$i]['id'] = $aco->acosid;
-            $responce->rows[$i]['cell'] = array(
-                $aco->acosid,
-                $className,
-                $methodName,
-                $displayName
+            $responce->rows[$i] = array(
+                'id'          => $aco->acosid,
+                'acosid'      => $aco->acosid,
+                'class'       => $className,
+                'method'      => $methodName,
+                'displayname' => $displayName
             );
             $i++;
         }

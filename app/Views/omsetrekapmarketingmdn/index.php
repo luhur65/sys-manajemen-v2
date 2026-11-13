@@ -163,6 +163,7 @@
             url: apiUrl,
             mtype: "POST", 
             datatype: "local",
+            jsonReader: { repeatitems: false },
             postData: {
                 jenis: function() { return $('#jenisSelect').val(); },
                 bln: function() { return $('#blnInput').val(); },

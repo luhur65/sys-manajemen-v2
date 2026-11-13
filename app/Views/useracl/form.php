@@ -61,7 +61,7 @@
             url: "<?= base_url('useracl/getAcos') ?>",
             mtype: "GET",
             datatype: "json",
-            jsonReader: { repeatitems: true },
+            jsonReader: { repeatitems: false },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [

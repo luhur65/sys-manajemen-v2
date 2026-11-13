@@ -79,6 +79,7 @@
             url: apiUrl,
             mtype: "POST", // we use post
             datatype: "local",
+            jsonReader: { repeatitems: false },
             postData: {
                 cabang: function() { return $('#cabangSelect').val(); }
             },

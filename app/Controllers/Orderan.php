@@ -113,12 +113,12 @@ class Orderan extends BaseController
         
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $i + $start;
-            $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
-                $row->FJumlahMuatan,
-                $row->FJumlahBongkaran,
-                $row->FJumlahExim
+            $responce->rows[$i] = array(
+                'id'               => $i + $start,
+                'FTgl'             => $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                'FJumlahMuatan'    => $row->FJumlahMuatan,
+                'FJumlahBongkaran' => $row->FJumlahBongkaran,
+                'FJumlahExim'      => $row->FJumlahExim
             );
             $i++;
         }

@@ -154,13 +154,12 @@ class User extends BaseController
             $response->records = $count;
 
             foreach ($rows as $i => $row) {
-                $response->rows[$i]['id']   = $row->id;
-                $response->rows[$i]['cell'] = [
-                    $row->id,
-                    $row->kodekaryawan,
-                    $row->namakaryawan,
-                    $row->cabang,
-                    $row->jabatan,
+                $response->rows[$i] = [
+                    'id'           => $row->id,
+                    'kodekaryawan' => $row->kodekaryawan,
+                    'namakaryawan' => $row->namakaryawan,
+                    'cabang'       => $row->cabang,
+                    'jabatan'      => $row->jabatan,
                 ];
             }
         } catch (Throwable $e) {
@@ -393,19 +392,19 @@ class User extends BaseController
             // But we pass the data needed
             $karyawanid = (int) ($row->karyawanid ?? 0);
 
-            $response->rows[$i]['id'] = $row->userpk;
-            $response->rows[$i]['cell'] = [
-                $row->userpk, // placeholder for aksi in frontend
-                $row->userid,
-                $row->username,
-                $karyawanMap[$karyawanid] ?? '',
-                \App\Libraries\UserStatus::aktif($row->aktif ?? null) ? 'Aktif' : 'Nonaktif',
-                $row->dashboard,
-                $row->email,
-                $row->nowhatsapp,
-                $row->rolename,
-                $row->modifiedby,
-                $row->modifiedonview
+            $response->rows[$i] = [
+                'id'             => $row->userpk,
+                'userpk'         => $row->userpk, // placeholder for aksi in frontend
+                'userid'         => $row->userid,
+                'username'       => $row->username,
+                'namakaryawan'   => $karyawanMap[$karyawanid] ?? '',
+                'statusaktif'    => \App\Libraries\UserStatus::aktif($row->aktif ?? null) ? 'Aktif' : 'Nonaktif',
+                'dashboard'      => $row->dashboard,
+                'email'          => $row->email,
+                'nowhatsapp'     => $row->nowhatsapp,
+                'rolename'       => $row->rolename,
+                'modifiedby'     => $row->modifiedby,
+                'modifiedonview' => $row->modifiedonview
             ];
             $i++;
         }

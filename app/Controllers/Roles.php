@@ -86,12 +86,12 @@ class Roles extends BaseController
 
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id'] = $row->roleid;
-            $responce->rows[$i]['cell'] = array(
-                $row->roleid, // placeholder aksi
-                $row->rolename,
-                $row->modifiedby,
-                $row->modifiedonview
+            $responce->rows[$i] = array(
+                'id'             => $row->roleid,
+                'roleid'         => $row->roleid, // placeholder aksi
+                'rolename'       => $row->rolename,
+                'modifiedby'     => $row->modifiedby,
+                'modifiedonview' => $row->modifiedonview
             );
             $i++;
         }

@@ -23,7 +23,7 @@
             url: gridAclUrl,
             mtype: "POST",
             datatype: "local",
-            jsonReader: { repeatitems: true },
+            jsonReader: { repeatitems: false },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             height: 250,

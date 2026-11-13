@@ -84,6 +84,7 @@
             url: apiUrl,
             mtype: "POST",
             datatype: "local",
+            jsonReader: { repeatitems: false },
             postData: {
                 datefrom: function() { return isInitialLoad ? '' : $('#datefromMKS').val(); },
                 dateto: function() { return isInitialLoad ? '' : $('#datetoMKS').val(); }

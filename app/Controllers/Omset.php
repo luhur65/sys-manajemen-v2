@@ -122,17 +122,17 @@ class Omset extends BaseController
                 $margin = ((float)$row->FProfit / (float)$row->FOmset) * 100;
             }
             
-            $responce->rows[$i]['id']   = $i + $start;
-            $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
-                $row->FJumlahMuatan,
-                $row->FJumlahBongkaran,
-                $row->FJumlahExim,
-                $row->FOmset,
-                $row->FBiayaLapangan,
-                $row->FNomPph23,
-                $row->FProfit,
-                $margin
+            $responce->rows[$i] = array(
+                'id'               => $i + $start,
+                'FTgl'             => $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                'FJumlahMuatan'    => $row->FJumlahMuatan,
+                'FJumlahBongkaran' => $row->FJumlahBongkaran,
+                'FJumlahExim'      => $row->FJumlahExim,
+                'FOmset'           => $row->FOmset,
+                'FBiayaLapangan'   => $row->FBiayaLapangan,
+                'FNomPph23'        => $row->FNomPph23,
+                'FProfit'          => $row->FProfit,
+                'FMargin'          => $margin
             );
             $i++;
         }

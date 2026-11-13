@@ -90,12 +90,12 @@ class Tracing extends BaseController
 
         $i = 0;
         foreach ($result as $row) {
-            $responce->rows[$i]['id'] = $row->UserId;
-            $responce->rows[$i]['cell'] = [
-                $row->UserId,
-                $row->shipper,
-                $row->waktulogin,
-                $row->cabang
+            $responce->rows[$i] = [
+                'id'         => $row->UserId,
+                'UserId'     => $row->UserId,
+                'shipper'    => $row->shipper,
+                'waktulogin' => $row->waktulogin,
+                'cabang'     => $row->cabang
             ];
             $i++;
         }

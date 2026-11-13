@@ -153,6 +153,7 @@
             url: apiUrl,
             mtype: "POST",
             datatype: "local",
+            jsonReader: { repeatitems: false },
             postData: {
                 cabang: function() { return $('#cabangSelect').val(); },
                 tgl_dari: function() { return $('#tgl_dari').val(); },
@@ -427,6 +428,7 @@
                 url: apiDetailUrl,
                 mtype: "POST",
                 datatype: "local",
+                jsonReader: { repeatitems: false },
                 postData: {
                     cabang: cabangValue,
                     ftgl: ftglValue

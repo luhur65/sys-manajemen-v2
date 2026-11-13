@@ -81,14 +81,14 @@ class Supirpercabang extends BaseController
 
         $i = 0;
         foreach ($data->getResultArray() as $row) {
-            $response->rows[$i]['id'] = $row['FKSupir'];
-            $response->rows[$i]['cell'] = [
-                $row['FKSupir'],
-                $row['FNSupir'],
-                $row['FAlamat'],
-                $row['FKota'],
-                $row['FTelp'],
-                ($row['FAktif'] ? 'Aktif' : 'Tidak Aktif')
+            $response->rows[$i] = [
+                'id'      => $row['FKSupir'],
+                'FKSupir' => $row['FKSupir'],
+                'FNSupir' => $row['FNSupir'],
+                'FAlamat' => $row['FAlamat'],
+                'FKota'   => $row['FKota'],
+                'FTelp'   => $row['FTelp'],
+                'FAktif'  => ($row['FAktif'] ? 'Aktif' : 'Tidak Aktif')
             ];
             $i++;
         }

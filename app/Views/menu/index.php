@@ -129,6 +129,7 @@
             url: apiUrl,
             mtype: "POST",
             datatype: "local",
+            jsonReader: { repeatitems: false },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [
@@ -386,6 +387,7 @@
             url: lookupUrl,
             mtype: "POST",
             datatype: "json",
+            jsonReader: { repeatitems: false },
             styleUI: 'Bootstrap4',
             iconSet: 'fontAwesome',
             colModel: [

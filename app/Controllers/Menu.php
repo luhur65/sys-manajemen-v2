@@ -107,17 +107,17 @@ class Menu extends BaseController
                 }
             }
 
-            $responce->rows[$i]['id']   = $row->menuid;
-            $responce->rows[$i]['cell'] = array(
-                $row->menuid,
-                $row->menuname,
-                $row->menuseq,
-                $row->menuparent,
-                $row->menuicon,
-                $route,
-                $row->link,
-                $row->modifiedby,
-                $row->modifiedonview
+            $responce->rows[$i] = array(
+                'id'             => $row->menuid,
+                'menuid'         => $row->menuid,
+                'menuname'       => $row->menuname,
+                'menuseq'        => $row->menuseq,
+                'menuparent'     => $row->menuparent,
+                'menuicon'       => $row->menuicon,
+                'routeid'        => $route,
+                'link'           => $row->link,
+                'modifiedby'     => $row->modifiedby,
+                'modifiedonview' => $row->modifiedonview
             );
             $i++;
         }
@@ -162,12 +162,12 @@ class Menu extends BaseController
         $responce->records = $count;
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $row->acosid;
-            $responce->rows[$i]['cell'] = array(
-                $row->acosid,
-                $row->class,
-                $row->method,
-                $row->displayname
+            $responce->rows[$i] = array(
+                'id'          => $row->acosid,
+                'acosid'      => $row->acosid,
+                'class'       => $row->class,
+                'method'      => $row->method,
+                'displayname' => $row->displayname
             );
             $i++;
         }

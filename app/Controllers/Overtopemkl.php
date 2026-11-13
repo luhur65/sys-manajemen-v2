@@ -110,26 +110,26 @@ class Overtopemkl extends BaseController
         
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $row->FNTrans; // Uses FNTrans as ID instead of index
             
             // colNames: 'Tanggal', 'No EPE', 'No Invoice', 'Nama Shipper', 'Nilai Invoice', 'Sisa (Blm dilunasi)', 'TOP (Hari)', 'Tgl Jth Tempo', 'OverDue (Hari)', 'Remind', 'No Job', 'Bln', 'Thn', 'Thn-Bln Job', 'Jns Job', 'Jns Piutang'
-            $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
-                $row->FNTrans,
-                $row->FNInvoice,
-                $row->FNShipper,
-                $row->FNominal,
-                $row->FSisa,
-                $row->FTOP,
-                $row->FTglJT ? date('d-M-Y', strtotime($row->FTglJT)) : '',
-                $row->FSelisih,
-                $row->FJnsRemind,
-                $row->FNoJob,
-                $row->FBlnJob,
-                $row->FThnJob,
-                $row->FNTgl,
-                $row->FJnsJob,
-                $row->FJnsPiutang
+            $responce->rows[$i] = array(
+                'id'          => $row->FNTrans,
+                'FTgl'        => $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                'FNTrans'     => $row->FNTrans,
+                'FNInvoice'   => $row->FNInvoice,
+                'FNShipper'   => $row->FNShipper,
+                'FNominal'    => $row->FNominal,
+                'FSisa'       => $row->FSisa,
+                'FTOP'        => $row->FTOP,
+                'FTglJT'      => $row->FTglJT ? date('d-M-Y', strtotime($row->FTglJT)) : '',
+                'FSelisih'    => $row->FSelisih,
+                'FJnsRemind'  => $row->FJnsRemind,
+                'FNoJob'      => $row->FNoJob,
+                'FBlnJob'     => $row->FBlnJob,
+                'FThnJob'     => $row->FThnJob,
+                'FNTgl'       => $row->FNTgl,
+                'FJnsJob'     => $row->FJnsJob,
+                'FJnsPiutang' => $row->FJnsPiutang
             );
             $i++;
         }

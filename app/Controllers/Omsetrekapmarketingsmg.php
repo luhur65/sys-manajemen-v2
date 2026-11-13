@@ -144,24 +144,24 @@ class Omsetrekapmarketingsmg extends BaseController
         $responce->rows = [];
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $i + $start; 
             
             $margin = 0;
             if (floatval($row->FOmset) != 0) {
                 $margin = (floatval($row->FProfit) / floatval($row->FOmset)) * 100;
             }
 
-            $responce->rows[$i]['cell'] = array(
-                $row->FBulan,
-                $row->FNMarketing,
-                $row->FJumlahMuatan,
-                $row->FJumlahBongkaran,
-                $row->FJumlahExim,
-                $row->FOmset,
-                $row->FBiayaLapangan,
-                $row->FNomPph23,
-                $row->FProfit,
-                $margin
+            $responce->rows[$i] = array(
+                'id'               => $i + $start,
+                'FBulan'           => $row->FBulan,
+                'FNMarketing'      => $row->FNMarketing,
+                'FJumlahMuatan'    => $row->FJumlahMuatan,
+                'FJumlahBongkaran' => $row->FJumlahBongkaran,
+                'FJumlahExim'      => $row->FJumlahExim,
+                'FOmset'           => $row->FOmset,
+                'FBiayaLapangan'   => $row->FBiayaLapangan,
+                'FNomPph23'        => $row->FNomPph23,
+                'FProfit'          => $row->FProfit,
+                'FMargin'          => $margin
             );
             $i++;
         }

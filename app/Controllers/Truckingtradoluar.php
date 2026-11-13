@@ -105,21 +105,21 @@ class Truckingtradoluar extends BaseController
         $responce->records = $count;
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $i + $start;
-            $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
-                $row->FUkuran20Muatan,
-                $row->FUkuran2x20Muatan,
-                $row->FUkuran40Muatan,
-                $row->FUkuran20Bongkaran,
-                $row->FUkuran2x20Bongkaran,
-                $row->FUkuran40Bongkaran,
-                $row->FUkuran20Import,
-                $row->FUkuran2x20Import,
-                $row->FUkuran40Import,
-                $row->FUkuran20Eksport,
-                $row->FUkuran2x20Eksport,
-                $row->FUkuran40Eksport
+            $responce->rows[$i] = array(
+                'id'                   => $i + $start,
+                'FTgl'                 => $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                'FUkuran20Muatan'      => $row->FUkuran20Muatan,
+                'FUkuran2x20Muatan'    => $row->FUkuran2x20Muatan,
+                'FUkuran40Muatan'      => $row->FUkuran40Muatan,
+                'FUkuran20Bongkaran'   => $row->FUkuran20Bongkaran,
+                'FUkuran2x20Bongkaran' => $row->FUkuran2x20Bongkaran,
+                'FUkuran40Bongkaran'   => $row->FUkuran40Bongkaran,
+                'FUkuran20Import'      => $row->FUkuran20Import,
+                'FUkuran2x20Import'    => $row->FUkuran2x20Import,
+                'FUkuran40Import'      => $row->FUkuran40Import,
+                'FUkuran20Eksport'     => $row->FUkuran20Eksport,
+                'FUkuran2x20Eksport'   => $row->FUkuran2x20Eksport,
+                'FUkuran40Eksport'     => $row->FUkuran40Eksport
             );
             $i++;
         }
@@ -194,20 +194,20 @@ class Truckingtradoluar extends BaseController
         $responce->records = $count;
         $i = 0;
         foreach ($data->getResult() as $row) {
-            $responce->rows[$i]['id']   = $i + $start;
-            $responce->rows[$i]['cell'] = array(
-                $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
-                $row->FNTrans,
-                $row->FNoContSeal,
-                $row->FNShipper,
-                $row->FNoPol,
-                $row->FOrderan,
-                $row->FNContainer,
-                $row->FLokasiBongkarMuat,
-                $row->FNominalHargaTrucking,
-                $row->FNominalHargaTruckingPusat,
-                $row->FSelisih,
-                $row->FKeterangan ?? $row->Fketerangan // Depending on the actual case sensitivity in DB
+            $responce->rows[$i] = array(
+                'id'                         => $i + $start,
+                'FTgl'                       => $row->FTgl ? date('d-M-Y', strtotime($row->FTgl)) : '',
+                'FNTrans'                    => $row->FNTrans,
+                'FNoContSeal'                => $row->FNoContSeal,
+                'FNShipper'                  => $row->FNShipper,
+                'FNoPol'                     => $row->FNoPol,
+                'FOrderan'                   => $row->FOrderan,
+                'FNContainer'                => $row->FNContainer,
+                'FLokasiBongkarMuat'         => $row->FLokasiBongkarMuat,
+                'FNominalHargaTrucking'      => $row->FNominalHargaTrucking,
+                'FNominalHargaTruckingPusat' => $row->FNominalHargaTruckingPusat,
+                'FSelisih'                   => $row->FSelisih,
+                'FKeterangan'                => $row->FKeterangan ?? $row->Fketerangan // Depending on the actual case sensitivity in DB
             );
             $i++;
         }
