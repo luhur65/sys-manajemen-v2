@@ -70,18 +70,14 @@ class Piutangoverdue extends BaseController
         $bulan     = $this->param('bulan');
         $marketing = $this->param('marketing');
 
+        if ($type === 'cascade') {
+            return $this->cascade((string) $this->request->getGet('from'), $cabang, $bulan, $marketing);
+        }
+
         try {
             switch ($type) {
                 case 'cabang':
-                    try {
-                        $list = $this->model->getCabang();
-                    } catch (\Throwable $e) {
-                        log_message('error', 'Piutangoverdue cabang (usp_getcabangoverdue): ' . $e->getMessage());
-                        $list = self::CABANG_FALLBACK;
-                    }
-                    if (!in_array('ALL', $list, true)) {
-                        array_unshift($list, 'ALL');
-                    }
+                    $list = $this->cabangList();
                     break;
                 case 'bulan':
                     $list = $this->model->getBulan($cabang);
@@ -101,6 +97,83 @@ class Piutangoverdue extends BaseController
         }
 
         return $this->response->setJSON($list);
+    }
+
+    /**
+     * Isi beberapa dropdown berantai dalam SATU request.
+     *
+     * Tiap request ke server ini mahal (bootstrap + koneksi DB ~3-5 detik),
+     * jadi rantai cabang -> bulan -> marketing -> shipper yang dulu 4 request
+     * berurutan digabung di sini. 'from' = dropdown yang berubah:
+     *   init      : semua list; cabang ALL, bulan terbaru, marketing/shipper ALL
+     *   cabang    : bulan, marketing, shipper
+     *   bulan     : marketing, shipper
+     *   marketing : shipper
+     * Nilai terpilih dipertahankan bila masih ada di list baru, selain itu
+     * kembali ke default (bulan terbaru / 'ALL').
+     */
+    private function cascade(string $from, string $cabang, string $bulan, string $marketing)
+    {
+        $levels = ['init' => 0, 'cabang' => 1, 'bulan' => 2, 'marketing' => 3];
+        if (!isset($levels[$from])) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'from tidak valid']);
+        }
+        $lv  = $levels[$from];
+        $out = [];
+
+        try {
+            if ($lv === 0) {
+                $list          = $this->cabangList();
+                $cabang        = 'ALL';
+                $out['cabang'] = ['list' => $list, 'value' => $cabang];
+            }
+            if ($lv <= 1) {
+                $list         = $this->model->getBulan($cabang);
+                $bulan        = ($lv === 1 && in_array($bulan, $list, true)) ? $bulan : self::latestMonth($list);
+                $out['bulan'] = ['list' => $list, 'value' => $bulan];
+            }
+            if ($lv <= 2) {
+                $list             = $this->model->getMarketing($cabang, $bulan);
+                $marketing        = ($lv > 0 && in_array($marketing, $list, true)) ? $marketing : 'ALL';
+                $out['marketing'] = ['list' => $list, 'value' => $marketing];
+            }
+            $list    = $this->model->getShipper($cabang, $bulan, $marketing);
+            $shipper = $this->param('shipper');
+            $out['shipper'] = ['list' => $list, 'value' => ($lv > 0 && in_array($shipper, $list, true)) ? $shipper : 'ALL'];
+        } catch (\Throwable $e) {
+            log_message('error', "Piutangoverdue::cascade($from): " . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['error' => 'Gagal memuat data filter']);
+        }
+
+        return $this->response->setJSON($out);
+    }
+
+    private function cabangList(): array
+    {
+        try {
+            $list = $this->model->getCabang();
+        } catch (\Throwable $e) {
+            log_message('error', 'Piutangoverdue cabang (usp_getcabangoverdue): ' . $e->getMessage());
+            $list = self::CABANG_FALLBACK;
+        }
+        if (!in_array('ALL', $list, true)) {
+            array_unshift($list, 'ALL');
+        }
+        return $list;
+    }
+
+    /** Bulan MM-YYYY terbaru dari list; 'ALL' bila tidak ada. */
+    private static function latestMonth(array $list): string
+    {
+        $best = 'ALL';
+        $key  = '';
+        foreach ($list as $v) {
+            if (preg_match('/^(\d{2})-(\d{4})$/', $v, $m) && $m[2] . $m[1] > $key) {
+                $key  = $m[2] . $m[1];
+                $best = $v;
+            }
+        }
+        return $best;
     }
 
     public function grid()

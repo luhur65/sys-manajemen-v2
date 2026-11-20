@@ -91,48 +91,40 @@
                 });
         }
 
-        // Bulan default = bulan terakhir (MM-YYYY terbesar), bukan 'ALL'
-        function latestMonth(list) {
-            let best = null, bestKey = '';
-            (list || []).forEach(v => {
-                const m = /^(\d{2})-(\d{4})$/.exec(v);
-                if (m && (m[2] + m[1]) > bestKey) { bestKey = m[2] + m[1]; best = v; }
+        // Dropdown berantai diisi lewat SATU request (type=cascade): server
+        // mengembalikan list + nilai terpilih untuk dropdown di bawah 'from'.
+        // Dulu 4 request berurutan, dan tiap request ke server ini mahal.
+        const filterSelects = { cabang: '#cabangSelect', bulan: '#bulanSelect', marketing: '#marketingSelect', shipper: '#shipperSelect' };
+        let cascadeSeq = 0;
+
+        function cascade(from) {
+            const seq = ++cascadeSeq;
+            const $below = Object.keys(filterSelects).slice(from === 'init' ? 0 : Object.keys(filterSelects).indexOf(from) + 1)
+                .map(k => $(filterSelects[k]));
+            $below.forEach($s => $s.prop('disabled', true));
+
+            return loadOptions('cascade', {
+                from: from,
+                cabang: $('#cabangSelect').val() || 'ALL',
+                bulan: $('#bulanSelect').val() || 'ALL',
+                marketing: $('#marketingSelect').val() || 'ALL',
+                shipper: $('#shipperSelect').val() || 'ALL'
+            }).then(res => {
+                // Respons lama (dropdown sudah diganti lagi) diabaikan.
+                if (seq !== cascadeSeq) return;
+                Object.keys(res).forEach(k => fillSelect($(filterSelects[k]), res[k].list, res[k].value));
+            }).always(() => {
+                if (seq === cascadeSeq) $below.forEach($s => $s.prop('disabled', false));
             });
-            return best;
-        }
-
-        function reloadShipper(keep) {
-            return loadOptions('shipper', {
-                cabang: $('#cabangSelect').val(),
-                bulan: $('#bulanSelect').val(),
-                marketing: $('#marketingSelect').val()
-            }).then(list => fillSelect($('#shipperSelect'), list, keep ? $('#shipperSelect').val() : 'ALL'));
-        }
-
-        function reloadMarketing(keep) {
-            return loadOptions('marketing', {
-                cabang: $('#cabangSelect').val(),
-                bulan: $('#bulanSelect').val()
-            }).then(list => fillSelect($('#marketingSelect'), list, keep ? $('#marketingSelect').val() : 'ALL'))
-              .then(() => reloadShipper(keep));
-        }
-
-        function reloadBulan(keep) {
-            const cur = $('#bulanSelect').val();
-            return loadOptions('bulan', { cabang: $('#cabangSelect').val() })
-                .then(list => fillSelect($('#bulanSelect'), list, (keep && cur) ? cur : latestMonth(list)))
-                .then(() => reloadMarketing(keep));
         }
 
         function initFilters() {
-            return loadOptions('cabang', {})
-                .then(list => fillSelect($('#cabangSelect'), list, 'ALL'))
-                .then(() => reloadBulan(false));
+            return cascade('init');
         }
 
-        $('#cabangSelect').on('change', function() { reloadBulan(true); });
-        $('#bulanSelect').on('change', function() { reloadMarketing(true); });
-        $('#marketingSelect').on('change', function() { reloadShipper(true); });
+        $('#cabangSelect').on('change', function() { cascade('cabang'); });
+        $('#bulanSelect').on('change', function() { cascade('bulan'); });
+        $('#marketingSelect').on('change', function() { cascade('marketing'); });
 
         function currentPostData() {
             return {
