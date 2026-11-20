@@ -58,16 +58,11 @@
     <!-- Grid Card -->
     <div class="card card-default">
         <div class="card-header">
-            <h3 class="card-title">LAPORAN PEMAKAIAN TRADO LUAR DETAIL</h3>
-        </div>
-        <div class="card-body p-0">
-            <table id="jqGrid"></table>
-            <div class="d-flex justify-content-between align-items-center p-2 mt-0">
-                <div id="lastUpdateHandler"></div>
-                <div id="jqGridInfoHandler"></div>
-            </div>
+            <h3 class="card-title">LAPORAN PEMAKAIAN TRADO LUAR DETAIL</h3><br>
+            <small id="lastUpdateHandler" class="text-muted">Last Update : -</small>
         </div>
     </div>
+    <table id="jqGrid"></table>
 </div>
 
 <script>
@@ -285,6 +280,9 @@
                 setHighlight($grid);
             }
         });
+
+        // Bar pager di bawah grid (struktur sama dengan Piutang Overdue).
+        $grid.customPager({ lazyLoading: true });
 
         $grid.jqGrid('filterToolbar', {
             stringResult: true,

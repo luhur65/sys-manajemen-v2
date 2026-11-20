@@ -55,21 +55,9 @@
     <div class="card card-default">
         <div class="card-header">
             <h3 class="card-title" id="gridTitle">DATA PIUTANG OVERDUE</h3>
-            <div class="card-tools">
-                <button type="button" id="btnExcel" class="btn btn-success btn-sm text-nowrap">
-                    <i class="fas fa-file-excel"></i> Export Excel
-                </button>
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <table id="jqGrid"></table>
-            <div id="jqGridPager"></div>
-
-            <div class="d-flex justify-content-end align-items-center p-2 mt-0">
-                <div id="jqGridInfoHandler"></div>
-            </div>
         </div>
     </div>
+    <table id="jqGrid"></table>
 </div>
 
 <script type="text/javascript">
@@ -305,6 +293,20 @@
             }
         });
 
+        // Bar tombol di bawah grid (struktur sama dengan Truckingtradoluar).
+        // Info lazy load tampil di #jqGridInfoHandler milik customPager.
+        $grid.customPager({
+            lazyLoading: true,
+            buttons: [
+                {
+                    // klik ditangani handler #btnExcel di bawah
+                    id: 'btnExcel',
+                    innerHTML: '<i class="fas fa-file-excel"></i> EXPORT',
+                    class: 'btn btn-success btn-sm mr-1'
+                }
+            ]
+        });
+
         // Tombol clear (lingkaran merah) pada filter toolbar
         $(document).on('keyup input', '.ui-search-input input', function() {
             const $input = $(this);
@@ -323,12 +325,20 @@
         $('#btnExcel').on('click', async function() {
             const $btn = $(this);
             const pd = $grid.jqGrid('getGridParam', 'postData') || {};
+            // Filter atas baru masuk ke postData setelah dropdown selesai dimuat
+            // dan grid di-reload. Sebelum itu jangan export: nilai kosong akan
+            // jatuh ke 'ALL' sehingga isi Excel berbeda dengan grid.
+            if (pd.cabang === undefined || pd.bulan === undefined) {
+                const msg = 'Filter masih dimuat. Tunggu sampai data grid tampil, lalu export lagi.';
+                if (typeof Swal !== 'undefined') Swal.fire('Info', msg, 'info'); else alert(msg);
+                return;
+            }
             const params = new URLSearchParams({
-                cabang: pd.cabang || 'ALL',
-                bulan: pd.bulan || 'ALL',
-                marketing: pd.marketing || 'ALL',
-                shipper: pd.shipper || 'ALL',
-                jumlahhari: pd.jumlahhari ?? 14,
+                cabang: pd.cabang,
+                bulan: pd.bulan,
+                marketing: pd.marketing,
+                shipper: pd.shipper,
+                jumlahhari: pd.jumlahhari,
                 filters: pd.filters || '',
                 sidx: pd.sidx || '',
                 sord: pd.sord || ''

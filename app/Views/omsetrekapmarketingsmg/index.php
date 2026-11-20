@@ -84,17 +84,11 @@
             <!-- Grid Card -->
             <div class="card card-default">
                 <div class="card-header">
-                    <h3 class="card-title">DATA REKAP OMSET MARKETING - CABANG SEMARANG</h3>
-                </div>
-                <div class="card-body p-0">
-                    <table id="jqGrid"></table>
-                    <!-- <div id="jqGridPager"></div> -->
-            <div class="d-flex justify-content-between align-items-center p-2 mt-0">
-                <div id="lastUpdateHandler">Last Update : <?= esc($last_update) ?></div>
-                <div id="jqGridInfoHandler"></div>
-            </div>
+                    <h3 class="card-title">DATA REKAP OMSET MARKETING - CABANG SEMARANG</h3><br>
+                    <small id="lastUpdateHandler" class="text-muted">Last Update : <?= esc($last_update) ?></small>
                 </div>
             </div>
+            <table id="jqGrid"></table>
             
 </div>
 
@@ -423,6 +417,9 @@ if(typeof setupLazyLoadScrollHandler === 'function') {
                 $grid.removeClass('table-striped');
             }
         });
+
+        // Bar pager di bawah grid (struktur sama dengan Piutang Overdue).
+        $grid.customPager({ lazyLoading: true });
 
         // Filter toolbar
         $grid.jqGrid('filterToolbar', { 

@@ -2,10 +2,31 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Export\ExcelExporter;
+use App\Libraries\Export\NullExportNotifier;
 use App\Models\MtruckingtradoluarModel;
 
 class Truckingtradoluar extends BaseController
 {
+    private const CABANG_NAMA = ['MDN' => 'MEDAN', 'JKT' => 'JAKARTA', 'SBY' => 'SURABAYA', 'MKS' => 'MAKASSAR'];
+
+    /** Kolom Excel = kolom grid header, urutan, label & group header sama. */
+    private const EXCEL_COLUMNS = [
+        ['key' => 'FTgl',                 'label' => 'Tanggal', 'type' => 'date', 'width' => 14],
+        ['key' => 'FUkuran20Muatan',      'label' => '20',   'group' => 'Muatan',    'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran2x20Muatan',    'label' => '2x20', 'group' => 'Muatan',    'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran40Muatan',      'label' => '40',   'group' => 'Muatan',    'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran20Bongkaran',   'label' => '20',   'group' => 'Bongkaran', 'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran2x20Bongkaran', 'label' => '2x20', 'group' => 'Bongkaran', 'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran40Bongkaran',   'label' => '40',   'group' => 'Bongkaran', 'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran20Import',      'label' => '20',   'group' => 'Import',    'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran2x20Import',    'label' => '2x20', 'group' => 'Import',    'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran40Import',      'label' => '40',   'group' => 'Import',    'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran20Eksport',     'label' => '20',   'group' => 'Eksport',   'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran2x20Eksport',   'label' => '2x20', 'group' => 'Eksport',   'type' => 'integer', 'width' => 9],
+        ['key' => 'FUkuran40Eksport',     'label' => '40',   'group' => 'Eksport',   'type' => 'integer', 'width' => 9],
+    ];
+
     /**
      * Whitelist kolom filter grid jqGrid (tabel TradoLuar per cabang - grid rekap harian).
      * Kolom di luar daftar ini ditolak oleh GridFilter.
@@ -68,19 +89,7 @@ class Truckingtradoluar extends BaseController
         $cabang = $this->request->getPost('cabang') ?: 'MDN';
         $tgl_dari = $this->request->getPost('tgl_dari'); if(!empty($tgl_dari)) $tgl_dari = date('Y-m-d', strtotime($tgl_dari));
         $tgl_sampai = $this->request->getPost('tgl_sampai'); if(!empty($tgl_sampai)) $tgl_sampai = date('Y-m-d', strtotime($tgl_sampai));
-        $search = $this->request->getPost('_search');
-        $filters = $this->request->getPost('filters');
-
-        $where = " ";
-
-        $operation = $this->operationAll($filters);
-        if ($operation != '') {
-            $where = " AND ($operation)";
-        }
-
-        if (!empty($tgl_dari) && !empty($tgl_sampai)) {
-            $where .= " AND FTgl >= '" . date('Y-m-d', strtotime($tgl_dari)) . " 00:00:00' AND FTgl <= '" . date('Y-m-d', strtotime($tgl_sampai)) . " 23:59:59'";
-        }
+        $where = $this->buildWhere($this->request->getPost('filters'), $tgl_dari, $tgl_sampai);
 
         $sql = $this->mtruckingtradoluarModel->count($where, $cabang);
         $count = $sql->getNumRows();
@@ -145,6 +154,81 @@ class Truckingtradoluar extends BaseController
         ];
 
         return $this->response->setJSON($responce);
+    }
+
+    /**
+     * Export Excel grid header (rekap harian): isi sama dengan grid
+     * (cabang, periode, filter toolbar dan sort aktif), tanpa paging.
+     */
+    public function excel()
+    {
+        $cabang = strtoupper((string) ($this->request->getGet('cabang') ?: 'MDN'));
+        if (!isset(self::CABANG_NAMA[$cabang])) {
+            $cabang = 'MDN';
+        }
+        $tglDari    = (string) $this->request->getGet('tgl_dari');
+        $tglSampai  = (string) $this->request->getGet('tgl_sampai');
+        $where      = $this->buildWhere($this->request->getGet('filters'), $tglDari, $tglSampai);
+        $sidx       = $this->request->getGet('sidx') ?: 'FTgl';
+        $sord       = $this->request->getGet('sord') ?: 'desc';
+
+        try {
+            $rows = $this->mtruckingtradoluarModel->getAll($where, $sidx, $sord, $cabang);
+        } catch (\Throwable $e) {
+            log_message('error', 'Truckingtradoluar::excel: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setBody('Gagal memuat data laporan');
+        }
+
+        $toNum = static fn($v) => ($v === null || trim((string) $v) === '') ? null : (float) str_replace(',', '', (string) $v);
+        $data  = [];
+        $total = ['FTgl' => 'GRAND TOTAL'];
+        foreach ($rows as $r) {
+            $item = ['FTgl' => $r['FTgl'] ? date('d-M-Y', strtotime($r['FTgl'])) : ''];
+            foreach (self::EXCEL_COLUMNS as $col) {
+                if ($col['key'] === 'FTgl') {
+                    continue;
+                }
+                $item[$col['key']]  = $toNum($r[$col['key']] ?? null);
+                $total[$col['key']] = ($total[$col['key']] ?? 0) + (float) $item[$col['key']];
+            }
+            $data[] = $item;
+        }
+
+        $periode = trim($tglDari . ' s/d ' . $tglSampai);
+        $exporter = new ExcelExporter(self::EXCEL_COLUMNS, new NullExportNotifier());
+        $exporter->setTitle('LAPORAN PENGGUNAAN TRADO LUAR', [
+            'Cabang'  => self::CABANG_NAMA[$cabang],
+            'Periode' => $periode === 's/d' ? 'SEMUA' : $periode,
+            'Dicetak' => ExcelExporter::tanggalCetak(),
+        ]);
+
+        $fileName = 'Laporan_Trado_Luar_' . self::CABANG_NAMA[$cabang] . '_' . date('Ymd_His');
+
+        try {
+            $path = $exporter->export(ExcelExporter::chunk($data), count($data), $fileName, $total);
+        } catch (\Throwable $e) {
+            log_message('error', 'Truckingtradoluar::excel write: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setBody('Gagal membuat file Excel');
+        }
+
+        return ExcelExporter::download($path, preg_replace('/[^A-Za-z0-9_\-]+/', '_', $fileName) . '.xlsx');
+    }
+
+    /** WHERE grid header: filter toolbar + rentang tanggal. Dipakai grid() dan excel(). */
+    private function buildWhere($filters, $tglDari, $tglSampai): string
+    {
+        $where = " ";
+
+        $operation = $this->operationAll($filters);
+        if ($operation != '') {
+            $where = " AND ($operation)";
+        }
+
+        if (!empty($tglDari) && !empty($tglSampai)) {
+            $where .= " AND FTgl >= '" . date('Y-m-d', strtotime($tglDari)) . " 00:00:00' AND FTgl <= '" . date('Y-m-d', strtotime($tglSampai)) . " 23:59:59'";
+        }
+
+        return $where;
     }
 
     public function griddetail()

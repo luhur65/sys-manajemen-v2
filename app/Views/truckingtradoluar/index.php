@@ -395,6 +395,12 @@
                             alert("Pilih baris data terlebih dahulu!");
                         }
                     }
+                },
+                {
+                    // klik ditangani handler #btnExcel di bawah
+                    id: 'btnExcel',
+                    innerHTML: '<i class="fas fa-file-excel"></i> EXPORT',
+                    class: 'btn btn-success btn-sm mr-1'
                 }
             ]
         });
@@ -605,6 +611,52 @@
         // Cabang change auto-refresh
         $('#cabangSelect').on('change', function() {
             $('#btnFilter').click();
+        });
+
+        // ---------- Export Excel (grid header) ----------
+        // Memakai parameter yang SEDANG dipakai grid (cabang & periode yang sudah
+        // di-Filter, filter toolbar, dan sort), jadi isi Excel = isi grid.
+        $('#btnExcel').on('click', async function() {
+            const $btn = $(this);
+            const $g = $('#jqGrid');
+            const pd = $g.jqGrid('getGridParam', 'postData') || {};
+            const val = (v) => (typeof v === 'function' ? v() : v);
+            const params = new URLSearchParams({
+                cabang: val(pd.cabang) || $('#cabangSelect').val() || 'MDN',
+                tgl_dari: val(pd.tgl_dari) || '',
+                tgl_sampai: val(pd.tgl_sampai) || '',
+                filters: pd.filters || '',
+                sidx: pd.sidx || $g.jqGrid('getGridParam', 'sortname') || 'FTgl',
+                sord: pd.sord || $g.jqGrid('getGridParam', 'sortorder') || 'desc'
+            });
+
+            $btn.prop('disabled', true).find('i').attr('class', 'fas fa-spinner fa-spin');
+            try {
+                const res = await fetch(`<?= base_url('truckingtradoluar/excel') ?>?` + params.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+                const type = res.headers.get('Content-Type') || '';
+                if (!res.ok || type.indexOf('spreadsheetml') === -1) {
+                    let msg = 'Gagal export Excel';
+                    try { const j = await res.clone().json(); msg = j.message || j.error || msg; } catch (e) { msg = (await res.text()) || msg; }
+                    throw new Error(msg);
+                }
+                const disp = res.headers.get('Content-Disposition') || '';
+                const m = /filename="?([^";]+)"?/i.exec(disp);
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = m ? m[1] : 'Laporan_Trado_Luar.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            } catch (err) {
+                if (typeof Swal !== 'undefined') Swal.fire('Error', err.message, 'error'); else alert(err.message);
+            } finally {
+                $btn.prop('disabled', false).find('i').attr('class', 'fas fa-file-excel');
+            }
         });
     });
 

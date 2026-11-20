@@ -38,15 +38,8 @@
         <div class="card-header">
             <h3 class="card-title">DATA TRACING PER CABANG</h3>
         </div>
-        <div class="card-body p-0">
-            <table id="jqGrid"></table>
-            <!-- <div id="jqGridPager"></div> -->
-            <div class="d-flex justify-content-between align-items-center p-2 mt-0">
-                <div id="lastUpdateHandler"></div>
-                <div id="jqGridInfoHandler"></div>
-            </div>
-        </div>
     </div>
+    <table id="jqGrid"></table>
             
 </div>
 
@@ -198,6 +191,9 @@
         });
 
         // Initialize Filter Toolbar
+        // Bar pager di bawah grid (struktur sama dengan Piutang Overdue).
+        $grid.customPager({ lazyLoading: true });
+
         $grid.jqGrid('filterToolbar', {
             stringResult: true,
             searchOnEnter: false,

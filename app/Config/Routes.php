@@ -630,6 +630,7 @@ $routes->post('truckinghargatradoluarlebihmahal/grid', 'Truckinghargatradoluarle
 $routes->get('truckingtradoluar', 'TruckingTradoLuar::index');
 $routes->post('truckingtradoluar/grid', 'TruckingTradoLuar::grid');
 $routes->post('truckingtradoluar/griddetail', 'TruckingTradoLuar::griddetail');
+$routes->get('truckingtradoluar/excel', 'Truckingtradoluar::excel');
 
 // Menu - Cek Sisa Stok
 $routes->match(['GET', 'POST'], 'Truckinghargatradoluarlebihmahal/index', 'Truckinghargatradoluarlebihmahal::index');

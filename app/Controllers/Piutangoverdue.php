@@ -166,7 +166,7 @@ class Piutangoverdue extends BaseController
             'Marketing'   => $this->param('marketing'),
             'Shipper'     => $this->param('shipper'),
             'Jumlah Hari' => (string) $this->jumlahHari('get'),
-            'Dicetak'     => date('d-m-Y H:i:s'),
+            'Dicetak'     => ExcelExporter::tanggalCetak(),
         ]);
 
         $fileName = 'Laporan_Piutang_Overdue_' . $cabang . '_' . $bulan . '_' . date('Ymd_His');

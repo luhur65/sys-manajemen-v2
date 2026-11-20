@@ -27,6 +27,9 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
  *   ['key' => 'FNominal', 'label' => 'Nominal Invoice', 'type' => 'number', 'width' => 18]
  *   type: text (default) | number | integer | date (string tanggal -> tanggal Excel)
  *   format (opsional): kode format Excel untuk number/integer, default '#,##0'
+ *   group (opsional): judul header grup (seperti setGroupHeaders jqGrid). Kolom
+ *     berurutan dengan group sama digabung di baris atas; kolom tanpa group
+ *     digabung vertikal dua baris.
  */
 class ExcelExporter
 {
@@ -36,6 +39,8 @@ class ExcelExporter
     private string $title = '';
     /** @var array<string,string> label => nilai, ditulis di atas tabel */
     private array $meta = [];
+    /** Baris paling atas header (beda dengan baris header kolom bila ada group). */
+    private int $headerTop = 0;
 
     /**
      * @param array<int,array{key:string,label:string,type?:string,width?:int}> $columns
@@ -143,17 +148,38 @@ class ExcelExporter
             $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
             $row = 2;
         }
+        // Label keterangan di-merge beberapa kolom awal sampai cukup lebar,
+        // nilai di kolom sesudahnya (teks meluber ke kanan karena sel kosong).
+        $labelSpan = $this->metaLabelSpan();
+        $labelEnd  = Coordinate::stringFromColumnIndex($labelSpan);
+        $valueCol  = Coordinate::stringFromColumnIndex($labelSpan + 1);
         foreach ($this->meta as $label => $value) {
             $sheet->setCellValueExplicit('A' . $row, $label, 's');
-            $sheet->setCellValueExplicit('B' . $row, ': ' . $value, 's');
+            if ($labelSpan > 1) {
+                $sheet->mergeCells("A{$row}:{$labelEnd}{$row}");
+            }
+            $sheet->setCellValueExplicit($valueCol . $row, ': ' . $value, 's');
             $row++;
         }
         if ($row > 1) {
             $row++; // satu baris kosong sebelum tabel
         }
 
-        $sheet->fromArray([array_column($this->columns, 'label')], null, 'A' . $row);
-        $sheet->getStyle($this->range($row, $row))->applyFromArray([
+        $this->headerTop = $row;
+        $grouped = (bool) array_filter($this->columns, static fn($c) => !empty($c['group']));
+        if ($grouped) {
+            $this->writeGroupHeader($sheet, $row);
+            $row++;
+        }
+
+        foreach ($this->columns as $i => $col) {
+            if ($grouped && empty($col['group'])) {
+                continue; // sudah ditulis & di-merge vertikal di baris group
+            }
+            // explicit string: label seperti "20" / "40" tidak berubah jadi angka
+            $sheet->setCellValueExplicit(Coordinate::stringFromColumnIndex($i + 1) . $row, (string) $col['label'], 's');
+        }
+        $sheet->getStyle($this->range($this->headerTop, $row))->applyFromArray([
             'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => self::HEADER_FILL]],
             'alignment' => [
@@ -164,6 +190,69 @@ class ExcelExporter
         ]);
 
         return $row;
+    }
+
+    /** Jumlah kolom awal yang digabung untuk label keterangan agar teksnya tidak terpotong. */
+    private function metaLabelSpan(): int
+    {
+        $need = 0;
+        foreach (array_keys($this->meta) as $label) {
+            $need = max($need, mb_strlen((string) $label) * 1.1 + 1);
+        }
+        $span = 0;
+        $sum  = 0.0;
+        $max  = max(1, count($this->columns) - 1);
+        while ($span < $max && $sum < $need) {
+            $sum += $this->columnWidth($this->columns[$span]);
+            $span++;
+        }
+        return max(1, $span);
+    }
+
+    /**
+     * Lebar kolom: minimal cukup untuk label header (bold) + tombol autofilter,
+     * supaya judul kolom tidak tertutup / terpotong.
+     */
+    private function columnWidth(array $col): float
+    {
+        $min = mb_strlen((string) $col['label']) * 1.2 + 4.5;
+        return max((float) ($col['width'] ?? 10), $min);
+    }
+
+    /** Tanggal cetak dengan nama bulan lengkap, mis. "20 November 2026 11:40:46" (WIB). */
+    public static function tanggalCetak(?int $ts = null): string
+    {
+        static $bulan = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
+            'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        $d = (new \DateTimeImmutable('@' . ($ts ?? time())))->setTimezone(new \DateTimeZone('Asia/Jakarta'));
+        return $d->format('d') . ' ' . $bulan[(int) $d->format('n')] . ' ' . $d->format('Y H:i:s');
+    }
+
+    /** Baris header grup: kolom ber-group sama digabung horizontal, tanpa group digabung vertikal. */
+    private function writeGroupHeader(Worksheet $sheet, int $row): void
+    {
+        $count = count($this->columns);
+        for ($i = 0; $i < $count; $i++) {
+            $col    = $this->columns[$i];
+            $letter = Coordinate::stringFromColumnIndex($i + 1);
+            $group  = $col['group'] ?? '';
+
+            if ($group === '') {
+                $sheet->setCellValue($letter . $row, $col['label']);
+                $sheet->mergeCells($letter . $row . ':' . $letter . ($row + 1));
+                continue;
+            }
+
+            $end = $i;
+            while ($end + 1 < $count && ($this->columns[$end + 1]['group'] ?? '') === $group) {
+                $end++;
+            }
+            $sheet->setCellValue($letter . $row, $group);
+            if ($end > $i) {
+                $sheet->mergeCells($letter . $row . ':' . Coordinate::stringFromColumnIndex($end + 1) . $row);
+            }
+            $i = $end;
+        }
     }
 
     /** Ubah satu baris asosiatif menjadi array sel sesuai urutan kolom. */
@@ -190,15 +279,20 @@ class ExcelExporter
         if ($val === null || $val === '') {
             return null;
         }
-        $ts = strtotime((string) $val);
-        return $ts === false ? (string) $val : ExcelDate::PHPToExcel($ts);
+        // Timestamp Unix (UTC) membuat tanggal WIB mundur 1 hari di Excel
+        // (16-Oct 00:00 WIB = 15-Oct 17:00 UTC). Pakai objek tanggal lokal.
+        try {
+            return ExcelDate::PHPToExcel(new \DateTimeImmutable((string) $val));
+        } catch (\Throwable) {
+            return (string) $val;
+        }
     }
 
     private function formatTable(Worksheet $sheet, int $headerRow, int $lastRow): void
     {
         $lastRow = max($lastRow, $headerRow);
 
-        $sheet->getStyle($this->range($headerRow, $lastRow))
+        $sheet->getStyle($this->range($this->headerTop ?: $headerRow, $lastRow))
             ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
         $sheet->freezePane('A' . ($headerRow + 1));
         $sheet->setAutoFilter($this->range($headerRow, $headerRow));
@@ -217,7 +311,7 @@ class ExcelExporter
             }
 
             $dim = $sheet->getColumnDimension($letter);
-            isset($col['width']) ? $dim->setWidth($col['width']) : $dim->setAutoSize(true);
+            isset($col['width']) ? $dim->setWidth($this->columnWidth($col)) : $dim->setAutoSize(true);
         }
     }
 

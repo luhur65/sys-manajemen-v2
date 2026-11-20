@@ -59,19 +59,13 @@
     <!-- Grid Card -->
     <div class="card card-default">
         <div class="card-header">
-            <h3 class="card-title">DATA PIUTANG EMKL - CABANG MEDAN</h3>
+            <h3 class="card-title">DATA PIUTANG EMKL - CABANG MEDAN</h3><br>
+            <small id="lastUpdateHandler" class="text-muted">Last Update : <?= esc($last_update) ?></small>
         </div>
-        <div class="card-body p-0">
-            <table id="jqGrid"></table>
-            <div id="jqGridPager"></div>
-
-            <div class="d-flex justify-content-between align-items-center p-2 mt-0">
-                <div id="lastUpdateHandler">Last Update : <?= esc($last_update) ?></div>
-                <div id="jqGridInfoHandler"></div>
-            </div>
-
-            <!-- Information boxes from sys-ci4 -->
-            <!-- <div class="p-3">
+    </div>
+    <table id="jqGrid"></table>
+    <!-- Information boxes from sys-ci4 -->
+    <!-- <div class="p-3">
                 <table class="table-sm">
                     <tr>
                         <td colspan="3"><b>Keterangan</b></td>
@@ -88,8 +82,6 @@
                     </tr>
                 </table>
             </div> -->
-        </div>
-    </div>
 </div>
 
 <script type="text/javascript">
@@ -400,6 +392,9 @@
 
             }
         });
+
+        // Bar pager di bawah grid (struktur sama dengan Piutang Overdue).
+        $grid.customPager({ lazyLoading: true });
 
         $grid.jqGrid('filterToolbar', {
             stringResult: true,

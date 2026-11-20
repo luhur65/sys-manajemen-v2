@@ -95,6 +95,16 @@ class MtruckingtradoluarModel extends Model
         ) AS GD WHERE RowNum BETWEEN $start AND $sampai ORDER BY RowNum");
     }
 
+    /** Semua baris sesuai filter & sort grid, tanpa paging (untuk export). */
+    public function getAll($where, $sidx, $sord, $cabang): array
+    {
+        $tableName   = $this->getTableName($cabang);
+        $surut       = GridSort::column($sidx, 'FTgl') . " " . GridSort::direction($sord);
+        $whereClause = trim($where) !== "" ? "WHERE 1=1 " . $where : "";
+
+        return $this->dbtruck->query("SELECT * FROM $tableName $whereClause ORDER BY $surut")->getResultArray();
+    }
+
     public function getGrandTotal($where, $cabang)
     {
         $tableName = $this->getTableName($cabang);

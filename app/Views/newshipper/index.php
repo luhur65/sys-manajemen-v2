@@ -66,17 +66,8 @@
         <div class="card-header">
             <h3 class="card-title">DATA NEW SHIPPER</h3>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table id="jqGrid"></table>
-                <div id="jqGridPager"></div>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center p-2 mt-0">
-                <div id="jqGridInfoHandler"></div>
-            </div>
-        </div>
     </div>
+    <table id="jqGrid"></table>
 </div>
 
 <script src="<?= base_url('libraries/tas-lib/js/lazyLoadingGridHelper.js') ?>"></script>
@@ -205,6 +196,9 @@
                 $grid.removeClass('table-striped');
             }
         });
+
+        // Bar pager di bawah grid (struktur sama dengan Piutang Overdue).
+        $grid.customPager({ lazyLoading: true });
 
         $grid.jqGrid('filterToolbar', {
             stringResult: true,
