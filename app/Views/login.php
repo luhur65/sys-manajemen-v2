@@ -526,6 +526,12 @@
   <script src="<?= asset('libraries/tas-lib/js/webauthn.js') ?>"></script>
 
   <script>
+    // Belum/tidak lagi login: buang seluruh cache halaman grid (lazyLoadingGridMonolith.js)
+    // supaya data laporan tidak tertinggal di browser setelah logout atau sesi habis.
+    try { if (window.indexedDB) indexedDB.deleteDatabase('jqgrid_cache'); } catch (e) {}
+  </script>
+
+  <script>
     // Standalone dialog untuk halaman login tanpa memuat seluruh mains.js.
     //
     // Semua dialog di halaman ini WAJIB lewat buildDialog(). jQuery UI hanya

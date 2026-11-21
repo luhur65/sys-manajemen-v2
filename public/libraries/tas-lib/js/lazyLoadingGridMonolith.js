@@ -7,16 +7,37 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // LazyGridIDB — IndexedDB shared layer
 // ══════════════════════════════════════════════════════════════════════════════
+//
+// Peran IndexedDB di sini: tempat CADANGAN halaman yang sudah dibuang dari memori
+// (lihat MAX_MEMORY_PAGES). Memori hanya memegang halaman di sekitar posisi user;
+// saat user kembali ke halaman jauh, halaman itu dibaca dari IndexedDB alih-alih
+// diminta ulang ke server.
+//
+// Aturan kunci & kebersihan:
+//  - Setiap entri milik SATU instance halaman (PAGE_ID, acak per page load) dan
+//    kuncinya memuat seluruh postData + sort + rows (lihat scopeKey). Dua tab
+//    dengan filter berbeda tidak mungkin saling membaca.
+//  - clearModule hanya menghapus entri milik instance ini.
+//  - Entri lebih tua dari MAX_AGE_MS dibuang saat DB dibuka; entri milik instance
+//    ini dibuang saat halaman ditutup (pagehide, best effort); seluruh DB dihapus
+//    saat halaman login dibuka (logout / sesi habis), lihat login.php.
 class LazyGridIDB {
     static _db = null;
+    static _openPromise = null;
     static IDB_NAME    = 'jqgrid_cache';
     static IDB_VERSION = 1;
     static IDB_STORE   = 'pages';
+    static MAX_AGE_MS  = 15 * 60 * 1000;
 
     static open() {
         if (LazyGridIDB._db) return Promise.resolve(LazyGridIDB._db);
-        return new Promise((resolve, reject) => {
+        if (LazyGridIDB._openPromise) return LazyGridIDB._openPromise;
+        LazyGridIDB._openPromise = new Promise((resolve, reject) => {
+            if (typeof indexedDB === 'undefined') { reject(new Error('IndexedDB tidak tersedia')); return; }
             const req = indexedDB.open(LazyGridIDB.IDB_NAME, LazyGridIDB.IDB_VERSION);
+            // Tanpa ini promise bisa menggantung selamanya dan grid berhenti memuat;
+            // dengan reject, pemanggil jatuh ke server.
+            req.onblocked = () => reject(new Error('IndexedDB terblokir'));
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(LazyGridIDB.IDB_STORE)) {
@@ -30,11 +51,37 @@ class LazyGridIDB {
                 LazyGridIDB._db.onversionchange = () => {
                     LazyGridIDB._db.close();
                     LazyGridIDB._db = null;
+                    LazyGridIDB._openPromise = null;
                 };
+                LazyGridIDB.purgeExpired(LazyGridIDB._db);
                 resolve(LazyGridIDB._db);
             };
             req.onerror = (e) => reject(e.target.error);
+        }).catch((e) => {
+            LazyGridIDB._openPromise = null;
+            throw e;
         });
+        return LazyGridIDB._openPromise;
+    }
+
+    /**
+     * Buang entri kedaluwarsa (sisa tab yang sudah ditutup) dan entri format lama
+     * tanpa `owner` -- kuncinya tidak memuat filter, jadi tidak boleh dibaca lagi.
+     */
+    static purgeExpired(db) {
+        try {
+            const tx = db.transaction(LazyGridIDB.IDB_STORE, 'readwrite');
+            const batas = Date.now() - LazyGridIDB.MAX_AGE_MS;
+            const req = tx.objectStore(LazyGridIDB.IDB_STORE).openCursor();
+            req.onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (!cursor) return;
+                const v = cursor.value || {};
+                const prev = LazyGridUtils.PREV_PAGE_ID;
+                if (!v.owner || !(v.timestamp > batas) || (prev && v.owner === prev)) cursor.delete();
+                cursor.continue();
+            };
+        } catch (e) { /* bukan hal kritis */ }
     }
 
     static tx(mode, callback) {
@@ -54,7 +101,7 @@ class LazyGridIDB {
 
     static savePage(moduleName, pageNumber, data, filterKey) {
         const key = LazyGridUtils.buildCacheKey(moduleName, pageNumber, filterKey);
-        const entry = { key, moduleName, pageNumber, filterKey, data, timestamp: Date.now() };
+        const entry = { key, moduleName, owner: LazyGridUtils.PAGE_ID, pageNumber, filterKey, data, timestamp: Date.now() };
         return LazyGridIDB.tx('readwrite', (store, resolve) => {
             const req = store.put(entry);
             req.onsuccess = () => resolve();
@@ -91,17 +138,22 @@ class LazyGridIDB {
         }).catch(() => null);
     }
 
+    /**
+     * Hapus entri milik instance halaman ini. moduleName null = semua modul.
+     * Entri tab lain tidak disentuh: tab itu masih memakainya.
+     */
     static clearModule(moduleName) {
         return LazyGridIDB.open().then(db =>
             new Promise(resolve => {
                 const tx = db.transaction(LazyGridIDB.IDB_STORE, 'readwrite');
                 const store = tx.objectStore(LazyGridIDB.IDB_STORE);
-                const index = store.index('moduleName');
-                const req = index.openCursor(IDBKeyRange.only(moduleName));
+                const req = moduleName == null
+                    ? store.openCursor()
+                    : store.index('moduleName').openCursor(IDBKeyRange.only(moduleName));
                 req.onsuccess = (e) => {
                     const cursor = e.target.result;
                     if (!cursor) { resolve(); return; }
-                    cursor.delete();
+                    if (cursor.value && cursor.value.owner === LazyGridUtils.PAGE_ID) cursor.delete();
                     cursor.continue();
                 };
                 req.onerror = () => resolve();
@@ -114,6 +166,44 @@ class LazyGridIDB {
 // LazyGridUtils — pure / stateless helpers
 // ══════════════════════════════════════════════════════════════════════════════
 class LazyGridUtils {
+    /** Identitas instance halaman ini; berganti setiap page load / tab baru. */
+    static PAGE_ID = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+
+    /**
+     * PAGE_ID halaman sebelumnya di tab yang sama. Halaman itu pasti sudah ditutup,
+     * jadi entrinya dibuang saat DB dibuka (purgeExpired). Ini jalur pembersihan
+     * yang andal; pagehide sering terpotong browser sebelum transaksi selesai.
+     */
+    static PREV_PAGE_ID = (function () {
+        try {
+            const k = 'sysmodern_lazygrid_page';
+            const prev = sessionStorage.getItem(k);
+            sessionStorage.setItem(k, LazyGridUtils.PAGE_ID);
+            return prev;
+        } catch (e) { return null; }
+    })();
+
+    /**
+     * Kunci cakupan data: instance halaman + seluruh parameter yang menentukan isi
+     * halaman (postData dari filter card, filter toolbar, sort, jumlah baris).
+     * Dulu hanya hash `filters`, sehingga cabang/periode/sort yang berbeda -- mis.
+     * di tab lain -- berbagi kunci yang sama dan datanya bisa tertukar.
+     * Sengaja string utuh, bukan hash, supaya tabrakan mustahil.
+     */
+    static scopeKey(grid, rowsCount) {
+        const pd = $.extend({}, grid.jqGrid('getGridParam', 'postData'));
+        ['page', 'rows', 'nd', '_search', 'sidx', 'sord'].forEach(k => delete pd[k]);
+        pd.__sidx = grid.jqGrid('getGridParam', 'sortname');
+        pd.__sord = grid.jqGrid('getGridParam', 'sortorder');
+        pd.__rows = rowsCount;
+        const norm = Object.keys(pd).sort().map(k => {
+            let v = pd[k];
+            if (typeof v === 'function') v = v();
+            return k + '=' + (v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v));
+        }).join('&');
+        return LazyGridUtils.PAGE_ID + '|' + norm;
+    }
+
     static buildFilterKey(filters) {
         const str = (filters == null) ? '' : String(filters);
         let hash = 5381;
@@ -134,6 +224,14 @@ class LazyGridUtils {
         return path.replace(/[^a-zA-Z0-9]/g, '_').replace(/^_+|_+$/g, '');
     }
 }
+
+// Entri IndexedDB hanya berguna selama halaman ini terbuka (kuncinya memuat
+// PAGE_ID). Saat halaman ditinggalkan -- pindah menu, tutup tab, logout -- milik
+// instance ini dihapus. Best effort: bila browser memotongnya, purgeExpired saat
+// DB dibuka berikutnya yang membereskan.
+window.addEventListener('pagehide', function () {
+    if (LazyGridIDB._db) LazyGridIDB.clearModule(null);
+});
 
 var lazyStates = {};
 
@@ -164,7 +262,7 @@ function getGridState(grid) {
 function triggerPrefetch(gridId, api, postData, fromPage, rowsCount) {
     var grid = $(gridId);
     var state = getGridState(grid);
-    var filterKey = LazyGridUtils.buildFilterKey(state.currentFilters);
+    var filterKey = LazyGridUtils.scopeKey(grid, rowsCount);
     var moduleName = LazyGridUtils.getModuleNameFromApi(api);
     var prefetchAhead = 3;
 
@@ -177,7 +275,7 @@ function triggerPrefetch(gridId, api, postData, fromPage, rowsCount) {
         if (state.lsPrefetchingPages.has(target)) continue;
 
         ((pg, delay) => {
-            LazyGridIDB.loadPage(moduleName, pg, filterKey, 15 * 60 * 1000).then(function(idbData) {
+            LazyGridIDB.loadPage(moduleName, pg, filterKey, LazyGridIDB.MAX_AGE_MS).then(function(idbData) {
                 if (idbData && idbData.length > 0) return;
                 if (state.cachedData[pg] || state.lsPrefetchingPages.has(pg)) return;
                 
@@ -193,6 +291,26 @@ function triggerPrefetch(gridId, api, postData, fromPage, rowsCount) {
 var WINDOW_PAGES = 3;
 var rowsPerPage = 50;
 var gapPage = 15;
+
+/**
+ * Batas halaman yang dipegang di memori per grid. Halaman di luar jendela DOM
+ * (minPageLoaded..maxPageLoaded) yang paling jauh dibuang dari memori; salinannya
+ * tetap ada di IndexedDB untuk dibaca ulang tanpa ke server.
+ */
+var MAX_MEMORY_PAGES = 10;
+
+function pruneMemoryCache(state) {
+    var pages = Object.keys(state.cachedData).map(Number);
+    if (pages.length <= MAX_MEMORY_PAGES) return;
+
+    var lo = state.minPageLoaded, hi = state.maxPageLoaded;
+    var dist = function (p) { return p < lo ? lo - p : (p > hi ? p - hi : 0); };
+    pages
+        .filter(function (p) { return dist(p) > 0; })   // halaman yang sedang tampil tidak dibuang
+        .sort(function (a, b) { return dist(b) - dist(a); })
+        .slice(0, pages.length - MAX_MEMORY_PAGES)
+        .forEach(function (p) { delete state.cachedData[p]; });
+}
 
 function throttle(func, limit) {
     let inThrottle;
@@ -248,6 +366,11 @@ function resetGridState(grid, resetFilters = false) {
     state.maxPageLoaded = 1;
     state.lastScrollTop = 0;
     state.loading = false;
+    state.jumping = false;
+    // Jump PageUp/PageDown yang masih ditunda (mains.js) tidak relevan lagi.
+    clearTimeout(state.jumpTimer);
+    state.jumpTimer = null;
+    state.pendingTargetAbs = undefined;
     state.loadingQueue = [];
     if (resetFilters) state.currentFilters = null;
     
@@ -265,7 +388,7 @@ function processLoadingQueue(gridId, api, postData, rowsCount) {
     var state = getGridState(grid);
     if (state.loadingQueue.length && !state.loading) {
         var next = state.loadingQueue.shift();
-        loadGridData(gridId, api, postData, next.page, rowsCount, next.direction, 'page');
+        loadGridData(gridId, api, postData, next.page, rowsCount, next.direction, 'page', next.callback);
     }
 }
 
@@ -354,8 +477,17 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
         state.loading = false;
     }
 
+    // Nomor generasi milik panggilan ini. Render yang tiba setelah ada reload/jump
+    // baru (mis. hasil IndexedDB yang lambat) dibuang supaya tidak menimpa grid.
+    var callSeq = state.loadSeq || 0;
+
     if (proses === 'jump') {
+        // Selama jump berjalan grid sempat kosong dan scrollTop kembali ke 0.
+        // Tanpa penanda ini scroll handler mengira user scroll ke atas lalu memuat
+        // halaman sebelumnya sampai halaman 1, dan selection kembali ke baris pertama.
+        state.jumping = true;
         state.loading = true;
+        if (state.jumpXhr && state.jumpXhr.readyState !== 4) state.jumpXhr.abort();
         grid.jqGrid('clearGridData');
         state.minPageLoaded = pageNumber;
         state.maxPageLoaded = pageNumber;
@@ -363,26 +495,41 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
         state.loading = false;
     }
 
-    if (state.cachedData[pageNumber] && proses === 'page') {
+    // Jump yang dilayani dari cache selesai tanpa ajax, jadi penanda jumping
+    // dilepas di sini. Ditunda sedikit supaya event scroll akibat clearGridData
+    // masih diabaikan scroll handler; dilewati bila sudah ada jump yang lebih baru.
+    function finishCachedJump() {
+        if (proses !== 'jump') return;
+        setTimeout(function () {
+            if (callSeq === (state.loadSeq || 0)) state.jumping = false;
+        }, 50);
+    }
+
+    if (state.cachedData[pageNumber] && (proses === 'page' || proses === 'jump')) {
         renderFromCache(grid, state.cachedData[pageNumber], direction, rowsCount, pageNumber);
+        if (proses === 'jump') triggerPrefetch(gridId, api, postData, pageNumber, rowsCount);
+        finishCachedJump();
         if (callback) callback();
         return;
     }
 
-    var filterKey = LazyGridUtils.buildFilterKey(state.currentFilters);
+    var filterKey = LazyGridUtils.scopeKey(grid, rowsCount);
     var moduleName = LazyGridUtils.getModuleNameFromApi(api);
-    var maxAgeMs = 15 * 60 * 1000;
 
-    if (proses === 'page') {
-        LazyGridIDB.loadPage(moduleName, pageNumber, filterKey, maxAgeMs).then(function(idbData) {
+    if (proses === 'page' || proses === 'jump') {
+        LazyGridIDB.loadPage(moduleName, pageNumber, filterKey, LazyGridIDB.MAX_AGE_MS).then(function(idbData) {
+            if (callSeq !== (state.loadSeq || 0)) return; // sudah ada reload/jump baru
+
             if (idbData && idbData.length > 0) {
                 state.cachedData[pageNumber] = idbData;
                 if (state.lsPrefetchingPages) state.lsPrefetchingPages.delete(pageNumber);
-                
+
                 if (!onlyCache) {
                     renderFromCache(grid, idbData, direction, rowsCount, pageNumber);
                     triggerPrefetch(gridId, api, postData, pageNumber, rowsCount);
                 }
+                pruneMemoryCache(state);
+                finishCachedJump();
                 if (callback) callback();
             } else {
                 fetchFromServer();
@@ -396,7 +543,9 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
         if (!onlyCache) {
             if (state.loading) {
                 var alreadyQueued = state.loadingQueue.some(function (q) { return q.page === pageNumber; });
-                if (!alreadyQueued) state.loadingQueue.push({ page: pageNumber, direction: direction });
+                // callback ikut disimpan: tanpa itu panah atas/bawah yang sempat
+                // antre tidak pernah memilih baris tujuannya.
+                if (!alreadyQueued) state.loadingQueue.push({ page: pageNumber, direction: direction, callback: callback });
                 return;
             }
             state.loading = true;
@@ -422,7 +571,14 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
             _search: _isSearch
         });
 
-        $.ajax({
+        // Hanya hasil jump terakhir yang berguna: batalkan jump sebelumnya yang
+        // masih berjalan. (Query di server tetap selesai; yang dibatalkan hanya
+        // penantian di browser. Debounce di mains.js yang menekan jumlahnya.)
+        if (proses === 'jump' && state.jumpXhr && state.jumpXhr.readyState !== 4) {
+            state.jumpXhr.abort();
+        }
+
+        var xhr = $.ajax({
             url: api,
             type: 'POST',
             data: fullPostData,
@@ -468,6 +624,7 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
                 if (state.lsPrefetchingPages) state.lsPrefetchingPages.delete(pageNumber);
 
                 if (onlyCache) {
+                    pruneMemoryCache(state);
                     return; // Prefetch selesai, jangan render
                 }
 
@@ -479,16 +636,18 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
                 grid.jqGrid('setGridParam', { records: state.totalRecord });
                 
                 triggerPrefetch(gridId, api, fullPostData, pageNumber, rowsCount);
+                pruneMemoryCache(state);
                 if (callback) callback(res);
             },
             error: function (xhr, textStatus, errorThrown) {
-                if (requestSeq !== (state.loadSeq || 0)) return;
+                if (requestSeq !== (state.loadSeq || 0) || textStatus === 'abort') return;
                 if (!onlyCache) $('.loaderGrid').addClass('d-none');
                 console.error('Grid Load Error:', textStatus, errorThrown);
                 if (state.lsPrefetchingPages) state.lsPrefetchingPages.delete(pageNumber);
             },
             complete: function () {
                 if (requestSeq !== (state.loadSeq || 0)) return;
+                if (proses === 'jump') state.jumping = false;
                 if (!onlyCache) {
                     state.loading = false;
                     var freshPostData = grid.jqGrid('getGridParam', 'postData');
@@ -496,6 +655,8 @@ function loadGridData(gridId, api, postData, pageNumber, rowsCount, direction = 
                 }
             }
         });
+
+        if (proses === 'jump') state.jumpXhr = xhr;
     }
 }
 
@@ -506,6 +667,13 @@ function setupLazyLoadScrollHandler(gridId, apiUrl, postData) {
     var throttledScroll = throttle(function () {
         var bDiv = $(this);
         var scrollTop = bDiv.scrollTop();
+
+        // Scroll yang terjadi karena grid dikosongkan saat jump bukan gerakan user.
+        if (state.jumping) {
+            state.lastScrollTop = scrollTop;
+            return;
+        }
+
         var viewHeight = bDiv.height();
         var tableHeight = bDiv.find('table').height();
         var rowNum = grid.jqGrid('getGridParam', 'rowNum');
@@ -607,6 +775,7 @@ function renderFromCache(grid, data, direction, rowsPerPage, currentPage, res) {
     }
 
     grid.jqGrid('setGridParam', { onSelectRow: originalOnSelectRow, onSelectAll: originalOnSelectAll });
+    pruneMemoryCache(state);
 
     if (typeof setHighlight === 'function') setHighlight(grid);
     refreshRowNumbers(grid, state.minPageLoaded, rowsPerPage);

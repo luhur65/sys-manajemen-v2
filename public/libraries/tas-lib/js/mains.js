@@ -620,6 +620,66 @@ function isKeyOwnedByDropdown(e) {
     return $(e.target).is("select");
 }
 
+/** Jeda setelah tekanan PageUp/PageDown terakhir sebelum jump benar-benar dikirim. */
+var LAZY_JUMP_DEBOUNCE_MS = 250;
+
+/**
+ * Jump lazy-load dengan debounce: setiap tekanan hanya menggeser target
+ * (state.pendingTargetAbs, indeks absolut 0-based). Request baru dikirim setelah
+ * tombol berhenti ditekan selama `delay` ms, jadi menahan PageDown tetap hanya
+ * menghasilkan satu request. Jump yang masih berjalan dibatalkan oleh
+ * loadGridData, sehingga yang dirender selalu target terakhir.
+ */
+function lazyScheduleJump(grid, targetAbs, align, delay) {
+    var state = getGridState(grid);
+    var gridId = grid.attr('id');
+
+    state.pendingTargetAbs = targetAbs;
+    state.pendingAlign = align;
+    $('#' + gridId + 'InfoHandler').text('Menuju baris ' + (targetAbs + 1) + ' of ' + state.totalRecord + ' ...');
+
+    clearTimeout(state.jumpTimer);
+    state.jumpTimer = setTimeout(function () {
+        state.jumpTimer = null;
+        var target = state.pendingTargetAbs;
+        if (target === undefined) return;
+
+        // Target ternyata sudah ada di DOM (mis. PageDown lalu PageUp): cukup pilih.
+        var ids = grid.getDataIDs();
+        if (!state.jumping && ids.length > 0) {
+            var first = parseInt(grid.jqGrid('getCell', ids[0], 'rn'), 10) - 1;
+            var last = parseInt(grid.jqGrid('getCell', ids[ids.length - 1], 'rn'), 10) - 1;
+            if (!isNaN(first) && !isNaN(last) && target >= first && target <= last) {
+                state.pendingTargetAbs = undefined;
+                var id = ids[target - first];
+                grid.resetSelection().setSelection(id);
+                scrollRowIntoView(grid, id, state.pendingAlign);
+                if (typeof updateGridInfoFast === 'function') updateGridInfoFast(grid);
+                return;
+            }
+        }
+
+        var pageSize = (typeof rowsPerPage !== 'undefined' && rowsPerPage > 0) ? rowsPerPage : (parseInt(grid.getGridParam('rowNum'), 10) || 50);
+        var page = Math.floor(target / pageSize) + 1;
+
+        loadGridData('#' + gridId, grid.jqGrid('getGridParam', 'url'), grid.jqGrid('getGridParam', 'postData'), page, pageSize, 'jump', 'jump', function () {
+            // Tombol ditekan lagi selama request berjalan: jump berikutnya yang memilih.
+            if (state.jumpTimer) return;
+
+            var t = state.pendingTargetAbs;
+            state.pendingTargetAbs = undefined;
+            if (t === undefined) return;
+
+            var newIds = grid.getDataIDs();
+            if (!newIds.length) return;
+            var newFirst = parseInt(grid.jqGrid('getCell', newIds[0], 'rn'), 10) - 1 || 0;
+            var idx = Math.max(0, Math.min(newIds.length - 1, t - newFirst));
+            grid.resetSelection().setSelection(newIds[idx]);
+            scrollRowIntoView(grid, newIds[idx], state.pendingAlign || 'bottom');
+        });
+    }, delay);
+}
+
 function setCustomBindKeys(grid) {
     if (grid.length > 0) {
         activeGrid = grid;
@@ -709,6 +769,14 @@ function setCustomBindKeys(grid) {
                 // =================================================================
                 else {
                     var state = (typeof getGridState === 'function') ? getGridState(grid) : {};
+
+                    // Jump sedang ditunda (debounce) atau sedang dimuat: posisi di DOM
+                    // belum mencerminkan tujuan user. PageUp/PageDown/Home/End tetap
+                    // diterima dan menggeser target (lihat lazyScheduleJump); tombol
+                    // lain diabaikan sampai data baru terpasang.
+                    var jumpBusy = !!(state.jumping || state.jumpTimer);
+                    if (jumpBusy && [33, 34, 35, 36].indexOf(e.keyCode) === -1) return;
+
                     var s_minPageLoaded = state.minPageLoaded || 1;
                     var s_maxPageLoaded = state.maxPageLoaded || 1;
                     var s_totalRecord = state.totalRecord || parseInt(grid.getGridParam("records")) || 0;
@@ -777,93 +845,41 @@ function setCustomBindKeys(grid) {
                                 }
                             });
                         }
-                    } else if (e.keyCode === 33) { // PageUp
-                        var targetAbsIndex = currentAbsIndex - visibleRows + 1;
-                        if (targetAbsIndex < 0) targetAbsIndex = 0;
+                    } else if (e.keyCode === 33 || e.keyCode === 34) { // PageUp / PageDown
+                        if (totRec <= 0) return;
+                        var isDown = e.keyCode === 34;
+                        var align = isDown ? 'bottom' : 'top';
 
-                        if (targetAbsIndex >= firstDomAbsIndex && targetAbsIndex <= lastDomAbsIndex) {
-                            var targetDomIdx = targetAbsIndex - firstDomAbsIndex;
-                            var targetId = gridIds[targetDomIdx];
+                        // Selama jump tertunda, tekanan berikutnya berangkat dari target
+                        // terakhir, bukan dari baris yang masih terlihat.
+                        var baseAbs = (jumpBusy && state.pendingTargetAbs !== undefined) ? state.pendingTargetAbs : currentAbsIndex;
+                        var targetAbsIndex = isDown ? baseAbs + visibleRows - 1 : baseAbs - visibleRows + 1;
+                        targetAbsIndex = Math.max(0, Math.min(totRec - 1, targetAbsIndex));
+
+                        if (!jumpBusy && targetAbsIndex >= firstDomAbsIndex && targetAbsIndex <= lastDomAbsIndex) {
+                            var targetId = gridIds[targetAbsIndex - firstDomAbsIndex];
                             grid.resetSelection().setSelection(targetId);
-                            scrollRowIntoView(grid, targetId, 'top');
-                        } else if (firstDomAbsIndex > 0) {
-                            var targetPageLoad = Math.floor(targetAbsIndex / serverPageSize) + 1;
-
-                            // UBAH 'up' MENJADI 'jump' DI SINI
-                            loadGridData(gridSelector, apiUrl, postData, targetPageLoad, serverPageSize, 'jump', 'jump', function () {
-                                var newIds = grid.getDataIDs();
-                                if (newIds.length > 0) {
-                                    var newFirstAbs = parseInt(grid.jqGrid('getCell', newIds[0], 'rn'), 10) - 1 || 0;
-                                    var targetDomIdx = targetAbsIndex - newFirstAbs;
-                                    if (targetDomIdx < 0) targetDomIdx = 0;
-                                    if (targetDomIdx >= newIds.length) targetDomIdx = newIds.length - 1;
-
-                                    var targetId = newIds[targetDomIdx];
-                                    grid.resetSelection().setSelection(targetId);
-                                    scrollRowIntoView(grid, targetId, 'top');
-                                }
-                            });
-                        }
-                    } else if (e.keyCode === 34) { // PageDown
-                        var targetAbsIndex = currentAbsIndex + visibleRows - 1;
-                        if (targetAbsIndex >= totRec) targetAbsIndex = totRec - 1;
-
-                        if (targetAbsIndex >= firstDomAbsIndex && targetAbsIndex <= lastDomAbsIndex) {
-                            var targetDomIdx = targetAbsIndex - firstDomAbsIndex;
-                            var targetId = gridIds[targetDomIdx];
-                            grid.resetSelection().setSelection(targetId);
-                            scrollRowIntoView(grid, targetId, 'bottom');
-                        } else if (lastDomAbsIndex < totRec - 1) {
-                            var targetPageLoad = Math.floor(targetAbsIndex / serverPageSize) + 1;
-
-                            // UBAH 'down' MENJADI 'jump' DI SINI
-                            loadGridData(gridSelector, apiUrl, postData, targetPageLoad, serverPageSize, 'jump', 'jump', function () {
-                                var newIds = grid.getDataIDs();
-                                if (newIds.length > 0) {
-                                    var newFirstAbs = parseInt(grid.jqGrid('getCell', newIds[0], 'rn'), 10) - 1 || 0;
-                                    var targetDomIdx = targetAbsIndex - newFirstAbs;
-                                    if (targetDomIdx < 0) targetDomIdx = 0;
-                                    if (targetDomIdx >= newIds.length) targetDomIdx = newIds.length - 1;
-
-                                    var targetId = newIds[targetDomIdx];
-                                    grid.resetSelection().setSelection(targetId);
-                                    scrollRowIntoView(grid, targetId, 'bottom');
-                                }
-                            });
+                            scrollRowIntoView(grid, targetId, align);
+                        } else {
+                            lazyScheduleJump(grid, targetAbsIndex, align, LAZY_JUMP_DEBOUNCE_MS);
                         }
                     } else if (e.keyCode === 36) { // Home
-                        if (firstDomAbsIndex === 0) {
+                        if (!jumpBusy && firstDomAbsIndex === 0) {
                             if (gridIds.length > 0) {
                                 grid.resetSelection().setSelection(gridIds[0]);
                                 scrollRowIntoView(grid, gridIds[0]);
                             }
-                        } else {
-                            // UBAH 'down' MENJADI 'jump' DI SINI
-                            loadGridData(gridSelector, apiUrl, postData, 1, serverPageSize, 'jump', 'jump', function () {
-                                var newIds = grid.getDataIDs();
-                                if (newIds.length > 0) {
-                                    grid.resetSelection().setSelection(newIds[0]);
-                                    scrollRowIntoView(grid, newIds[0]);
-                                }
-                            });
+                        } else if (totRec > 0) {
+                            lazyScheduleJump(grid, 0, 'top', 0);
                         }
                     } else if (e.keyCode === 35) { // End
-                        if (lastDomAbsIndex >= totRec - 1) {
+                        if (!jumpBusy && lastDomAbsIndex >= totRec - 1) {
                             if (gridIds.length > 0) {
                                 grid.resetSelection().setSelection(gridIds[gridIds.length - 1]);
                                 scrollRowIntoView(grid, gridIds[gridIds.length - 1]);
                             }
-                        } else {
-                            var lastPageLoad = Math.ceil(totRec / serverPageSize);
-
-                            // UBAH 'down' MENJADI 'jump' DI SINI
-                            loadGridData(gridSelector, apiUrl, postData, lastPageLoad, serverPageSize, 'jump', 'jump', function () {
-                                var newIds = grid.getDataIDs();
-                                if (newIds.length > 0) {
-                                    grid.resetSelection().setSelection(newIds[newIds.length - 1]);
-                                    scrollRowIntoView(grid, newIds[newIds.length - 1]);
-                                }
-                            });
+                        } else if (totRec > 0) {
+                            lazyScheduleJump(grid, totRec - 1, 'bottom', 0);
                         }
                     }
                 }
