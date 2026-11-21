@@ -12,9 +12,9 @@
     <!-- Filter Card -->
     <div class="card card-primary card-outline">
         <div class="card-body">
-            <div class="row align-items-end">
+            <div class="row">
                 <div class="col-md-3">
-                    <div class="form-group filter-input-group mb-0">
+                    <div class="form-group filter-input-group">
                         <label class="filter-label">Cabang</label>
                         <select id="cabangSelect" class="form-control select2">
                             <option value="MDN">MEDAN</option>
@@ -26,24 +26,24 @@
                 </div>
 
                 <div class="col-md-3">
-                    <div class="form-group filter-input-group mb-0">
+                    <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Dari</label>
                         <input type="text" class="form-control datepicker" id="tgl_dari" autocomplete="off">
                     </div>
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="form-group filter-input-group mb-0">
+                    <div class="form-group filter-input-group">
                         <label class="filter-label">Tanggal Sampai</label>
                         <input type="text" class="form-control datepicker" id="tgl_sampai" autocomplete="off">
                     </div>
                 </div>
                 
-                <div class="col-md-3">
-                    <div class="form-group filter-input-group mb-0">
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-group filter-input-group w-100">
                         <div class="d-flex w-100">
                             <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
-                                <i class="fas fa-search"></i> Tampilkan
+                                <i class="fas fa-filter"></i> Filter
                             </button>
                             <button type="button" id="btnReset" class="btn btn-secondary w-50 ml-1">
                                 <i class="fas fa-undo"></i> Reset
@@ -59,7 +59,7 @@
     <div class="card card-default">
         <div class="card-header">
             <h3 class="card-title">LAPORAN PEMAKAIAN TRADO LUAR DETAIL</h3><br>
-            <small id="lastUpdateHandler" class="text-muted">Last Update : -</small>
+            <small id="lastUpdateHandler" class="text-muted">Last Update : </small>
         </div>
     </div>
     <table id="jqGrid"></table>

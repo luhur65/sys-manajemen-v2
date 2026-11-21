@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <div class="form-group filter-input-group w-100 d-flex justify-content-between">
+                    <div class="form-group filter-input-group w-100">
                         <div class="d-flex w-100">
                             <button type="button" id="btnFilter" class="btn btn-primary w-50 mr-1">
                                 <i class="fas fa-filter"></i> Filter

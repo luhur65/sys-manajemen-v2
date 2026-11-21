@@ -1,6 +1,5 @@
 <style>
     #ui-datepicker-div { display: none; }
-    .card-filter { margin-bottom: 15px; }
 
     /* Perbaikan UX untuk highlight bulan yang aktif di DatePicker/MonthPicker (terutama Dark Mode) */
     .ui-datepicker .ui-state-active,
@@ -19,7 +18,7 @@
 
 <div class="container-fluid">
     <!-- Filter Card -->
-    <div class="card card-primary card-outline card-filter">
+    <div class="card card-primary card-outline">
         <div class="card-body">
             <form id="formFilter">
                 <div class="row">

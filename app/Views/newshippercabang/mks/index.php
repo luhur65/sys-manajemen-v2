@@ -19,13 +19,15 @@
                     </div>
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
-                    <div class="form-group filter-input-group w-100 d-flex justify-content-between">
-                        <button id="btnshowMKS" class="btn btn-primary" style="width: 48%;">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                        <button id="btnresetMKS" class="btn btn-secondary" style="width: 48%;">
-                            <i class="fas fa-sync"></i> Reset
-                        </button>
+                    <div class="form-group filter-input-group w-100">
+                        <div class="d-flex w-100">
+                            <button type="button" id="btnshowMKS" class="btn btn-primary w-50 mr-1">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <button type="button" id="btnresetMKS" class="btn btn-secondary w-50 ml-1">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

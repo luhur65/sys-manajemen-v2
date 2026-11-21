@@ -4,7 +4,6 @@
     .jqgrow td { font-size: 13px !important; }
     .ui-jqgrid .ui-jqgrid-htable th { font-size: 13px !important; text-align: center; }
     .ui-jqgrid .ui-userdata { height: 35px; padding: 6px; }
-    .card-filter { margin-bottom: 15px; }
     .table-subgrid { margin: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     
     /* Responsif JqGrid Pager pada Mobile */
@@ -83,8 +82,8 @@
     <!-- Grid Card -->
     <div class="card card-default">
         <div class="card-header">
-            <h3 class="card-title" id="gridTitle" style="font-weight: bold; margin-bottom: 0;">DATA PENGGUNAAN TRADO LUAR - CABANG MEDAN</h3><br>
-            <small id="lastUpdateHandler" class="text-muted ">Last Update : -</small>
+            <h3 class="card-title" id="gridTitle">DATA PENGGUNAAN TRADO LUAR - CABANG MEDAN</h3><br>
+            <small id="lastUpdateHandler" class="text-muted">Last Update : </small>
         </div>
     </div>
     <table id="jqGrid"></table>
@@ -97,7 +96,7 @@
             <div class="modal-header d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="modal-title" id="modalDetailTitle" style="font-weight: bold; margin-bottom: 0;">Detail Trado Luar</h5>
-                    <small id="modalLastUpdate" class="text-muted ">Last Update : -</small>
+                    <small id="modalLastUpdate" class="text-muted ">Last Update : </small>
                 </div>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
             </div>
