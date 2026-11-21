@@ -137,10 +137,31 @@
         })();
     </script>
 
+<?php
+    // Scope kunci preferensi grid. Diambil dari router (controller.method), BUKAN
+    // dari window.location.pathname: satu halaman grid bisa dicapai lewat banyak
+    // URL berbeda -- Routes.php mendaftarkan 'Piutangemkl', 'piutangemkl',
+    // 'Piutangemkl/index' dan 'piutangemkl/index' untuk controller yang sama --
+    // dan pathname juga ikut membawa base path (mis. '/sys-modern/'), sehingga
+    // preferensi user hilang begitu aplikasi dipindah docroot.
+    $gridPrefScope = '';
+    $gridPrefRouter = service('router');
+    if ($gridPrefRouter !== null) {
+        $gridPrefCtrl = $gridPrefRouter->controllerName();
+        if (is_string($gridPrefCtrl) && $gridPrefCtrl !== '') {
+            $gridPrefPos  = strrpos($gridPrefCtrl, '\\');
+            $gridPrefCtrl = $gridPrefPos === false ? $gridPrefCtrl : substr($gridPrefCtrl, $gridPrefPos + 1);
+            $gridPrefMtd  = (string) $gridPrefRouter->methodName();
+            $gridPrefScope = strtolower($gridPrefCtrl) . '.' . strtolower($gridPrefMtd !== '' ? $gridPrefMtd : 'index');
+        }
+    }
+?>
     <script>
         const appUrl = '<?= base_url() ?>';
         const baseUrl = '<?= base_url() ?>';
         window.apiUrl = appUrl;
+        // Dipakai GridAutoInjector untuk menyusun kunci preferensi grid.
+        window.gridPrefScope = '<?= esc($gridPrefScope, 'js') ?>';
 
         (function() {
             const savedTheme = localStorage.getItem('theme');

@@ -40,7 +40,10 @@ $routes->get('webauthn/checkDevice', 'Webauthn::checkDevice');
 // Grid Preferences Routes (JSON File Storage)
 $routes->get('gridpreference/load', 'GridPreference::load');
 $routes->post('gridpreference/save', 'GridPreference::save');
-$routes->get('gridpreference/delete', 'GridPreference::delete');
+// POST, bukan GET: filter csrf CI4 hanya memeriksa POST/PUT/PATCH/DELETE, jadi
+// versi GET-nya bisa dipicu pihak ketiga lewat <img src="..."> dan menghapus
+// preferensi user yang sedang login.
+$routes->post('gridpreference/delete', 'GridPreference::delete');
 
 // Harilibur proxy route
 $routes->match(['GET', 'POST'], 'harilibur', 'Harilibur::index');
