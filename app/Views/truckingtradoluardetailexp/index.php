@@ -140,7 +140,7 @@
             sortname: "FTgl",
             sortorder: "DESC",
             rowNum: 50,
-            rowList: [50, 100, 200],
+            rowList: [50, 100, 500, 1000],
             viewrecords: true,
             toolbar: [true, "top"],
             autowidth: true,
@@ -148,7 +148,7 @@
             height: 400,
             autoHeight: true, // tinggi default; mengecil di layar pendek (GridAutoHeight.js)
             rownumbers: true,
-            rownumWidth: 35,
+            rownumWidth: 45,
             gridview: true,
             footerrow: true,
             onSortCol: function(index, iCol, sortorder) {

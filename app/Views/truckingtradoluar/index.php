@@ -193,6 +193,7 @@
             autoHeight: true, // tinggi default; mengecil di layar pendek (GridAutoHeight.js)
             shrinkToFit: false,
             rownumbers: true,
+            rownumWidth: 45,
             footerrow: true,
             userDataOnFooter: true,
             toolbar: [true, 'top'],
@@ -456,6 +457,7 @@
                 ],
                 rowNum: 50,
                 rownumbers: true,
+                rownumWidth: 45,
                 sortname: 'FNTrans',
                 sortorder: 'asc',
                 autowidth: true,

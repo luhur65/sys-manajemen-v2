@@ -120,7 +120,7 @@
             rowNum: rowNum,
             rownumbers: true,
             rownumWidth: 45,
-            rowList: [10, 20, 50, 100],
+            rowList: [50, 100, 500, 1000],
             toolbar: [true, "top"],
             sortable: true,
             sortname: sortname,
