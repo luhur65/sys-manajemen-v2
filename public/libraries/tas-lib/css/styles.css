@@ -347,6 +347,20 @@ input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
 	/* overflow-x: scroll; */
 }
 
+/* Bar di bawah grid (tombol + info "View x - y of z"). Tingginya dulu ikut isi:
+   31px kalau ada tombol, 20px kalau tidak, sehingga info tampak mengecil di
+   halaman tanpa tombol. Sekarang selalu setinggi satu tombol .btn bawaan. */
+.grid-pager > .row,
+.grid-pager.row {
+	min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+.grid-pager .pager-info {
+	font-size: 1.077rem; /* 14px pada html 13px (desktop) */
+	font-weight: 600;
+	white-space: nowrap;
+}
+
 [id^="gview_"] {
 	z-index: 0;
 }
