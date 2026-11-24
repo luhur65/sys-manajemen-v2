@@ -361,6 +361,22 @@ input[type=text]:focus,input[type=password]:focus, .select2-selection:focus {
 	white-space: nowrap;
 }
 
+/* Markup desktop customPager membagi bar jadi col-8 (tombol) + col-4 (info).
+   Di jendela sempit sepertiga bar tidak cukup untuk "View 101 - 150 of 2346"
+   sehingga teks meluber keluar kartu. Kolom info dibuat selebar isinya, kolom
+   tombol mengambil sisanya. */
+.grid-pager > .row > .col-8 {
+	flex: 1 1 0;
+	max-width: none;
+	min-width: 0;
+}
+
+.grid-pager > .row > .col-4 {
+	flex: 0 0 auto;
+	width: auto;
+	max-width: 100%;
+}
+
 [id^="gview_"] {
 	z-index: 0;
 }
