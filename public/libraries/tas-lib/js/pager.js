@@ -524,6 +524,18 @@ $.fn.customPager = function (option = {}) {
                                           buttonElement.innerHTML =
                                               button.innerHTML;
 
+                                          if (button.shortcut) {
+                                              let tempInerHTML = button.innerHTML;
+                                              let textBtn = tempInerHTML.split('</i>')[1];
+                                              let iconBtn = tempInerHTML.split('</i>')[0];
+                                              let idx = textBtn.toLowerCase().indexOf(button.shortcut.toLowerCase());
+                                              if (idx !== -1) {
+                                                  textBtn = textBtn.substring(0, idx) + '<u>' + textBtn.charAt(idx) + '</u>' + textBtn.substring(idx + 1);
+                                                  buttonElement.innerHTML = iconBtn + '</i>' + textBtn;
+                                              }
+                                              buttonElement.setAttribute('data-shortcut', button.shortcut);
+                                          }
+
                                           if (button.onClick) {
                                               $(document).on(
                                                   "click",
@@ -588,6 +600,18 @@ $.fn.customPager = function (option = {}) {
                                               );
                                               buttonElement.innerHTML =
                                                   button.innerHTML;
+
+                                              if (button.shortcut) {
+                                                  let tempInerHTML = button.innerHTML;
+                                                  let textBtn = tempInerHTML.split('</i>')[1];
+                                                  let iconBtn = tempInerHTML.split('</i>')[0];
+                                                  let idx = textBtn.toLowerCase().indexOf(button.shortcut.toLowerCase());
+                                                  if (idx !== -1) {
+                                                      textBtn = textBtn.substring(0, idx) + '<u>' + textBtn.charAt(idx) + '</u>' + textBtn.substring(idx + 1);
+                                                      buttonElement.innerHTML = iconBtn + '</i>' + textBtn;
+                                                  }
+                                                  buttonElement.setAttribute('data-shortcut', button.shortcut);
+                                              }
 
                                               if (button.onClick) {
                                                   $(document).on(

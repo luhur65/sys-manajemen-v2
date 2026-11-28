@@ -364,6 +364,7 @@
                     id: 'detail',
                     innerHTML: '<i class="fas fa-list"></i> DETAIL',
                     class: 'btn btn-info btn-sm mr-1',
+                    shortcut: 'd',
                     onClick: () => {
                         var selRowId = $("#jqGrid").jqGrid('getGridParam', 'selrow');
                         if (selRowId) {
@@ -400,10 +401,12 @@
                     // klik ditangani handler #btnExcel di bawah
                     id: 'btnExcel',
                     innerHTML: '<i class="fas fa-file-excel"></i> EXPORT',
-                    class: 'btn btn-success btn-sm mr-1'
+                    class: 'btn btn-success btn-sm mr-1',
+                    shortcut: 'e'
                 }
             ]
         });
+        setupKeyboardShortcuts();
 
 
         // Trigger initial load

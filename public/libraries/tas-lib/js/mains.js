@@ -932,6 +932,42 @@ function scrollRowIntoView(grid, rowId, align) {
     }
 }
 
+function setupKeyboardShortcuts() {
+    const shortcutMap = {};
+    $('[data-shortcut]').each(function () {
+        const key = $(this).data('shortcut').toLowerCase();
+        const right = $(this).data('right'); // opsional: 'add' | 'edit' | 'delete'
+        shortcutMap[key] = {
+            btn: $(this),
+            right: right || null
+        };
+    });
+
+    $(window).off('keydown.globalShortcut').on('keydown.globalShortcut', function (e) {
+
+        if ($(e.target).is('input, textarea, select')) return;
+        if (!e.altKey) return;
+
+        const key = e.key.toLowerCase();
+        const entry = shortcutMap[key];
+        if (!entry) return;
+
+        e.preventDefault();
+
+        // Cek permission jika ada
+        if (entry.right && typeof accessRights !== 'undefined') {
+            if (!accessRights[entry.right]) {
+                if (typeof showDialog === 'function') {
+                    showDialog('error', 'Anda tidak memiliki akses untuk aksi ini.');
+                }
+                return;
+            }
+        }
+
+        entry.btn.click();
+    });
+}
+
 function setSidebarBindKeys() {
     $(document).on("keydown", (event) => {
         if (event.keyCode === 77 && event.altKey) {

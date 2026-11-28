@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-start">
-                    <button type="submit" class="btn btn-primary" id="btnSave"><i class="fas fa-save"></i> Save</button>
+                    <button type="submit" class="btn btn-primary" id="btnSave" data-shortcut="s"><i class="fas fa-save"></i> Save</button>
                     <button type="button" class="btn btn-outline-primary" data-dismiss="modal"><i class="fas fa-times"></i> Close</button>
                 </div>
             </form>
@@ -264,6 +264,7 @@
                     id: 'add',
                     innerHTML: '<i class="fa fa-plus"></i> ADD',
                     class: 'btn btn-primary btn-sm mr-1',
+                    shortcut: 'a',
                     onClick: () => {
                         newData();
                     }
@@ -272,6 +273,7 @@
                     id: 'edit',
                     innerHTML: '<i class="fa fa-pen"></i> EDIT',
                     class: 'btn btn-success btn-sm mr-1',
+                    shortcut: 'e',
                     onClick: () => {
                         let selectedId = $grid.jqGrid('getGridParam', 'selrow');
                         if (selectedId) {
@@ -285,6 +287,7 @@
                     id: 'delete',
                     innerHTML: '<i class="fa fa-trash"></i> DELETE',
                     class: 'btn btn-danger btn-sm mr-1',
+                    shortcut: 'd',
                     onClick: () => {
                         let selectedId = $grid.jqGrid('getGridParam', 'selrow');
                         if (selectedId) {
@@ -298,6 +301,7 @@
                     id: 'view',
                     innerHTML: '<i class="fa fa-eye"></i> VIEW',
                     class: 'btn btn-info btn-sm mr-1',
+                    shortcut: 'v',
                     onClick: () => {
                         let selectedId = $grid.jqGrid('getGridParam', 'selrow');
                         if (selectedId) {
@@ -309,6 +313,7 @@
                 }
             ]
         });
+        setupKeyboardShortcuts();
 
         // Initial load
         loadGridData("#jqGrid", apiUrl, $grid.jqGrid('getGridParam', 'postData'), 1, rowNum, 'down', 'reload');
