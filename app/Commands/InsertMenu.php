@@ -9,17 +9,23 @@ class InsertMenu extends BaseCommand
 {
     protected $group       = 'Custom';
     protected $name        = 'menu:insert';
-    protected $description = 'Insert new menu for Grafik Biaya Kantor';
+    protected $description = 'Insert new menu (ACOS + menu + ACL) secara interaktif';
 
     public function run(array $params)
     {
         $db = \Config\Database::connect();
 
+        $className   = CLI::getOption('class') ?? CLI::prompt('Nama class controller (contoh: Grafikbiayakantorbandinglaba)', null, 'required');
+        $methodName   = CLI::getOption('method') ?? CLI::prompt('Nama method', 'index');
+        $namaAco      = CLI::getOption('displayname') ?? CLI::prompt('Display name ACOS', null, 'required');
+        $menuName     = CLI::getOption('menuname') ?? CLI::prompt('Nama menu (menuname)', null, 'required');
+        $menuIcon     = CLI::getOption('icon') ?? CLI::prompt('Icon menu', 'ICON-GRAPH');
+        $link         = CLI::getOption('link') ?? CLI::prompt('Link menu', strtolower($className));
+        $parentKeyword = CLI::getOption('parent') ?? CLI::prompt('Kata kunci menu parent (kosongkan untuk root)', '');
+        $roleId       = (int) (CLI::getOption('role') ?? CLI::prompt('Role ID untuk ACL', '3'));
+
         try {
             // 1. Insert ke tblacos
-            $className = 'Grafikbiayakantorbandinglaba';
-            $methodName = 'index';
-            $namaAco = 'menu Grafik Biaya Kantor Banding Laba';
 
             // Cek apakah sudah ada
             $cekAco = $db->table('tblacos')->where('class', $className)->where('method', $methodName)->get()->getRow();
@@ -43,8 +49,11 @@ class InsertMenu extends BaseCommand
             }
 
             // 2. Insert ke tblmenu
-            $parent = $db->table('tblmenu')->like('menuname', 'Grafik', 'both')->where('menuparent', 0)->get()->getRow();
-            $parentId = $parent ? $parent->menuid : 0;
+            $parentId = 0;
+            if ($parentKeyword !== '') {
+                $parent = $db->table('tblmenu')->like('menuname', $parentKeyword, 'both')->where('menuparent', 0)->get()->getRow();
+                $parentId = $parent ? $parent->menuid : 0;
+            }
             
             $lastSeq = $db->table('tblmenu')->where('menuparent', $parentId)->selectMax('menuseq')->get()->getRow();
             $nextSeq = ($lastSeq && $lastSeq->menuseq) ? $lastSeq->menuseq + 1 : 1;
@@ -58,13 +67,13 @@ class InsertMenu extends BaseCommand
 
                 $dataMenu = [
                     'menuid' => $menuId,
-                    'menuname' => 'Grafik Biaya Kntr Bnding Laba',
+                    'menuname' => $menuName,
                     'menuseq' => $nextSeq,
                     'menuparent' => $parentId,
-                    'menuicon' => 'ICON-GRAPH',
+                    'menuicon' => $menuIcon,
                     'menuexe' => '',
                     'acoid' => $acoId,
-                    'link' => 'grafikbiayakantorbandinglaba',
+                    'link' => $link,
                     'modifiedby' => 'admin',
                     'modifiedon' => date('Y-m-d H:i:s')
                 ];
@@ -73,22 +82,22 @@ class InsertMenu extends BaseCommand
             }
 
             // 3. Insert ke tblacl
-            $cekAcl = $db->table('tblacl')->where('roleid', 3)->where('acoid', $acoId)->get()->getRow();
+            $cekAcl = $db->table('tblacl')->where('roleid', $roleId)->where('acoid', $acoId)->get()->getRow();
             if ($cekAcl) {
-                CLI::write("ACL untuk role 3 (Admin) sudah ada.", 'green');
+                CLI::write("ACL untuk role {$roleId} sudah ada.", 'green');
             } else {
                 $lastAcl = $db->table('tblacl')->selectMax('aclid')->get()->getRow();
                 $aclId = ($lastAcl && $lastAcl->aclid) ? $lastAcl->aclid + 1 : 1;
 
                 $dataAcl = [
                     'aclid' => $aclId,
-                    'roleid' => 3,
+                    'roleid' => $roleId,
                     'acoid' => $acoId,
                     'modifiedby' => 'admin',
                     'modifiedon' => date('Y-m-d H:i:s')
                 ];
                 $db->table('tblacl')->insert($dataAcl);
-                CLI::write("ACL untuk role 3 (Admin) berhasil ditambahkan.", 'green');
+                CLI::write("ACL untuk role {$roleId} berhasil ditambahkan.", 'green');
             }
 
         } catch (\Exception $e) {
